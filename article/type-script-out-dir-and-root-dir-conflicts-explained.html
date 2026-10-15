@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript outDir and rootDir Conflicts Explained - typescript</title>
+    <meta name="description" content="Configuring rootDir and outDir in your tsconfig.json dictates how TypeScript maps your input source files to emitted JavaScript build files. When these paths conflict—whether through overlapping directories, attempting to compile files outside the defined">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-out-dir-and-root-dir-conflicts-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript outDir and rootDir Conflicts Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-out-dir-and-root-dir-conflicts-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Configuring rootDir and outDir in your tsconfig.json dictates how TypeScript maps your input source files to emitted JavaScript build files. When these paths conflict—whether through overlapping directories, attempting to compile files outside the defined" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-outdir-and-rootdir-conflicts-explained">TypeScript
+outDir and rootDir Conflicts Explained</h1>
+<p>Configuring <code>rootDir</code> and <code>outDir</code> in your
+<code>tsconfig.json</code> dictates how TypeScript maps your input
+source files to emitted JavaScript build files. When these paths
+conflict—whether through overlapping directories, attempting to compile
+files outside the defined root, or accidentally including emitted files
+back into compilation—the TypeScript compiler (<code>tsc</code>)
+typically throws compilation errors like TS5055 or TS6059, or generates
+distorted, unexpectedly nested output directory structures.</p>
+<h3 id="the-roles-of-outdir-and-rootdir">The Roles of outDir and
+rootDir</h3>
+<ul>
+<li><strong><code>rootDir</code></strong>: Defines the base directory of
+your TypeScript source code. TypeScript uses this path to determine the
+directory structure when mirroring source files into the output
+directory.</li>
+<li><strong><code>outDir</code></strong>: Defines the destination folder
+where the generated <code>.js</code>, <code>.d.ts</code>, and
+<code>.js.map</code> files will be placed.</li>
+</ul>
+<h3 id="conflict-scenarios-and-compiler-behavior">Conflict Scenarios and
+Compiler Behavior</h3>
+<h4 id="1-overwriting-source-files-error-ts5055">1. Overwriting Source
+Files (Error TS5055)</h4>
+<p>If <code>outDir</code> is set to the same directory as
+<code>rootDir</code> (or omitted entirely, defaulting output to the
+source locations), TypeScript risks overwriting your original files.
+This issue commonly surfaces when <code>allowJs</code> is enabled or
+declaration files are emitted:</p>
+<pre class="text"><code>Cannot write file &#39;path/to/file.js&#39; because it would overwrite input file. (TS5055)</code></pre>
+<p>The compiler blocks execution to safeguard your source code from
+being permanently replaced by generated output.</p>
+<h4 id="2-source-files-outside-the-root-error-ts6059">2. Source Files
+Outside the Root (Error TS6059)</h4>
+<p>When <code>rootDir</code> is explicitly defined, every single file
+included in the compilation program must reside inside that directory.
+If a file inside <code>rootDir</code> imports a file located outside of
+it (such as a shared utility in a monorepo or a root-level config file),
+compilation immediately fails:</p>
+<pre class="text"><code>File &#39;.../shared/util.ts&#39; is not under &#39;rootDir&#39; &#39;.../src&#39;. &#39;rootDir&#39; is expected to contain all source files. (TS6059)</code></pre>
+<p>TypeScript requires all input sources to share a common root so it
+can cleanly mirror the folder hierarchy inside <code>outDir</code>.</p>
+<h4 id="3-unexpected-output-nesting">3. Unexpected Output Nesting</h4>
+<p>If <code>rootDir</code> is left unspecified, TypeScript automatically
+calculates the common root directory among all input files. If a file
+outside your primary source folder is accidentally imported, TypeScript
+recalculates the common root one level higher. Consequently, your
+<code>outDir</code> structure will unexpectedly change from
+<code>dist/index.js</code> to <code>dist/src/index.js</code> to preserve
+the wider directory tree.</p>
+<h4 id="4-recursive-build-loops">4. Recursive Build Loops</h4>
+<p>If <code>outDir</code> is placed inside <code>rootDir</code> (for
+example, <code>rootDir: "./"</code> and <code>outDir: "./dist"</code>)
+without properly excluding the build folder, subsequent builds may
+attempt to process the emitted JavaScript or declaration files inside
+<code>dist</code>. This causes circular compilation issues, duplicated
+declaration files, or build slowdowns.</p>
+<h3 id="how-to-resolve-and-prevent-conflicts">How to Resolve and Prevent
+Conflicts</h3>
+<ol type="1">
+<li><p><strong>Keep Source and Output Separate</strong>: Establish
+distinct folders for inputs and outputs. Set
+<code>"rootDir": "./src"</code> and
+<code>"outDir": "./dist"</code>.</p></li>
+<li><p><strong>Exclude the Output Folder</strong>: Add your output path
+to the <code>exclude</code> array in <code>tsconfig.json</code> to
+prevent the compiler from reading emitted files:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;exclude&quot;</span><span class="er">:</span> <span class="ot">[</span><span class="st">&quot;node_modules&quot;</span><span class="ot">,</span> <span class="st">&quot;dist&quot;</span><span class="ot">]</span></span></code></pre></div></li>
+<li><p><strong>Use Project References for External Files</strong>: If
+you need to import files that live outside <code>rootDir</code>, do not
+expand <code>rootDir</code> to the repository root. Instead, split the
+project using TypeScript Project References with composite
+configurations to compile each directory independently.</p></li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Helpers Injected for Legacy JavaScript - typescript</title>
+    <meta name="description" content="When compiling modern ECMAScript features to older JavaScript standards like ES5 or ES3, the TypeScript compiler automatically injects runtime helper functions into the generated output to emulate native functionality. This downleveling process allows mod">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-helpers-injected-for-legacy-java-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Helpers Injected for Legacy JavaScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-helpers-injected-for-legacy-java-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When compiling modern ECMAScript features to older JavaScript standards like ES5 or ES3, the TypeScript compiler automatically injects runtime helper functions into the generated output to emulate native functionality. This downleveling process allows mod" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-helpers-injected-for-legacy-javascript">TypeScript
+Helpers Injected for Legacy JavaScript</h1>
+<p>When compiling modern ECMAScript features to older JavaScript
+standards like ES5 or ES3, the TypeScript compiler automatically injects
+runtime helper functions into the generated output to emulate native
+functionality. This downleveling process allows modern syntax—such as
+classes, async/await, and object spread—to run seamlessly on legacy
+engines. This article outlines the most common runtime helpers
+TypeScript injects, the modern features that trigger them, and how their
+footprint can be managed using the <code>tslib</code> library.</p>
+<h3 id="class-inheritance-__extends">Class Inheritance:
+<code>__extends</code></h3>
+<p>When compiling ES6 <code>class</code> syntax that uses the
+<code>extends</code> keyword down to ES5, TypeScript injects the
+<code>__extends</code> helper. This helper sets up the prototype chain
+and copies static properties from the base constructor to the derived
+constructor, faithfully reproducing ES6 inheritance behavior using
+legacy prototype manipulation.</p>
+<h3 id="asyncawait-__awaiter-and-__generator">Async/Await:
+<code>__awaiter</code> and <code>__generator</code></h3>
+<p>Targeting ES5 while writing <code>async</code> and <code>await</code>
+triggers two primary helpers:</p>
+<ul>
+<li><strong><code>__awaiter</code></strong>: Wraps an execution context
+in a Promise, resolving or rejecting based on the step-by-step progress
+of an asynchronous operation.</li>
+<li><strong><code>__generator</code></strong>: Converts an
+<code>async</code> function body into a state-machine function capable
+of pausing and resuming execution, emulating generator and coroutine
+behavior without native ES6 generator support.</li>
+</ul>
+<h3 id="object-spread-and-rest-__assign-and-__rest">Object Spread and
+Rest: <code>__assign</code> and <code>__rest</code></h3>
+<ul>
+<li><strong><code>__assign</code></strong>: Emulates
+<code>Object.assign</code> when compiling object spread syntax (e.g.,
+<code>{ ...a, ...b }</code>). It shallow-copies own enumerable
+properties from source objects to a target object.</li>
+<li><strong><code>__rest</code></strong>: Handles object destructuring
+with rest properties (e.g., <code>const { x, ...rest } = obj;</code>).
+It copies remaining own enumerable properties from the source object to
+a new object while excluding the explicitly destructured keys.</li>
+</ul>
+<h3 id="array-spread-and-iteration-__spreadarray-and-__values">Array
+Spread and Iteration: <code>__spreadArray</code> and
+<code>__values</code></h3>
+<ul>
+<li><strong><code>__spreadArray</code></strong> (formerly
+<code>__spread</code>): Transforms array spread elements (e.g.,
+<code>[...arr, 1, 2]</code>) and spread function arguments into standard
+ES5 <code>Array.prototype.concat</code> calls while maintaining correct
+handling of sparse arrays and iterable protocol semantics.</li>
+<li><strong><code>__values</code></strong>: Enables the use of
+<code>for...of</code> loops over collections by emulating iteration
+protocols, safely retrieving an iterator object or falling back to array
+indexing.</li>
+</ul>
+<h3 id="decorators-__decorate-__param-and-__metadata">Decorators:
+<code>__decorate</code>, <code>__param</code>, and
+<code>__metadata</code></h3>
+<p>When using TypeScript's experimental decorators, several helpers
+manage metadata reflection and application:</p>
+<ul>
+<li><strong><code>__decorate</code></strong>: Evaluates and applies
+class, method, accessor, and property decorators in the required
+order.</li>
+<li><strong><code>__param</code></strong>: Attaches parameter decorators
+to target methods.</li>
+<li><strong><code>__metadata</code></strong>: Emits design-time type
+metadata via the <code>Reflect.metadata</code> API when
+<code>emitDecoratorMetadata</code> is enabled.</li>
+</ul>
+<h3 id="module-re-exports-__exportstar">Module Re-exports:
+<code>__exportStar</code></h3>
+<p>When modern re-export syntax is used (e.g.,
+<code>export * from "./module"</code>), TypeScript generates
+<code>__exportStar</code> in CommonJS or AMD formats. This helper
+iterates over the exported members of the target module and re-binds
+them to the current module's <code>exports</code> object, omitting
+default exports.</p>
+<h3 id="template-literals-__maketemplateobject">Template Literals:
+<code>__makeTemplateObject</code></h3>
+<p>Tagged template literals compiled to ES5 use
+<code>__makeTemplateObject</code> to construct the array of strings
+passed to the tagging function. It ensures the freeze state and the
+<code>raw</code> property of the template array adhere to the ECMAScript
+specification.</p>
+<h3 id="managing-helper-duplication-with-tslib">Managing Helper
+Duplication with <code>tslib</code></h3>
+<p>By default, TypeScript injects these helper definitions inline at the
+top of every file where they are needed. In multi-file projects, this
+causes significant code duplication and increases bundle size. Enabling
+the <code>importHelpers</code> compiler option in
+<code>tsconfig.json</code> instructs the compiler to import these
+functions from the external <code>tslib</code> package instead, ensuring
+each helper is included only once in the final bundle.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

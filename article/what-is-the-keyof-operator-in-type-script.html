@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the keyof Operator in TypeScript? - typescript</title>
+    <meta name="description" content="The keyof operator in TypeScript is a powerful feature designed to extract the keys of an object type and represent them as a union of string or numeric literal types. This article provides a focused guide on the purpose of the keyof operator, how it impr">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-the-keyof-operator-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the keyof Operator in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-the-keyof-operator-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The keyof operator in TypeScript is a powerful feature designed to extract the keys of an object type and represent them as a union of string or numeric literal types. This article provides a focused guide on the purpose of the keyof operator, how it impr" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-keyof-operator-in-typescript">What Is the keyof
+Operator in TypeScript?</h1>
+<p>The <code>keyof</code> operator in TypeScript is a powerful feature
+designed to extract the keys of an object type and represent them as a
+union of string or numeric literal types. This article provides a
+focused guide on the purpose of the <code>keyof</code> operator, how it
+improves compile-time type safety, and how to effectively implement it
+alongside generics and mapped types to prevent runtime errors when
+accessing object properties.</p>
+<h2 id="understanding-the-keyof-operator">Understanding the keyof
+Operator</h2>
+<p>At its core, <code>keyof</code> is an indexed type query operator.
+When applied to an object type, it produces a union type representing
+all the known, public property names of that type.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> User {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  email<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserKeys <span class="op">=</span> <span class="kw">keyof</span> User<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Equivalent to: &quot;id&quot; | &quot;name&quot; | &quot;email&quot;</span></span></code></pre></div>
+<p>If you assign a value to a variable typed as <code>UserKeys</code>,
+TypeScript will only permit <code>"id"</code>, <code>"name"</code>, or
+<code>"email"</code>. Supplying any other string results in a
+compile-time error.</p>
+<h2 id="the-primary-purpose-of-keyof">The Primary Purpose of keyof</h2>
+<p>The primary purpose of <code>keyof</code> is to establish strict
+relationships between objects and their property names. In vanilla
+JavaScript, accessing object properties dynamically (e.g.,
+<code>user[key]</code>) often leads to typos or referencing non-existent
+properties, causing <code>undefined</code> values or runtime crashes.
+The <code>keyof</code> operator solves this problem at compile time.</p>
+<h3 id="1-enforcing-type-safe-property-access">1. Enforcing Type-Safe
+Property Access</h3>
+<p>The most common use case for <code>keyof</code> is constraining
+function parameters that accept property names. By pairing
+<code>keyof</code> with TypeScript generics, you can guarantee that a
+specified key actually exists on the target object.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getProperty</span><span class="op">&lt;</span>T<span class="op">,</span> K <span class="kw">extends</span> <span class="kw">keyof</span> T<span class="op">&gt;</span>(obj<span class="op">:</span> T<span class="op">,</span> key<span class="op">:</span> K)<span class="op">:</span> T[K] {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> obj[key]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user<span class="op">:</span> User <span class="op">=</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  email<span class="op">:</span> <span class="st">&quot;alice@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid calls:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getProperty</span>(user<span class="op">,</span> <span class="st">&quot;name&quot;</span>)<span class="op">;</span> <span class="co">// Type of userName is string</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userId <span class="op">=</span> <span class="fu">getProperty</span>(user<span class="op">,</span> <span class="st">&quot;id&quot;</span>)<span class="op">;</span>     <span class="co">// Type of userId is number</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Invalid call (compile error):</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Argument of type &#39;&quot;address&quot;&#39; is not assignable to parameter of type &#39;keyof User&#39;.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userAddress <span class="op">=</span> <span class="fu">getProperty</span>(user<span class="op">,</span> <span class="st">&quot;address&quot;</span>)<span class="op">;</span> </span></code></pre></div>
+<p>In this pattern, <code>K extends keyof T</code> ensures that
+<code>K</code> must be one of the keys of <code>T</code>. Additionally,
+the return type <code>T[K]</code> automatically infers the precise type
+of the requested property.</p>
+<h3 id="2-powering-mapped-types">2. Powering Mapped Types</h3>
+<p>The <code>keyof</code> operator is fundamental to building mapped
+types, which allow you to create new types based on existing ones.
+Standard utility types such as <code>Partial&lt;T&gt;</code>,
+<code>Readonly&lt;T&gt;</code>, and <code>Required&lt;T&gt;</code> rely
+on <code>keyof</code> under the hood.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReadonlyObject<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReadonlyUser <span class="op">=</span> ReadonlyObject<span class="op">&lt;</span>User<span class="op">&gt;;</span></span></code></pre></div>
+<p>Here, <code>[K in keyof T]</code> iterates over every key produced by
+<code>keyof T</code> and applies the <code>readonly</code> modifier to
+each property.</p>
+<h2 id="behavior-with-index-signatures">Behavior with Index
+Signatures</h2>
+<p>When an object type includes an index signature, <code>keyof</code>
+reflects that signature's key type:</p>
+<ul>
+<li>If the type has a <code>[key: string]: any</code> signature,
+<code>keyof</code> evaluates to <code>string | number</code> (because
+JavaScript objects automatically coerce numbers to strings when used as
+keys).</li>
+<li>If the type has a <code>[key: number]: any</code> signature,
+<code>keyof</code> evaluates strictly to <code>number</code>.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Dictionary <span class="op">=</span> { [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">boolean</span> }<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DictKeys <span class="op">=</span> <span class="kw">keyof</span> Dictionary<span class="op">;</span> <span class="co">// string | number</span></span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<p>The <code>keyof</code> operator exists to bridge the gap between
+static types and dynamic property handling. By extracting object keys
+into discrete union types, it enables robust generic constraints, safe
+property lookups, and flexible type transformations, ultimately
+eliminating an entire class of runtime errors.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

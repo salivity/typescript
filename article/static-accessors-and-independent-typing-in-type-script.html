@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Accessors and Independent Typing in TypeScript - typescript</title>
+    <meta name="description" content="Static accessors allow developers to define getter and setter methods directly on a class constructor rather than on its instances. This article explains what static accessors are in TypeScript, demonstrates their implementation, and addresses whether get">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/static-accessors-and-independent-typing-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Static Accessors and Independent Typing in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/static-accessors-and-independent-typing-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Static accessors allow developers to define getter and setter methods directly on a class constructor rather than on its instances. This article explains what static accessors are in TypeScript, demonstrates their implementation, and addresses whether get" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="static-accessors-and-independent-typing-in-typescript">Static
+Accessors and Independent Typing in TypeScript</h1>
+<p>Static accessors allow developers to define getter and setter methods
+directly on a class constructor rather than on its instances. This
+article explains what static accessors are in TypeScript, demonstrates
+their implementation, and addresses whether getters and setters can have
+independent types, including the specific type-compatibility rules
+enforced by the TypeScript compiler.</p>
+<h2 id="what-are-static-accessors">What Are Static Accessors?</h2>
+<p>In TypeScript and JavaScript, static accessors are <code>get</code>
+and <code>set</code> methods prefixed with the <code>static</code>
+keyword inside a class definition. Unlike instance accessors, which are
+invoked on an instantiated object, static accessors exist on the class
+constructor itself. They allow you to encapsulate logic around reading
+or writing class-level state without needing to instantiate the
+class.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Configuration {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">static</span> _timeout<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">5000</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">get</span> <span class="fu">timeout</span>()<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Configuration<span class="op">.</span><span class="at">_timeout</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">set</span> <span class="fu">timeout</span>(value<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (value <span class="op">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;Timeout must be a positive number.&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    Configuration<span class="op">.</span><span class="at">_timeout</span> <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Accessed directly from the class constructor</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>Configuration<span class="op">.</span><span class="at">timeout</span> <span class="op">=</span> <span class="dv">10000</span><span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(Configuration<span class="op">.</span><span class="at">timeout</span>)<span class="op">;</span> <span class="co">// 10000</span></span></code></pre></div>
+<h2 id="can-static-accessors-be-typed-independently">Can Static
+Accessors Be Typed Independently?</h2>
+<p>Yes, static accessors can be typed independently starting from
+TypeScript 4.3. Prior to TypeScript 4.3, both the getter and setter were
+required to share the exact same type. Modern versions of TypeScript
+allow write types (setters) to differ from read types (getters).</p>
+<p>This is particularly useful when a setter can accept multiple formats
+or input types (such as a string or number) that are normalized
+internally into a single canonical type returned by the getter.</p>
+<h3 id="example-independent-types-on-static-accessors">Example:
+Independent Types on Static Accessors</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CacheManager {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">static</span> _limit<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Getter returns a strict number</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">get</span> <span class="fu">limit</span>()<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> CacheManager<span class="op">.</span><span class="at">_limit</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Setter accepts either a string or a number</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">set</span> <span class="fu">limit</span>(value<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span>) {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;string&quot;</span>) {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      CacheManager<span class="op">.</span><span class="at">_limit</span> <span class="op">=</span> <span class="pp">parseInt</span>(value<span class="op">,</span> <span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      CacheManager<span class="op">.</span><span class="at">_limit</span> <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid usages:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>CacheManager<span class="op">.</span><span class="at">limit</span> <span class="op">=</span> <span class="st">&quot;250&quot;</span><span class="op">;</span> <span class="co">// Accepted via setter</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>CacheManager<span class="op">.</span><span class="at">limit</span> <span class="op">=</span> <span class="dv">500</span><span class="op">;</span>   <span class="co">// Accepted via setter</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> currentLimit<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> CacheManager<span class="op">.</span><span class="at">limit</span><span class="op">;</span> <span class="co">// Typed as number</span></span></code></pre></div>
+<h2 id="the-typing-constraint">The Typing Constraint</h2>
+<p>While TypeScript allows independent types for accessors, there is a
+fundamental restriction: <strong>the getter's return type must be
+assignable to the setter's parameter type</strong>.</p>
+<p>This constraint ensures operations like self-assignment remain
+type-safe:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This must always be valid:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>CacheManager<span class="op">.</span><span class="at">limit</span> <span class="op">=</span> CacheManager<span class="op">.</span><span class="at">limit</span><span class="op">;</span></span></code></pre></div>
+<p>Because the getter returns <code>number</code>, and the setter
+accepts <code>string | number</code>, <code>number</code> is assignable
+to <code>string | number</code>.</p>
+<p>If you attempt the inverse—where the getter returns a type broader
+than what the setter accepts—TypeScript will throw a compilation
+error:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> InvalidExample {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">static</span> _val<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Error: The return type of a &#39;get&#39; accessor must be assignable to its &#39;set&#39; accessor type.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">get</span> <span class="fu">value</span>()<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> InvalidExample<span class="op">.</span><span class="at">_val</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">set</span> <span class="fu">value</span>(v<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    InvalidExample<span class="op">.</span><span class="at">_val</span> <span class="op">=</span> v<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Static accessors in TypeScript provide powerful encapsulation for
+class-level properties, and TypeScript 4.3+ gives you the flexibility to
+type getters and setters independently, provided the getter type
+satisfies the setter's accepted input.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

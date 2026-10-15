@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulate Numeric Range Types in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript does not provide a native operator for numeric ranges, but you can simulate them by combining recursive conditional types, template literal types, and type inference. This guide demonstrates how to generate bounded numeric unions—such as intege">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/simulate-numeric-range-types-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Simulate Numeric Range Types in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/simulate-numeric-range-types-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript does not provide a native operator for numeric ranges, but you can simulate them by combining recursive conditional types, template literal types, and type inference. This guide demonstrates how to generate bounded numeric unions—such as intege" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="simulate-numeric-range-types-in-typescript">Simulate Numeric
+Range Types in TypeScript</h1>
+<p>TypeScript does not provide a native operator for numeric ranges, but
+you can simulate them by combining recursive conditional types, template
+literal types, and type inference. This guide demonstrates how to
+generate bounded numeric unions—such as integers from 1 to 100—by
+leveraging template literals to construct multi-digit ranges efficiently
+and parse string patterns back into type-safe numbers.</p>
+<h3 id="the-limitation-of-recursive-tuple-ranges">The Limitation of
+Recursive Tuple Ranges</h3>
+<p>The standard approach to numeric ranges uses recursive tuples to
+count up to a maximum limit:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Enumerate<span class="op">&lt;</span>N <span class="kw">extends</span> <span class="dt">number</span><span class="op">,</span> Acc <span class="kw">extends</span> <span class="dt">number</span>[] <span class="op">=</span> []<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Acc[<span class="st">&#39;length&#39;</span>] <span class="kw">extends</span> N</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> Acc[<span class="dt">number</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> Enumerate<span class="op">&lt;</span>N<span class="op">,</span> [<span class="op">...</span>Acc<span class="op">,</span> Acc[<span class="st">&#39;length&#39;</span>]]<span class="op">&gt;;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IntRange<span class="op">&lt;</span>From <span class="kw">extends</span> <span class="dt">number</span><span class="op">,</span> To <span class="kw">extends</span> <span class="dt">number</span><span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">Exclude</span><span class="op">&lt;</span>Enumerate<span class="op">&lt;</span>To<span class="op">&gt;,</span> Enumerate<span class="op">&lt;</span>From<span class="op">&gt;&gt;;</span></span></code></pre></div>
+<p>While functional for small ranges, this pattern hits TypeScript’s
+recursive depth limit (around 1,000 iterations), triggering the
+<code>Type instantiation is excessively deep and possibly infinite</code>
+error.</p>
+<h3 id="using-template-literals-to-avoid-recursion-limits">Using
+Template Literals to Avoid Recursion Limits</h3>
+<p>Template literal types allow you to simulate large ranges by
+generating Cartesian products of numeric string digits and converting
+them back to numbers using the <code>extends</code>${infer N extends
+number}`` pattern.</p>
+<h4 id="step-1-define-base-digits">Step 1: Define Base Digits</h4>
+<p>Define base digit unions for building decimal numbers:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Digit <span class="op">=</span> <span class="dv">0</span> <span class="op">|</span> <span class="dv">1</span> <span class="op">|</span> <span class="dv">2</span> <span class="op">|</span> <span class="dv">3</span> <span class="op">|</span> <span class="dv">4</span> <span class="op">|</span> <span class="dv">5</span> <span class="op">|</span> <span class="dv">6</span> <span class="op">|</span> <span class="dv">7</span> <span class="op">|</span> <span class="dv">8</span> <span class="op">|</span> <span class="dv">9</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NonZeroDigit <span class="op">=</span> <span class="dv">1</span> <span class="op">|</span> <span class="dv">2</span> <span class="op">|</span> <span class="dv">3</span> <span class="op">|</span> <span class="dv">4</span> <span class="op">|</span> <span class="dv">5</span> <span class="op">|</span> <span class="dv">6</span> <span class="op">|</span> <span class="dv">7</span> <span class="op">|</span> <span class="dv">8</span> <span class="op">|</span> <span class="dv">9</span><span class="op">;</span></span></code></pre></div>
+<h4 id="step-2-combine-digits-with-template-literals">Step 2: Combine
+Digits with Template Literals</h4>
+<p>Combine these unions within a template literal to construct ranges.
+For example, to create numbers from <code>0</code> to
+<code>99</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TwoDigitNumberString <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span>Digit<span class="sc">}</span><span class="vs">`</span> <span class="op">|</span> <span class="vs">`</span><span class="sc">${</span>NonZeroDigit<span class="sc">}${</span>Digit<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<h4 id="step-3-parse-strings-to-numbers">Step 3: Parse Strings to
+Numbers</h4>
+<p>Convert the resulting string union back into numeric literal
+types:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ParseInt<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> N <span class="kw">extends</span> number<span class="sc">}</span><span class="vs">`</span> <span class="op">?</span> N <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ZeroToNinetyNine <span class="op">=</span> ParseInt<span class="op">&lt;</span>TwoDigitNumberString<span class="op">&gt;;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: 0 | 1 | 2 | ... | 99</span></span></code></pre></div>
+<p>This operation executes without recursive type overhead, instantly
+generating a union of 100 numeric literals.</p>
+<h3 id="simulating-a-1-to-100-range">Simulating a 1 to 100 Range</h3>
+<p>To model a common range such as <code>1</code> to <code>100</code>,
+combine multi-digit template patterns:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Digit <span class="op">=</span> <span class="dv">0</span> <span class="op">|</span> <span class="dv">1</span> <span class="op">|</span> <span class="dv">2</span> <span class="op">|</span> <span class="dv">3</span> <span class="op">|</span> <span class="dv">4</span> <span class="op">|</span> <span class="dv">5</span> <span class="op">|</span> <span class="dv">6</span> <span class="op">|</span> <span class="dv">7</span> <span class="op">|</span> <span class="dv">8</span> <span class="op">|</span> <span class="dv">9</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NonZeroDigit <span class="op">=</span> <span class="dv">1</span> <span class="op">|</span> <span class="dv">2</span> <span class="op">|</span> <span class="dv">3</span> <span class="op">|</span> <span class="dv">4</span> <span class="op">|</span> <span class="dv">5</span> <span class="op">|</span> <span class="dv">6</span> <span class="op">|</span> <span class="dv">7</span> <span class="op">|</span> <span class="dv">8</span> <span class="op">|</span> <span class="dv">9</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Range1To100String <span class="op">=</span> </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="vs">`</span><span class="sc">${</span>NonZeroDigit<span class="sc">}</span><span class="vs">`</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="vs">`</span><span class="sc">${</span>NonZeroDigit<span class="sc">}${</span>Digit<span class="sc">}</span><span class="vs">`</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="st">&#39;100&#39;</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Range1To100 <span class="op">=</span> Range1To100String <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> N <span class="kw">extends</span> number<span class="sc">}</span><span class="vs">`</span> <span class="op">?</span> N <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid usage:</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> validOpacity<span class="op">:</span> Range1To100 <span class="op">=</span> <span class="dv">85</span><span class="op">;</span> </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile-time error:</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Type &#39;101&#39; is not assignable to type &#39;Range1To100&#39;.</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> invalidOpacity<span class="op">:</span> Range1To100 <span class="op">=</span> <span class="dv">101</span><span class="op">;</span> </span></code></pre></div>
+<h3 id="pattern-matching-for-floating-point-ranges">Pattern Matching for
+Floating Point Ranges</h3>
+<p>Template literals can also enforce floating-point numeric constraints
+that recursive counters cannot represent:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AlphaValue <span class="op">=</span> <span class="vs">`0.</span><span class="sc">${</span>Digit<span class="sc">}</span><span class="vs">`</span> <span class="op">|</span> <span class="vs">`0.</span><span class="sc">${</span>Digit<span class="sc">}${</span>Digit<span class="sc">}</span><span class="vs">`</span> <span class="op">|</span> <span class="st">&#39;1.0&#39;</span> <span class="op">|</span> <span class="st">&#39;0&#39;</span> <span class="op">|</span> <span class="st">&#39;1&#39;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setTransparency</span>(alpha<span class="op">:</span> AlphaValue <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> N <span class="kw">extends</span> number<span class="sc">}</span><span class="vs">`</span> <span class="op">?</span> N <span class="op">:</span> <span class="dt">never</span>) {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Accepts numbers like 0, 0.5, 0.99, 1</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">setTransparency</span>(<span class="fl">0.75</span>)<span class="op">;</span> <span class="co">// OK</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">setTransparency</span>(<span class="fl">1.5</span>)<span class="op">;</span>  <span class="co">// Error: Argument of type &#39;1.5&#39; is not assignable</span></span></code></pre></div>
+<p>By using template literals to assemble string-based permutations and
+parsing them back to numbers via <code>infer</code>, you achieve
+performant, recursion-safe numeric range types.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

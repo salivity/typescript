@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the noUnusedLocals Flag in TypeScript? - typescript</title>
+    <meta name="description" content="The noUnusedLocals compiler flag in TypeScript helps developers maintain clean, efficient, and bug-free codebases by detecting and reporting unused local variables. This article explains the core purpose of the noUnusedLocals setting, highlights the pract">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-the-no-unused-locals-flag-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the noUnusedLocals Flag in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-the-no-unused-locals-flag-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The noUnusedLocals compiler flag in TypeScript helps developers maintain clean, efficient, and bug-free codebases by detecting and reporting unused local variables. This article explains the core purpose of the noUnusedLocals setting, highlights the pract" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-nounusedlocals-flag-in-typescript">What Is the
+noUnusedLocals Flag in TypeScript?</h1>
+<p>The <code>noUnusedLocals</code> compiler flag in TypeScript helps
+developers maintain clean, efficient, and bug-free codebases by
+detecting and reporting unused local variables. This article explains
+the core purpose of the <code>noUnusedLocals</code> setting, highlights
+the practical benefits of enabling it in your projects, demonstrates how
+to configure it in <code>tsconfig.json</code>, and outlines how to
+handle intentionally unused variables.</p>
+<h2 id="what-does-nounusedlocals-do">What Does
+<code>noUnusedLocals</code> Do?</h2>
+<p>When <code>noUnusedLocals</code> is enabled, the TypeScript compiler
+checks the scope of functions, blocks, and modules for local variables,
+constants, functions, classes, or imports that are declared but never
+read. If any such declarations are found, the compiler emits an error
+(e.g.,
+<code>TS6133: '[variable]' is declared but its value is never read</code>).</p>
+<p>By default, this setting is set to <code>false</code>, allowing
+unused declarations to exist without triggering compiler errors.</p>
+<h2 id="why-use-nounusedlocals">Why Use
+<code>noUnusedLocals</code>?</h2>
+<p>Enabling <code>noUnusedLocals</code> provides several direct
+advantages to software development workflows:</p>
+<ul>
+<li><strong>Preventing Logic Bugs:</strong> Often, an unused local
+variable is a symptom of an incomplete implementation or a typo. For
+example, a developer might compute a transformed value into a new
+variable but accidentally reference the original variable in subsequent
+logic.</li>
+<li><strong>Eliminating Dead Code:</strong> Codebases accumulate "cruft"
+during refactoring. Unused declarations clutter the code, making it
+harder for developers to read, understand, and maintain the actual
+logic.</li>
+<li><strong>Optimizing Bundle Size:</strong> Although modern bundlers
+often perform tree-shaking, unreferenced local declarations or unused
+imports can sometimes prevent optimal dead-code elimination, leading to
+unnecessary weight in the final JavaScript bundle.</li>
+</ul>
+<h2 id="how-to-enable-nounusedlocals">How to Enable
+<code>noUnusedLocals</code></h2>
+<p>To activate this feature, add or update the
+<code>noUnusedLocals</code> property inside the
+<code>compilerOptions</code> section of your <code>tsconfig.json</code>
+file:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;noUnusedLocals&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Once configured, any build or type-check executed through the
+TypeScript CLI (<code>tsc</code>) will flag unused local
+declarations.</p>
+<h2 id="code-example">Code Example</h2>
+<p>Consider the following function:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> taxRate<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> discount <span class="op">=</span> <span class="dv">5</span><span class="op">;</span> <span class="co">// TS6133: &#39;discount&#39; is declared but its value is never read.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> tax <span class="op">=</span> price <span class="op">*</span> taxRate<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> price <span class="op">+</span> tax<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>With <code>noUnusedLocals: true</code>, the TypeScript compiler flags
+<code>discount</code> because it is declared within the local function
+scope but never referenced.</p>
+<h2 id="handling-intentionally-unused-variables">Handling Intentionally
+Unused Variables</h2>
+<p>In situations where a variable must be extracted but will not be
+used—such as destructuring an object—TypeScript permits prefixing the
+variable name with an underscore (<code>_</code>) to suppress the
+error:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> { id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> role<span class="op">:</span> <span class="st">&quot;admin&quot;</span> }<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Destructure to remove &#39;role&#39;, keeping only the rest</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> { role<span class="op">:</span> _role<span class="op">,</span> <span class="op">...</span>publicUserData } <span class="op">=</span> user<span class="op">;</span></span></code></pre></div>
+<p>By prefixing the variable with <code>_</code>, you signal to both the
+TypeScript compiler and other developers that the value is intentionally
+ignored.</p>
+<h2
+id="nounusedlocals-vs-nounusedparameters"><code>noUnusedLocals</code>
+vs. <code>noUnusedParameters</code></h2>
+<p>It is worth noting the distinction between
+<code>noUnusedLocals</code> and <code>noUnusedParameters</code>. While
+<code>noUnusedLocals</code> targets variables, imports, and definitions
+declared within a block or module, <code>noUnusedParameters</code>
+applies specifically to arguments passed into functions or methods.
+Enabling both options provides comprehensive protection against dead
+declarations across your codebase.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Structural Subtyping and Fewer Properties - typescript</title>
+    <meta name="description" content="TypeScript uses a structural type system to determine type compatibility based entirely on an object&#39;s shape rather than its explicit declaration. This article explains how TypeScript evaluates whether an object satisfies an interface with fewer propertie">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-structural-subtyping-and-fewer-properties">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Structural Subtyping and Fewer Properties - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-structural-subtyping-and-fewer-properties" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript uses a structural type system to determine type compatibility based entirely on an object&#39;s shape rather than its explicit declaration. This article explains how TypeScript evaluates whether an object satisfies an interface with fewer propertie" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-structural-subtyping-and-fewer-properties">TypeScript
+Structural Subtyping and Fewer Properties</h1>
+<p>TypeScript uses a structural type system to determine type
+compatibility based entirely on an object's shape rather than its
+explicit declaration. This article explains how TypeScript evaluates
+whether an object satisfies an interface with fewer properties,
+detailing the mechanics of width subtyping, how member-by-member
+verification works, and the distinct role of excess property checks
+during object literal assignment.</p>
+<h3 id="the-core-principle-width-subtyping">The Core Principle: Width
+Subtyping</h3>
+<p>In TypeScript, interfaces define a minimum contract rather than an
+exhaustive boundary. When an interface has fewer properties than an
+object being compared against it, the compiler applies a rule known in
+type theory as <em>width subtyping</em>.</p>
+<p>Under width subtyping, a type <code>B</code> is considered a subtype
+of type <code>A</code> if <code>B</code> contains all the properties
+defined in <code>A</code>, along with matching or narrower types for
+those properties. Any additional properties present in <code>B</code>
+are simply ignored during the compatibility evaluation. The system asks:
+<em>"Does this object have at least the required properties with
+compatible types?"</em> If the answer is yes, the type check passes.</p>
+<h3 id="step-by-step-evaluation-process">Step-by-Step Evaluation
+Process</h3>
+<p>When the TypeScript compiler verifies whether an object variable
+satisfies a target interface, it executes the following steps:</p>
+<ol type="1">
+<li><strong>Target Interface Inspection:</strong> The compiler reads the
+target interface and builds a list of its required and optional property
+keys along with their associated types.</li>
+<li><strong>Member-by-Member Verification:</strong> For each property
+defined in the target interface, the compiler checks the source object
+to confirm that the key exists.</li>
+<li><strong>Type Compatibility Check:</strong> For each matching key,
+the compiler verifies that the value's type on the source object can be
+assigned to the type defined in the target interface (handling
+covariance).</li>
+<li><strong>Acceptance:</strong> If all keys required by the interface
+exist on the source object and their types are compatible, the check
+succeeds. The compiler does not fail the operation simply because the
+source object has extra, unspecified properties.</li>
+</ol>
+<p>Consider this example using existing references:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Point2D {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  x<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  y<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> point3D <span class="op">=</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  x<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  y<span class="op">:</span> <span class="dv">20</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  z<span class="op">:</span> <span class="dv">30</span><span class="op">,</span> <span class="co">// Extra property</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: point3D possesses both &#39;x&#39; and &#39;y&#39; as numbers</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> target<span class="op">:</span> Point2D <span class="op">=</span> point3D<span class="op">;</span> </span></code></pre></div>
+<p>Because <code>point3D</code> contains <code>x</code> and
+<code>y</code>, it fulfills the contract of <code>Point2D</code>. The
+presence of <code>z</code> does not prevent <code>target</code> from
+safely executing any operation defined for a <code>Point2D</code>.</p>
+<h3 id="the-exception-excess-property-checking">The Exception: Excess
+Property Checking</h3>
+<p>While structural subtyping allows objects to have extra properties,
+TypeScript introduces a deliberate safety mechanism known as
+<strong>Excess Property Checking</strong> for fresh object literals.</p>
+<p>If you pass an object literal directly to a variable declaration or a
+function parameter with a defined type, TypeScript assumes that any
+property not explicitly declared in the interface is likely a typo or an
+error:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Object literal may only specify known properties, and &#39;z&#39; does not exist in type &#39;Point2D&#39;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> directPoint<span class="op">:</span> Point2D <span class="op">=</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  x<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  y<span class="op">:</span> <span class="dv">20</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  z<span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>This check does not mean structural subtyping has stopped working.
+Instead, it is a design-time heuristic applied specifically to "fresh"
+object literals. Because the literal is created on the spot and not
+referenced elsewhere, defining properties that the target type cannot
+access represents dead code or a misspelling.</p>
+<h3 id="summary-of-rules">Summary of Rules</h3>
+<ul>
+<li><strong>Intermediary References:</strong> When an object is assigned
+to an intermediate variable first, TypeScript applies pure structural
+subtyping. If the object has all required properties, it satisfies an
+interface with fewer properties.</li>
+<li><strong>Direct Literals:</strong> When assigning an object literal
+directly, TypeScript triggers excess property checks to guard against
+developer error, rejecting unexpected keys even if the required keys are
+present.</li>
+<li><strong>Open Shapes:</strong> Interfaces in TypeScript remain
+open-ended by design, allowing specialized data structures with many
+fields to be passed seamlessly to functions expecting simpler,
+general-purpose shapes.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

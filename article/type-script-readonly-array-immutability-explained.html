@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Readonly Array Immutability Explained - typescript</title>
+    <meta name="description" content="This article explores how TypeScript enforces array immutability through the readonly modifier. You will learn the mechanics behind compile-time validation, including the removal of mutating methods, restrictions on element reassignment, and type assignab">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-readonly-array-immutability-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Readonly Array Immutability Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-readonly-array-immutability-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript enforces array immutability through the readonly modifier. You will learn the mechanics behind compile-time validation, including the removal of mutating methods, restrictions on element reassignment, and type assignab" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-readonly-array-immutability-explained">TypeScript
+Readonly Array Immutability Explained</h1>
+<p>This article explores how TypeScript enforces array immutability
+through the <code>readonly</code> modifier. You will learn the mechanics
+behind compile-time validation, including the removal of mutating
+methods, restrictions on element reassignment, and type assignability
+rules. The guide also highlights critical limitations, such as the
+distinction between shallow compile-time checks and true runtime
+immutability.</p>
+<h2 id="the-readonly-array-type-system">The Readonly Array Type
+System</h2>
+<p>TypeScript provides array immutability by altering the interface used
+to represent the array. In TypeScript, standard arrays implement the
+<code>Array&lt;T&gt;</code> interface, which includes mutating methods
+such as <code>push()</code>, <code>pop()</code>, <code>splice()</code>,
+and index reassignments.</p>
+<p>When you apply the <code>readonly</code> modifier to an array,
+TypeScript instead maps the type to the
+<code>ReadonlyArray&lt;T&gt;</code> interface. You can declare these
+types using several syntaxes:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Prefix modifier</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers<span class="op">:</span> <span class="kw">readonly</span> <span class="dt">number</span>[] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Generic type</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> strings<span class="op">:</span> ReadonlyArray<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> [<span class="st">&quot;a&quot;</span><span class="op">,</span> <span class="st">&quot;b&quot;</span><span class="op">,</span> <span class="st">&quot;c&quot;</span>]<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Type assertion (const assertion)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> values <span class="op">=</span> [<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>] <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span></code></pre></div>
+<p>Regardless of the syntax used, TypeScript changes the underlying type
+definition to strip out any operations that alter the array in
+place.</p>
+<h2 id="how-typescript-validates-immutability">How TypeScript Validates
+Immutability</h2>
+<p>TypeScript enforces immutability at compile time through two primary
+mechanisms: stripping mutating methods and restricting index
+signatures.</p>
+<h3 id="1-removal-of-mutating-methods">1. Removal of Mutating
+Methods</h3>
+<p>The <code>ReadonlyArray&lt;T&gt;</code> interface simply omits
+methods that modify the array in place. Methods that safely read or
+return new arrays—such as <code>map()</code>, <code>filter()</code>,
+<code>slice()</code>, and <code>concat()</code>—remain available.</p>
+<p>If you attempt to invoke a mutating method, the TypeScript compiler
+flags it immediately:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> list<span class="op">:</span> <span class="kw">readonly</span> <span class="dt">number</span>[] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Property &#39;push&#39; does not exist on type &#39;readonly number[]&#39;.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>list<span class="op">.</span><span class="fu">push</span>(<span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Property &#39;splice&#39; does not exist on type &#39;readonly number[]&#39;.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>list<span class="op">.</span><span class="fu">splice</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-read-only-index-signatures">2. Read-Only Index Signatures</h3>
+<p>A standard array allows reassignment of individual elements via
+bracket notation. TypeScript allows this through an index signature that
+accepts assignments: <code>[n: number]: T</code>.</p>
+<p>With a readonly array, TypeScript marks the index signature as
+<code>readonly</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> ReadonlyArray<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> [n<span class="op">:</span> <span class="dt">number</span>]<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Attempting to assign a new value to an index causes the compiler to
+reject the operation:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> list<span class="op">:</span> <span class="kw">readonly</span> <span class="dt">number</span>[] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Index signature in type &#39;readonly number[]&#39; only permits reading.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>list[<span class="dv">0</span>] <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span></code></pre></div>
+<h2 id="assignability-rules">Assignability Rules</h2>
+<p>TypeScript uses directional type assignability to prevent accidental
+mutations:</p>
+<ul>
+<li><strong>Mutable to Readonly:</strong> You can assign a standard
+array (<code>T[]</code>) to a <code>readonly T[]</code>. This is safe
+because the consumer promises not to mutate the data.</li>
+<li><strong>Readonly to Mutable:</strong> You cannot assign a
+<code>readonly T[]</code> to a standard <code>T[]</code>. This prevents
+passing a read-only array into a function that might alter it.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">mutateArray</span>(arr<span class="op">:</span> <span class="dt">number</span>[]) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  arr<span class="op">.</span><span class="fu">push</span>(<span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> immutable<span class="op">:</span> <span class="kw">readonly</span> <span class="dt">number</span>[] <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Argument of type &#39;readonly number[]&#39; is not assignable to parameter of type &#39;number[]&#39;.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// The type &#39;readonly number[]&#39; is &#39;readonly&#39; and cannot be assigned to the mutable type &#39;number[]&#39;.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">mutateArray</span>(immutable)<span class="op">;</span></span></code></pre></div>
+<p>To pass a readonly array to a function expecting a mutable array, you
+must explicitly create a copy (e.g., using <code>[...immutable]</code>)
+or cast the type.</p>
+<h2 id="key-limitations">Key Limitations</h2>
+<p>While the <code>readonly</code> modifier provides strong compile-time
+safety, it has two notable limitations:</p>
+<ol type="1">
+<li><p><strong>Shallow Immutability:</strong> The <code>readonly</code>
+modifier only applies to the array itself, not to the elements within
+it. If the array contains objects, those objects can still be
+mutated:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> users<span class="op">:</span> <span class="kw">readonly</span> { name<span class="op">:</span> <span class="dt">string</span> }[] <span class="op">=</span> [{ name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> }]<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>users[<span class="dv">0</span>]<span class="op">.</span><span class="at">name</span> <span class="op">=</span> <span class="st">&quot;Bob&quot;</span><span class="op">;</span> <span class="co">// Valid: the object property is not readonly</span></span></code></pre></div>
+<p>To make objects immutable, you must use nested
+<code>Readonly&lt;T&gt;</code> types or apply <code>as const</code>
+across the entire structure.</p></li>
+<li><p><strong>No Runtime Enforcement:</strong> TypeScript's type checks
+are erased during compilation. In the emitted JavaScript, a readonly
+array is just a standard JavaScript array. If external JavaScript code
+interacts with your compiled code, or if you cast away the type with
+<code>as number[]</code>, the array can still be mutated at runtime
+unless protected by <code>Object.freeze()</code>.</p></li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

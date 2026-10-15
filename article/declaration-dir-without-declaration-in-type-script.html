@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>declarationDir Without declaration in TypeScript - typescript</title>
+    <meta name="description" content="When configuring a TypeScript project, developers often organize build artifacts by outputting type definitions into a dedicated folder using the declarationDir option. However, setting declarationDir in your tsconfig.json without also enabling the declar">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/declaration-dir-without-declaration-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="declarationDir Without declaration in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/declaration-dir-without-declaration-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When configuring a TypeScript project, developers often organize build artifacts by outputting type definitions into a dedicated folder using the declarationDir option. However, setting declarationDir in your tsconfig.json without also enabling the declar" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="declarationdir-without-declaration-in-typescript">declarationDir
+Without declaration in TypeScript</h1>
+<p>When configuring a TypeScript project, developers often organize
+build artifacts by outputting type definitions into a dedicated folder
+using the <code>declarationDir</code> option. However, setting
+<code>declarationDir</code> in your <code>tsconfig.json</code> without
+also enabling the <code>declaration</code> flag causes the TypeScript
+compiler to fail and throw a configuration error. This article explains
+the exact error that occurs, why the compiler enforces this rule, and
+how to resolve the issue properly.</p>
+<h2 id="the-result-compiler-error-ts5063">The Result: Compiler Error
+TS5063</h2>
+<p>If you define <code>declarationDir</code> while
+<code>declaration</code> remains <code>false</code> (its default state)
+or omitted, the TypeScript compiler (<code>tsc</code>) will abort the
+build process and return the following error:</p>
+<pre class="text"><code>error TS5063: Option &#39;declarationDir&#39; cannot be specified without specifying option &#39;declaration&#39; or option &#39;composite&#39;.</code></pre>
+<p>TypeScript requires an active directive to emit declaration files
+(<code>.d.ts</code>) before it allows you to specify where those files
+should be placed. Because <code>declarationDir</code> only affects
+<code>.d.ts</code> files, providing an output directory for files that
+the compiler is not instructed to produce is treated as an invalid
+configuration.</p>
+<h2 id="why-this-happens">Why This Happens</h2>
+<p>The TypeScript compiler options serve distinct, dependent roles:</p>
+<ul>
+<li><strong><code>declaration</code></strong>: When set to
+<code>true</code>, it tells the compiler to generate <code>.d.ts</code>
+files for every TypeScript file in your project.</li>
+<li><strong><code>declarationDir</code></strong>: Specifies the
+directory path where those generated <code>.d.ts</code> files should be
+routed.</li>
+</ul>
+<p>If <code>declaration</code> is not enabled, the compiler has no
+declaration files to write to disk. Rather than silently ignoring the
+<code>declarationDir</code> property, the compiler throws error TS5063
+to prevent unintended build output behavior and misconfigured deployment
+pipelines.</p>
+<h2 id="how-to-fix-the-error">How to Fix the Error</h2>
+<p>Depending on your project requirements, there are three ways to
+resolve this error:</p>
+<h3 id="1-enable-the-declaration-flag">1. Enable the
+<code>declaration</code> Flag</h3>
+<p>If your goal is to emit type definitions to the specified
+directory—which is typical when publishing libraries or
+packages—explicitly enable <code>declaration</code> in your
+<code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declaration&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declarationDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/types&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="2-enable-project-references-with-composite">2. Enable Project
+References with <code>composite</code></h3>
+<p>If you are working within a monorepo setup using TypeScript project
+references, you can enable <code>composite</code>. Enabling
+<code>composite</code> automatically enforces and enables
+<code>declaration</code> under the hood:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;composite&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declarationDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/types&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="3-remove-declarationdir">3. Remove
+<code>declarationDir</code></h3>
+<p>If you are building an application (such as a web app or backend
+service) where <code>.d.ts</code> files are not needed by external
+consumers, remove <code>declarationDir</code> from your configuration
+entirely. JavaScript output will continue to route to your configured
+<code>outDir</code> without generating type definition files.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

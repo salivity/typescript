@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Safety in TypeScript Builder Pattern - typescript</title>
+    <meta name="description" content="The Builder Pattern is a creational design pattern used to construct complex objects step-by-step, but traditional implementations often risk runtime errors if required fields are omitted before instantiation. TypeScript enforces compile-time type safety">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-safety-in-type-script-builder-pattern">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type Safety in TypeScript Builder Pattern - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-safety-in-type-script-builder-pattern" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Builder Pattern is a creational design pattern used to construct complex objects step-by-step, but traditional implementations often risk runtime errors if required fields are omitted before instantiation. TypeScript enforces compile-time type safety" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-safety-in-typescript-builder-pattern">Type Safety in
+TypeScript Builder Pattern</h1>
+<p>The Builder Pattern is a creational design pattern used to construct
+complex objects step-by-step, but traditional implementations often risk
+runtime errors if required fields are omitted before instantiation.
+TypeScript enforces compile-time type safety in the builder pattern by
+leveraging advanced type features such as generic type parameters,
+phantom types, intersection types, and typed <code>this</code> contexts.
+This article explains how TypeScript tracks an object's construction
+state across method chains and restricts the final <code>build()</code>
+call until all required properties are satisfied.</p>
+<h3 id="the-challenge-of-the-traditional-builder">The Challenge of the
+Traditional Builder</h3>
+<p>In standard object-oriented programming, a builder usually stores
+properties in an internal dictionary or partial object. Because the
+builder's methods typically return <code>this</code>, the compiler views
+the builder's state as static throughout the entire chain. Consequently,
+calling the terminal <code>.build()</code> method prematurely—before
+defining mandatory fields—cannot be detected at compile time without
+advanced type constraints, resulting in runtime <code>undefined</code>
+errors.</p>
+<h3 id="generic-state-accumulation">Generic State Accumulation</h3>
+<p>TypeScript solves this limitation by using generic type parameters to
+track accumulated properties at each step of the fluent interface.
+Instead of returning an untyped <code>this</code>, each setter method
+returns a new builder instance parameterized with an intersection of the
+previous state and the newly set property.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> User {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  email<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  age<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserBuilder<span class="op">&lt;</span>T <span class="op">=</span> {}<span class="op">&gt;</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> data<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> <span class="op">=</span> {}<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(initialData<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> <span class="op">=</span> {}) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">data</span> <span class="op">=</span> initialData<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setId</span>(id<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> UserBuilder<span class="op">&lt;</span>T <span class="op">&amp;</span> { id<span class="op">:</span> <span class="dt">string</span> }<span class="op">&gt;</span> {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">UserBuilder</span>({ <span class="op">...</span><span class="kw">this</span><span class="op">.</span><span class="at">data</span><span class="op">,</span> id })<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setEmail</span>(email<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> UserBuilder<span class="op">&lt;</span>T <span class="op">&amp;</span> { email<span class="op">:</span> <span class="dt">string</span> }<span class="op">&gt;</span> {</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">UserBuilder</span>({ <span class="op">...</span><span class="kw">this</span><span class="op">.</span><span class="at">data</span><span class="op">,</span> email })<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setAge</span>(age<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> UserBuilder<span class="op">&lt;</span>T <span class="op">&amp;</span> { age<span class="op">?:</span> <span class="dt">number</span> }<span class="op">&gt;</span> {</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="fu">UserBuilder</span>({ <span class="op">...</span><span class="kw">this</span><span class="op">.</span><span class="at">data</span><span class="op">,</span> age })<span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In this implementation, calling <code>setId</code> transitions the
+builder from <code>UserBuilder&lt;{}&gt;</code> to
+<code>UserBuilder&lt;{ id: string }&gt;</code>. The type system
+accumulates properties strictly through type inference without requiring
+runtime overhead.</p>
+<h3 id="enforcing-the-terminal-build-method">Enforcing the Terminal
+Build Method</h3>
+<p>To prevent premature object instantiation, TypeScript allows type
+constraints directly on the <code>this</code> parameter of class
+methods. By restricting the <code>build()</code> method's
+<code>this</code> context to a type that includes all mandatory fields,
+TypeScript produces a compilation error if the method is called before
+those fields are provided.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserBuilder<span class="op">&lt;</span>T <span class="op">=</span> {}<span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ... setters from previous example ...</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">build</span>(<span class="kw">this</span><span class="op">:</span> UserBuilder<span class="op">&lt;</span>{ id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> email<span class="op">:</span> <span class="dt">string</span> }<span class="op">&gt;</span>)<span class="op">:</span> User {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">data</span> <span class="im">as</span> User<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If a developer attempts to call <code>build()</code> immediately
+after initializing the builder:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: The &#39;this&#39; context of type &#39;UserBuilder&lt;{}&gt;&#39; is not assignable to </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// method&#39;s &#39;this&#39; of type &#39;UserBuilder&lt;{ id: string; email: string; }&gt;&#39;.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="fu">UserBuilder</span>()<span class="op">.</span><span class="fu">build</span>()<span class="op">;</span></span></code></pre></div>
+<p>The error resolves only when both mandatory setters
+(<code>setId</code> and <code>setEmail</code>) have been called in the
+chain:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiles successfully and returns a fully typed User</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="kw">new</span> <span class="fu">UserBuilder</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">setId</span>(<span class="st">&quot;usr_101&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">setEmail</span>(<span class="st">&quot;alex@example.com&quot;</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">build</span>()<span class="op">;</span></span></code></pre></div>
+<h3 id="typestate-pattern-with-phantom-types">Typestate Pattern with
+Phantom Types</h3>
+<p>For builders with complex lifecycle requirements—such as mutually
+exclusive options or mandatory sequencing—TypeScript can model the
+"typestate" pattern using phantom types. A phantom type is a generic
+parameter that never appears in the runtime values of the class but
+exists purely to track state at compile time.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Empty <span class="op">=</span> <span class="st">&quot;EMPTY&quot;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HasConfig <span class="op">=</span> <span class="st">&quot;HAS_CONFIG&quot;</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ClientBuilder<span class="op">&lt;</span>State <span class="op">=</span> Empty<span class="op">&gt;</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> config<span class="op">?:</span> <span class="dt">object</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setConfig</span>(config<span class="op">:</span> <span class="dt">object</span>)<span class="op">:</span> ClientBuilder<span class="op">&lt;</span>HasConfig<span class="op">&gt;</span> {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> builder <span class="op">=</span> <span class="kw">new</span> <span class="fu">ClientBuilder</span><span class="op">&lt;</span>HasConfig<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    builder<span class="op">.</span><span class="at">config</span> <span class="op">=</span> config<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> builder<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">connect</span>(<span class="kw">this</span><span class="op">:</span> ClientBuilder<span class="op">&lt;</span>HasConfig<span class="op">&gt;</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execution is guaranteed to have config initialized</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Here, the literal string union types <code>Empty</code> and
+<code>HasConfig</code> serve as flags. The method <code>connect()</code>
+cannot be invoked until the state matches <code>HasConfig</code>,
+preventing improper setup sequences entirely at compile time.</p>
+<h3 id="key-benefits">Key Benefits</h3>
+<ol type="1">
+<li><strong>Zero Runtime Cost:</strong> State tracking exists strictly
+at the type level; compiled JavaScript contains no heavy state-machine
+overhead.</li>
+<li><strong>Deterministic Completion:</strong> Developers receive
+immediate feedback in IDEs via autocomplete, which can hide or flag
+invalid operations before the code ever runs.</li>
+<li><strong>Refactoring Safety:</strong> Modifying the underlying data
+model by adding a required field immediately flags every builder chain
+across the codebase that fails to supply the new property.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

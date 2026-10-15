@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator vs AsyncGenerator in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, Generator and AsyncGenerator are built-in generic interfaces used to represent the return types of generator functions. While both interfaces allow execution to be paused and resumed using the yield keyword, Generator produces values synchr">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/generator-vs-async-generator-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Generator vs AsyncGenerator in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/generator-vs-async-generator-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, Generator and AsyncGenerator are built-in generic interfaces used to represent the return types of generator functions. While both interfaces allow execution to be paused and resumed using the yield keyword, Generator produces values synchr" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="generator-vs-asyncgenerator-in-typescript">Generator vs
+AsyncGenerator in TypeScript</h1>
+<p>In TypeScript, <code>Generator</code> and <code>AsyncGenerator</code>
+are built-in generic interfaces used to represent the return types of
+generator functions. While both interfaces allow execution to be paused
+and resumed using the <code>yield</code> keyword, <code>Generator</code>
+produces values synchronously using the standard iterator protocol,
+whereas <code>AsyncGenerator</code> handles asynchronous sequences by
+returning promises for each iterated value and supporting
+<code>await</code> expressions within its execution context.</p>
+<h2 id="syntax-and-function-declarations">Syntax and Function
+Declarations</h2>
+<p>The distinction between the two interfaces begins with how their
+corresponding functions are defined:</p>
+<ul>
+<li><strong><code>Generator</code></strong> is produced by a synchronous
+generator function declared with <code>function*</code>.</li>
+<li><strong><code>AsyncGenerator</code></strong> is produced by an
+asynchronous generator function declared with
+<code>async function*</code>.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Synchronous Generator</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span><span class="op">*</span> <span class="fu">syncNumberSequence</span>()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Asynchronous Generator</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span><span class="op">*</span> <span class="fu">asyncNumberSequence</span>()<span class="op">:</span> AsyncGenerator<span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">await</span> <span class="kw">new</span> <span class="bu">Promise</span>((resolve) <span class="kw">=&gt;</span> <span class="pp">setTimeout</span>(resolve<span class="op">,</span> <span class="dv">100</span>))<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="the-interface-type-signatures">The Interface Type
+Signatures</h2>
+<p>Both interfaces accept three generic parameters:
+<code>Type&lt;T, TReturn, TNext&gt;</code>.</p>
+<ul>
+<li><code>T</code>: The type of values returned by
+<code>yield</code>.</li>
+<li><code>TReturn</code>: The type of the final return value when the
+generator finishes execution.</li>
+<li><code>TNext</code>: The type accepted by the
+<code>.next(value)</code> method to pass data into the generator.</li>
+</ul>
+<p>The fundamental structural difference lies in the return types of
+their iterator methods (<code>next</code>, <code>return</code>, and
+<code>throw</code>):</p>
+<h3
+id="generatort-treturn-tnext"><code>Generator&lt;T, TReturn, TNext&gt;</code></h3>
+<p>The standard <code>Generator</code> interface extends
+<code>Iterator&lt;T, TReturn, TNext&gt;</code> and
+<code>Iterable&lt;T&gt;</code>. Calling <code>.next()</code> returns a
+synchronous <code>IteratorResult</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="bu">Generator</span><span class="op">&lt;</span>T <span class="op">=</span> <span class="dt">unknown</span><span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">,</span> TNext <span class="op">=</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>(<span class="op">...</span>args<span class="op">:</span> [] <span class="op">|</span> [TNext])<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(value<span class="op">:</span> TReturn)<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span>(e<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">,</span> TNext<span class="op">&gt;;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The resulting object is <code>{ value: T, done: boolean }</code>
+immediately accessible in memory.</p>
+<h3
+id="asyncgeneratort-treturn-tnext"><code>AsyncGenerator&lt;T, TReturn, TNext&gt;</code></h3>
+<p>The <code>AsyncGenerator</code> interface extends
+<code>AsyncIterator&lt;T, TReturn, TNext&gt;</code> and
+<code>AsyncIterable&lt;T&gt;</code>. Calling <code>.next()</code>
+returns a <code>Promise</code> resolving to an
+<code>IteratorResult</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncGenerator<span class="op">&lt;</span>T <span class="op">=</span> <span class="dt">unknown</span><span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">,</span> TNext <span class="op">=</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>(<span class="op">...</span>args<span class="op">:</span> [] <span class="op">|</span> [TNext])<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span>(value<span class="op">:</span> TReturn <span class="op">|</span> PromiseLike<span class="op">&lt;</span>TReturn<span class="op">&gt;</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span>(e<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]()<span class="op">:</span> AsyncGenerator<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">,</span> TNext<span class="op">&gt;;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because every step returns a promise, handling values requires
+asynchronous resolution via <code>.then()</code> or
+<code>await</code>.</p>
+<h2 id="execution-and-capabilities">Execution and Capabilities</h2>
+<p>The internal and external execution models differ significantly:</p>
+<h3 id="1-internal-await-usage">1. Internal <code>await</code>
+Usage</h3>
+<p>An <code>AsyncGenerator</code> can pause execution waiting for
+asynchronous operations using <code>await</code>. Standard
+<code>Generator</code> functions cannot use the <code>await</code>
+keyword.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid in AsyncGenerator</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span><span class="op">*</span> <span class="fu">fetchPaginatedData</span>(urls<span class="op">:</span> <span class="dt">string</span>[])<span class="op">:</span> AsyncGenerator<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">const</span> url <span class="kw">of</span> urls) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(url)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">text</span>()<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">yield</span> data<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="2-yielding-promises">2. Yielding Promises</h3>
+<p>When a synchronous <code>Generator</code> yields a promise, the
+yielded value type is simply <code>Promise&lt;T&gt;</code>, and the
+caller receives
+<code>{ value: Promise&lt;T&gt;, done: false }</code>.</p>
+<p>In an <code>AsyncGenerator</code>, yielding a promise unwraps it
+before handing the resolved value to the consumer, or resolves the
+promise created by <code>.next()</code>.</p>
+<h2 id="consumption-forof-vs-for-awaitof">Consumption:
+<code>for...of</code> vs <code>for await...of</code></h2>
+<p>Because they implement different symbol protocols
+(<code>Symbol.iterator</code> versus <code>Symbol.asyncIterator</code>),
+they are consumed with different control structures:</p>
+<ul>
+<li><strong><code>Generator</code></strong> is consumed with a standard
+<code>for...of</code> loop:</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">const</span> value <span class="kw">of</span> <span class="fu">syncNumberSequence</span>()) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value)<span class="op">;</span> <span class="co">// Synchronous logs</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong><code>AsyncGenerator</code></strong> requires a
+<code>for await...of</code> loop within an asynchronous context:</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="cf">await</span> (<span class="kw">const</span> value <span class="kw">of</span> <span class="fu">asyncNumberSequence</span>()) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value)<span class="op">;</span> <span class="co">// Logs after each promise resolves</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="summary-of-differences">Summary of Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><code>Generator</code></th>
+<th style="text-align: left;"><code>AsyncGenerator</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Declaration</strong></td>
+<td style="text-align: left;"><code>function*</code></td>
+<td style="text-align: left;"><code>async function*</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>.next()</code> Return
+Type</strong></td>
+<td
+style="text-align: left;"><code>IteratorResult&lt;T, TReturn&gt;</code></td>
+<td
+style="text-align: left;"><code>Promise&lt;IteratorResult&lt;T, TReturn&gt;&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Protocol Symbol</strong></td>
+<td style="text-align: left;"><code>[Symbol.iterator]</code></td>
+<td style="text-align: left;"><code>[Symbol.asyncIterator]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Loop Construct</strong></td>
+<td style="text-align: left;"><code>for...of</code></td>
+<td style="text-align: left;"><code>for await...of</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Allows <code>await</code>
+Inside</strong></td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Yes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Primary Use Case</strong></td>
+<td style="text-align: left;">Synchronous pipelines, custom sequences,
+state machines</td>
+<td style="text-align: left;">Streaming data, API pagination,
+asynchronous queues</td>
+</tr>
+</tbody>
+</table></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

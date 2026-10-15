@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Structural Subtyping: Primitives and Objects - typescript</title>
+    <meta name="description" content="This article explores how TypeScript reconciles structural subtyping with JavaScript&#39;s distinction between primitive values and objects. You will learn how TypeScript models auto-boxing, why primitive types are assignable to certain object shapes, how pro">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-structural-subtyping-primitives-and-objects">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Structural Subtyping: Primitives and Objects - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-structural-subtyping-primitives-and-objects" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript reconciles structural subtyping with JavaScript&#39;s distinction between primitive values and objects. You will learn how TypeScript models auto-boxing, why primitive types are assignable to certain object shapes, how pro" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-structural-subtyping-primitives-and-objects">TypeScript
+Structural Subtyping: Primitives and Objects</h1>
+<p>This article explores how TypeScript reconciles structural subtyping
+with JavaScript's distinction between primitive values and objects. You
+will learn how TypeScript models auto-boxing, why primitive types are
+assignable to certain object shapes, how prototype interfaces bridge the
+gap between values and shapes, and why this structural relationship is
+largely one-directional.</p>
+<h2 id="structural-typing-and-the-primitive-divide">Structural Typing
+and the Primitive Divide</h2>
+<p>TypeScript relies on a structural type system, meaning compatibility
+is determined by the shape and members of a type rather than its
+explicit declaration. In JavaScript, however, runtime values fall into
+two distinct categories: primitives (such as <code>string</code>,
+<code>number</code>, <code>boolean</code>, <code>symbol</code>, and
+<code>bigint</code>) and reference objects.</p>
+<p>Primitives do not inherently possess properties or methods at the
+machine level. Despite this, JavaScript provides seamless access to
+methods on primitives via auto-boxing (wrapping the primitive in a
+temporary object wrapper when accessing properties). TypeScript directly
+encodes this runtime behavior into its static type system, allowing
+primitives to act as structural subtypes of matching object types.</p>
+<h2 id="property-access-and-prototype-interfaces">Property Access and
+Prototype Interfaces</h2>
+<p>TypeScript ships with built-in ambient declarations for the standard
+JavaScript library, including global interfaces such as
+<code>String</code>, <code>Number</code>, and <code>Boolean</code>.
+These interfaces declare the methods and properties found on the
+corresponding runtime prototypes (<code>String.prototype</code>,
+<code>Number.prototype</code>, etc.).</p>
+<p>When TypeScript checks a primitive type (like <code>string</code>),
+it treats that type as possessing all the members defined in its
+matching interface (<code>String</code>). Because structural subtyping
+only checks whether the target type's required properties exist on the
+source type, a primitive value is assignable to an object type if the
+primitive's prototype interface satisfies that object type's
+contract.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: &#39;string&#39; has a &#39;length&#39; property via String.prototype</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hasLength<span class="op">:</span> { length<span class="op">:</span> <span class="dt">number</span> } <span class="op">=</span> <span class="st">&quot;hello world&quot;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: &#39;number&#39; has a &#39;toFixed&#39; method via Number.prototype</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hasToFixed<span class="op">:</span> { <span class="fu">toFixed</span>(fractionDigits<span class="op">?:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">string</span> } <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span></code></pre></div>
+<p>In these cases, TypeScript determines that the primitive satisfies
+the shape of the object.</p>
+<h2
+id="directionality-primitives-to-objects-vs-objects-to-primitives">Directionality:
+Primitives to Objects vs. Objects to Primitives</h2>
+<p>While a primitive can be assigned to an object type with matching
+properties, the reverse relationship is strictly forbidden. An object
+that happens to implement the entire interface of a primitive wrapper
+cannot be assigned to a primitive type:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: Primitive assigned to matching object shape</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> obj<span class="op">:</span> { length<span class="op">:</span> <span class="dt">number</span> } <span class="op">=</span> <span class="st">&quot;example&quot;</span><span class="op">;</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;{ length: number }&#39; is not assignable to type &#39;string&#39;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> str<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> { length<span class="op">:</span> <span class="dv">7</span> }<span class="op">;</span> </span></code></pre></div>
+<p>Primitives in TypeScript are atomic value types. Even if an object
+provides every method of <code>String.prototype</code>, it lacks the
+fundamental primitive identity required by the runtime. TypeScript
+preserves this boundary to avoid runtime type errors where operations
+specifically expect a raw JavaScript primitive rather than an
+object.</p>
+<h2 id="wrapper-objects-vs-primitive-types">Wrapper Objects vs.
+Primitive Types</h2>
+<p>TypeScript makes a strict distinction between primitive types and
+their wrapper object types:</p>
+<ul>
+<li><strong>Lowercase types (<code>string</code>, <code>number</code>,
+<code>boolean</code>)</strong>: Represent the actual primitive
+values.</li>
+<li><strong>Uppercase types (<code>String</code>, <code>Number</code>,
+<code>Boolean</code>)</strong>: Represent the wrapper interfaces defined
+by the standard library.</li>
+</ul>
+<p>A primitive type is a subtype of its corresponding wrapper type:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> primitiveStr<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;test&quot;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> wrapperStr<span class="op">:</span> <span class="bu">String</span> <span class="op">=</span> primitiveStr<span class="op">;</span> <span class="co">// Valid</span></span></code></pre></div>
+<p>However, a wrapper object is not a subtype of the primitive:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> wrapperStr<span class="op">:</span> <span class="bu">String</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">String</span>(<span class="st">&quot;test&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;String&#39; is not assignable to type &#39;string&#39;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> primitiveStr<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> wrapperStr<span class="op">;</span> </span></code></pre></div>
+<p><code>String</code> is an object type, and allowing it to satisfy
+<code>string</code> would break type safety around runtime identity and
+operations like <code>typeof</code>.</p>
+<h2 id="the-special-roles-of-object--and-object">The Special Roles of
+<code>Object</code>, <code>{}</code>, and <code>object</code></h2>
+<p>The interaction between primitives and objects is governed by three
+specific general types:</p>
+<ol type="1">
+<li><strong><code>Object</code></strong>: Represents the methods
+provided by <code>Object.prototype</code>. All primitives (except
+<code>null</code> and <code>undefined</code>) inherit these properties
+and are assignable to <code>Object</code>.</li>
+<li><strong><code>{}</code> (Empty Object Type)</strong>: Represents any
+value that is not <code>null</code> or <code>undefined</code>. Because
+primitives have no required missing properties to satisfy
+<code>{}</code>, any primitive can be assigned to <code>{}</code>.</li>
+<li><strong><code>object</code> (lowercase)</strong>: Explicitly
+represents non-primitive types (<code>typeof x === "object"</code> or
+<code>"function"</code>). Primitives cannot be assigned to
+<code>object</code>.</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> a<span class="op">:</span> <span class="bu">Object</span> <span class="op">=</span> <span class="st">&quot;text&quot;</span><span class="op">;</span> <span class="co">// Valid: String has Object.prototype methods</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> b<span class="op">:</span> {} <span class="op">=</span> <span class="dv">123</span><span class="op">;</span>        <span class="co">// Valid: 123 is not null or undefined</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;string&#39; is not assignable to type &#39;object&#39;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> c<span class="op">:</span> <span class="dt">object</span> <span class="op">=</span> <span class="st">&quot;text&quot;</span><span class="op">;</span> </span></code></pre></div>
+<p>Through this mechanism, TypeScript mirrors JavaScript's auto-boxing
+behavior: primitives act structurally like objects when properties are
+read, but remain distinct values that cannot be simulated simply by
+creating object literals.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

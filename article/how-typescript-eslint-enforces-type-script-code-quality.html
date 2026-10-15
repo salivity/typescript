@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How typescript-eslint Enforces TypeScript Code Quality - typescript</title>
+    <meta name="description" content="This article examines the essential role of typescript-eslint in modern TypeScript development, explaining how it bridges the gap between ESLint and the TypeScript compiler. By translating TypeScript code into a format ESLint can analyze, typescript-eslin">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-typescript-eslint-enforces-type-script-code-quality">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How typescript-eslint Enforces TypeScript Code Quality - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-typescript-eslint-enforces-type-script-code-quality" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines the essential role of typescript-eslint in modern TypeScript development, explaining how it bridges the gap between ESLint and the TypeScript compiler. By translating TypeScript code into a format ESLint can analyze, typescript-eslin" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-eslint-enforces-typescript-code-quality">How
+typescript-eslint Enforces TypeScript Code Quality</h1>
+<p>This article examines the essential role of
+<code>typescript-eslint</code> in modern TypeScript development,
+explaining how it bridges the gap between ESLint and the TypeScript
+compiler. By translating TypeScript code into a format ESLint can
+analyze, <code>typescript-eslint</code> enables static code analysis,
+prevents anti-patterns, and enforces consistent style guides. Readers
+will learn how type-aware linting enhances code reliability beyond
+standard type-checking, why it replaced legacy linters, and how it
+functions as a core component of a professional development
+workflow.</p>
+<h2 id="bridging-eslint-and-the-typescript-compiler">Bridging ESLint and
+the TypeScript Compiler</h2>
+<p>Standard ESLint was designed specifically for JavaScript. Because
+TypeScript introduces custom syntax—such as interfaces, enums, type
+annotations, and generics—the standard JavaScript parser cannot read
+TypeScript files.</p>
+<p><code>typescript-eslint</code> resolves this by providing
+<code>@typescript-eslint/parser</code>. This parser converts TypeScript
+code into an ESTree-compatible Abstract Syntax Tree (AST). By producing
+an AST that ESLint can interpret, developers can run standard ESLint
+linting rules directly on TypeScript files without syntax errors.</p>
+<h2 id="unlocking-type-aware-linting">Unlocking Type-Aware Linting</h2>
+<p>While standard linters only inspect syntax and structure,
+<code>typescript-eslint</code> leverages the TypeScript compiler’s type
+checker to perform semantic, type-aware linting. Through its
+<code>@typescript-eslint/eslint-plugin</code>, the tool accesses full
+type information to catch logical errors that the TypeScript compiler
+(<code>tsc</code>) permits by design.</p>
+<p>Key capabilities of type-aware linting include:</p>
+<ul>
+<li><strong>Handling Unhandled Promises:</strong> Rules such as
+<code>no-floating-promises</code> ensure that asynchronous operations
+are properly awaited or handled with <code>.catch()</code>, preventing
+silent failures.</li>
+<li><strong>Preventing Misused Promises:</strong> Rules like
+<code>no-misused-promises</code> flag async functions passed into places
+expecting synchronous void returns, such as event listeners.</li>
+<li><strong>Restricting Unsafe Operations:</strong> Rules such as
+<code>no-unsafe-assignment</code>, <code>no-unsafe-member-access</code>,
+and <code>no-unsafe-call</code> prevent implicit <code>any</code> leaks
+that degrade overall type safety.</li>
+<li><strong>Eliminating Redundancies:</strong> Rules like
+<code>no-unnecessary-condition</code> warn developers when a condition
+is always truthy or falsy according to the inferred types.</li>
+</ul>
+<h2 id="enforcing-consistency-and-idiomatic-patterns">Enforcing
+Consistency and Idiomatic Patterns</h2>
+<p>Codebases benefit significantly from unified design patterns,
+especially across large engineering teams.
+<code>typescript-eslint</code> provides configurable rule sets that
+establish consistent architectural boundaries and syntax usage:</p>
+<ul>
+<li><strong>Type Definitions:</strong> Teams can strictly enforce
+whether object types must use <code>interface</code> or
+<code>type</code> definitions via
+<code>consistent-type-definitions</code>.</li>
+<li><strong>Explicit Contracts:</strong> Rules like
+<code>explicit-function-return-type</code> require developers to
+explicitly declare what functions return, improving readability and
+preventing accidental signature changes.</li>
+<li><strong>Modern Language Features:</strong> The linter can discourage
+legacy TypeScript patterns, such as namespaces or non-null assertions
+(<code>!</code>), pushing developers toward modern, safer idioms.</li>
+</ul>
+<h2 id="complementing-the-typescript-compiler">Complementing the
+TypeScript Compiler</h2>
+<p>A common misconception is that the TypeScript compiler makes a linter
+redundant. In practice, <code>tsc</code> and
+<code>typescript-eslint</code> serve complementary purposes:</p>
+<ul>
+<li><strong>TypeScript Compiler (<code>tsc</code>):</strong> Verifies
+that code is structurally valid according to type declarations and
+transpiles TypeScript into JavaScript. It does not enforce stylistic
+consistency, detect dead code branches, or mandate promise
+handling.</li>
+<li><strong>typescript-eslint:</strong> Analyzes code quality,
+maintainability, architectural conventions, and runtime safety patterns
+that fall outside the compiler's strict remit.</li>
+</ul>
+<p>By combining <code>tsc</code> for type verification and
+<code>typescript-eslint</code> for quality control, development teams
+catch bugs early in the editing process and maintain clean, scalable
+codebases.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

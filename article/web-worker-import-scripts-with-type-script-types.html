@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Worker importScripts with TypeScript Types - typescript</title>
+    <meta name="description" content="Using importScripts inside TypeScript-based Web Workers introduces a gap between runtime execution and compile-time type safety. While TypeScript provides built-in global signatures for importScripts when using the worker standard library, the compiler ca">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/web-worker-import-scripts-with-type-script-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Web Worker importScripts with TypeScript Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/web-worker-import-scripts-with-type-script-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Using importScripts inside TypeScript-based Web Workers introduces a gap between runtime execution and compile-time type safety. While TypeScript provides built-in global signatures for importScripts when using the worker standard library, the compiler ca" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="web-worker-importscripts-with-typescript-types">Web Worker
+importScripts with TypeScript Types</h1>
+<p>Using <code>importScripts</code> inside TypeScript-based Web Workers
+introduces a gap between runtime execution and compile-time type safety.
+While TypeScript provides built-in global signatures for
+<code>importScripts</code> when using the worker standard library, the
+compiler cannot automatically inspect or infer the types declared in
+external scripts loaded at runtime. This article examines how TypeScript
+handles <code>importScripts</code>, why static type checking breaks down
+with dynamic worker script loading, and the strategies required to
+properly type global objects introduced by imported scripts.</p>
+<h2 id="the-typescript-worker-environment">The TypeScript Worker
+Environment</h2>
+<p>To use worker-specific APIs like <code>importScripts</code>, your
+TypeScript project or worker-specific <code>tsconfig.json</code> must
+include the WebWorker library in the <code>lib</code> compiler
+option:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES2022&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;lib&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;ES2022&quot;</span><span class="ot">,</span> <span class="st">&quot;WebWorker&quot;</span><span class="ot">]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Adding <code>"WebWorker"</code> supplies the global scope definitions
+for <code>DedicatedWorkerGlobalScope</code>, which exposes
+worker-specific globals such as <code>postMessage</code>,
+<code>onmessage</code>, and the function:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">function</span> <span class="fu">importScripts</span>(<span class="op">...</span>urls<span class="op">:</span> (<span class="dt">string</span> <span class="op">|</span> URL)[])<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span></code></pre></div>
+<p>This definition tells TypeScript that <code>importScripts</code>
+takes string URLs and returns <code>void</code>. It does not, however,
+establish any link between the loaded files and the symbols they inject
+into the worker's global scope.</p>
+<h2 id="the-type-resolution-challenge">The Type Resolution
+Challenge</h2>
+<p><code>importScripts</code> loads and executes scripts synchronously,
+placing their exports directly into the worker's global scope. Because
+this operation happens purely at runtime via URL resolution,
+TypeScript's static analysis cannot determine which variables,
+functions, or classes were added.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// worker.ts</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">importScripts</span>(<span class="st">&quot;https://example.com/math-utils.js&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Cannot find name &#39;calculateHash&#39;.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">calculateHash</span>(<span class="st">&quot;data&quot;</span>)<span class="op">;</span> </span></code></pre></div>
+<p>Even though <code>calculateHash</code> exists globally at runtime
+after <code>importScripts</code> runs, the TypeScript compiler fails
+with an unresolved identifier error.</p>
+<h2 id="supplying-types-for-imported-scripts">Supplying Types for
+Imported Scripts</h2>
+<p>To make TypeScript aware of variables introduced by
+<code>importScripts</code>, you must provide ambient declarations
+manually.</p>
+<h3 id="1-global-ambient-declarations">1. Global Ambient
+Declarations</h3>
+<p>Create an ambient declaration file (e.g., <code>globals.d.ts</code>)
+or declare the global identifiers directly in the worker file if it is
+treated as a script rather than a module:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// math-utils.d.ts</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">function</span> <span class="fu">calculateHash</span>(data<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">const</span> UTILS_VERSION<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span></code></pre></div>
+<p>When this definition is included in your project, TypeScript allows
+access to <code>calculateHash</code> anywhere in the global scope
+without errors:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// worker.ts</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">importScripts</span>(<span class="st">&quot;/scripts/math-utils.js&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: TypeScript uses the ambient declaration</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hash <span class="op">=</span> <span class="fu">calculateHash</span>(<span class="st">&quot;input data&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-triple-slash-directives">2. Triple-Slash Directives</h3>
+<p>If your worker file needs to explicitly declare a dependency on
+specific global types without converting the file into a module, use a
+triple-slash reference directive at the top of the file:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> path=</span><span class="dt">&quot;./types/math-utils.d.ts&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">importScripts</span>(<span class="st">&quot;/scripts/math-utils.js&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hash <span class="op">=</span> <span class="fu">calculateHash</span>(<span class="st">&quot;input data&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>This ensures the compiler loads the specified types into the scope of
+that individual worker file.</p>
+<h2 id="module-workers-as-the-modern-alternative">Module Workers as the
+Modern Alternative</h2>
+<p>Classic workers use <code>importScripts</code> and global namespace
+pollution. Modern browsers support module workers, which replace
+<code>importScripts</code> with standard ES module imports
+(<code>import ... from ...</code>).</p>
+<p>When initializing the worker in the main thread:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> worker <span class="op">=</span> <span class="kw">new</span> <span class="bu">Worker</span>(<span class="kw">new</span> <span class="fu">URL</span>(<span class="st">&quot;./worker.ts&quot;</span><span class="op">,</span> import<span class="op">.</span><span class="at">meta</span><span class="op">.</span><span class="at">url</span>)<span class="op">,</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&quot;module&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Inside the worker, standard static imports can be used instead of
+<code>importScripts</code>:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// worker.ts</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { calculateHash } <span class="im">from</span> <span class="st">&quot;./math-utils&quot;</span><span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">calculateHash</span>(<span class="st">&quot;data&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Using module workers avoids the static analysis limitations of
+<code>importScripts</code> entirely, enabling automatic type inference,
+tree shaking, and standard TypeScript module resolution.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

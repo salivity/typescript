@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Custom Iterables with Symbol.iterator in TypeScript - typescript</title>
+    <meta name="description" content="This article provides a practical guide on how to type custom iterable data structures using Symbol.iterator in TypeScript. You will learn the fundamental interfaces TypeScript uses for iteration, how to manually implement and type the Iterable&lt;T&gt; contrac">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-custom-iterables-with-symbol-iterator-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type Custom Iterables with Symbol.iterator in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-custom-iterables-with-symbol-iterator-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a practical guide on how to type custom iterable data structures using Symbol.iterator in TypeScript. You will learn the fundamental interfaces TypeScript uses for iteration, how to manually implement and type the Iterable&lt;T&gt; contrac" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-custom-iterables-with-symboliterator-in-typescript">Type
+Custom Iterables with Symbol.iterator in TypeScript</h1>
+<p>This article provides a practical guide on how to type custom
+iterable data structures using <code>Symbol.iterator</code> in
+TypeScript. You will learn the fundamental interfaces TypeScript uses
+for iteration, how to manually implement and type the
+<code>Iterable&lt;T&gt;</code> contract on custom classes, and how to
+leverage generator methods for simpler, type-safe iteration.</p>
+<hr />
+<h3 id="understanding-typescripts-iteration-interfaces">Understanding
+TypeScript's Iteration Interfaces</h3>
+<p>To make any custom structure iterable in TypeScript—allowing it to be
+consumed by <code>for...of</code> loops or the spread operator
+(<code>...</code>)—it must satisfy the <code>Iterable&lt;T&gt;</code>
+interface.</p>
+<p>TypeScript defines three primary built-in interfaces in its standard
+library for this purpose:</p>
+<ol type="1">
+<li><strong><code>Iterable&lt;T&gt;</code></strong>: Represents the data
+structure that can be iterated over. It requires a
+<code>[Symbol.iterator]()</code> method that returns an
+<code>Iterator&lt;T&gt;</code>.</li>
+<li><strong><code>Iterator&lt;T&gt;</code></strong>: An object with a
+<code>next()</code> method that advances through the sequence.</li>
+<li><strong><code>IteratorResult&lt;T&gt;</code></strong>: The return
+value of <code>next()</code>. It is a discriminated union of:
+<ul>
+<li><code>{ done: false; value: T }</code></li>
+<li><code>{ done: true; value: undefined }</code> (or an optional return
+value)</li>
+</ul></li>
+</ol>
+<h3 id="method-1-explicitly-implementing-iterablet">Method 1: Explicitly
+Implementing <code>Iterable&lt;T&gt;</code></h3>
+<p>The standard way to type an iterable structure is to declare that
+your class implements <code>Iterable&lt;T&gt;</code> and explicitly type
+the return value of <code>[Symbol.iterator]()</code>.</p>
+<p>Here is an implementation of a custom <code>NumberRange</code>
+collection:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NumberRange <span class="kw">implements</span> Iterable<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> start<span class="op">:</span> <span class="dt">number</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> end<span class="op">:</span> <span class="dt">number</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> step<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  ) {}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> Iterator<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> current <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">start</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> end <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">end</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> step <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">step</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">next</span>()<span class="op">:</span> IteratorResult<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (current <span class="op">&lt;=</span> end) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>          <span class="kw">const</span> value <span class="op">=</span> current<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>          current <span class="op">+=</span> step<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>          <span class="cf">return</span> { done<span class="op">:</span> <span class="kw">false</span><span class="op">,</span> value }<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { done<span class="op">:</span> <span class="kw">true</span><span class="op">,</span> value<span class="op">:</span> <span class="dt">undefined</span> }<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="usage-and-type-inference">Usage and Type Inference</h4>
+<p>TypeScript automatically infers the loop variable's type based on the
+generic parameter supplied to <code>Iterable&lt;T&gt;</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> range <span class="op">=</span> <span class="kw">new</span> <span class="fu">NumberRange</span>(<span class="dv">1</span><span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// &#39;n&#39; is inferred as type &#39;number&#39;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">const</span> n <span class="kw">of</span> range) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(n)<span class="op">;</span> <span class="co">// 1, 2, 3, 4, 5</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Spreading works with correct array typing: number[]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers<span class="op">:</span> <span class="dt">number</span>[] <span class="op">=</span> [<span class="op">...</span>range]<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="method-2-using-generator-methods">Method 2: Using Generator
+Methods</h3>
+<p>Writing manual <code>next()</code> state machines can be verbose.
+Using a generator function prefixed with an asterisk (<code>*</code>)
+automatically satisfies both <code>Iterator&lt;T&gt;</code> and
+<code>Iterable&lt;T&gt;</code> via the
+<code>IterableIterator&lt;T&gt;</code> or
+<code>Generator&lt;T&gt;</code> types.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Queue<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="kw">implements</span> Iterable<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> items<span class="op">:</span> T[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">enqueue</span>(item<span class="op">:</span> T)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">items</span><span class="op">.</span><span class="fu">push</span>(item)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dequeue</span>()<span class="op">:</span> T <span class="op">|</span> <span class="dt">undefined</span> {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">items</span><span class="op">.</span><span class="fu">shift</span>()<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The generator return type can be Iterator&lt;T&gt;, IterableIterator&lt;T&gt;, or Generator&lt;T&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">*</span>[<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> Iterator<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">const</span> item <span class="kw">of</span> <span class="kw">this</span><span class="op">.</span><span class="at">items</span>) {</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">yield</span> item<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="typing-the-generator-signature">Typing the Generator
+Signature</h4>
+<p>If you need explicit control over what the generator yields, returns,
+and receives via <code>next()</code>, use the standard
+<code>Generator&lt;TYield, TReturn, TNext&gt;</code> type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>[<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span>T<span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">const</span> item <span class="kw">of</span> <span class="kw">this</span><span class="op">.</span><span class="at">items</span>) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">yield</span> item<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="typing-plain-object-iterables">Typing Plain Object
+Iterables</h3>
+<p>You can also apply <code>[Symbol.iterator]</code> directly to plain
+object literals using the computed property syntax:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserCollection {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  users<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> Iterator<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> team<span class="op">:</span> UserCollection <span class="op">=</span> {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  users<span class="op">:</span> [<span class="st">&quot;Alice&quot;</span><span class="op">,</span> <span class="st">&quot;Bob&quot;</span><span class="op">,</span> <span class="st">&quot;Charlie&quot;</span>]<span class="op">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]() {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> users <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">users</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">next</span>()<span class="op">:</span> IteratorResult<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span> {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (index <span class="op">&lt;</span> users<span class="op">.</span><span class="at">length</span>) {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>          <span class="cf">return</span> { done<span class="op">:</span> <span class="kw">false</span><span class="op">,</span> value<span class="op">:</span> users[index<span class="op">++</span>] }<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { done<span class="op">:</span> <span class="kw">true</span><span class="op">,</span> value<span class="op">:</span> <span class="dt">undefined</span> }<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">const</span> member <span class="kw">of</span> team) {</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(member<span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span> <span class="co">// member is typed as string</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="summary-of-types-to-use">Summary of Types to Use</h3>
+<ul>
+<li>Use <strong><code>Iterable&lt;T&gt;</code></strong> on classes or
+interfaces as the contract to enforce compatibility with JavaScript
+iteration protocols.</li>
+<li>Use <strong><code>Iterator&lt;T&gt;</code></strong> or
+<strong><code>IteratorResult&lt;T&gt;</code></strong> when writing
+manual iterator objects with a custom <code>next()</code> method.</li>
+<li>Use <strong><code>Generator&lt;T, void, unknown&gt;</code></strong>
+or <strong><code>IterableIterator&lt;T&gt;</code></strong> when
+implementing <code>*[Symbol.iterator]()</code> with
+<code>yield</code>.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

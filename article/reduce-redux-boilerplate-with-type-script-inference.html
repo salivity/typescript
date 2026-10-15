@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reduce Redux Boilerplate with TypeScript Inference - typescript</title>
+    <meta name="description" content="Redux Toolkit dramatically simplifies Redux development by leaning on TypeScript&#39;s inference engine to eliminate redundant type definitions. Traditionally, writing type-safe Redux required creating separate action type constants, interface definitions for">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/reduce-redux-boilerplate-with-type-script-inference">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Reduce Redux Boilerplate with TypeScript Inference - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/reduce-redux-boilerplate-with-type-script-inference" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Redux Toolkit dramatically simplifies Redux development by leaning on TypeScript&#39;s inference engine to eliminate redundant type definitions. Traditionally, writing type-safe Redux required creating separate action type constants, interface definitions for" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="reduce-redux-boilerplate-with-typescript-inference">Reduce Redux
+Boilerplate with TypeScript Inference</h1>
+<p>Redux Toolkit dramatically simplifies Redux development by leaning on
+TypeScript's inference engine to eliminate redundant type definitions.
+Traditionally, writing type-safe Redux required creating separate action
+type constants, interface definitions for every action, complex union
+types for reducers, and manual typing across component hooks. Redux
+Toolkit replaces this repetitive workflow by automatically deriving
+action types, payload structures, and dispatch capabilities directly
+from your implementation code, ensuring end-to-end type safety with
+minimal manual annotation.</p>
+<h3 id="state-and-action-inference-in-createslice">State and Action
+Inference in <code>createSlice</code></h3>
+<p>The primary way Redux Toolkit reduces boilerplate is through the
+<code>createSlice</code> API. Instead of requiring distinct types for
+action constants, action interfaces, and reducer functions,
+<code>createSlice</code> generates everything in one place using the
+<code>PayloadAction&lt;T&gt;</code> generic.</p>
+<p>When you define a case reducer, you only need to annotate the payload
+of the incoming action:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { createSlice<span class="op">,</span> PayloadAction } <span class="im">from</span> <span class="st">&#39;@reduxjs/toolkit&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserState {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> initialState<span class="op">:</span> UserState <span class="op">=</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&#39;&#39;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userSlice <span class="op">=</span> <span class="fu">createSlice</span>({</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&#39;user&#39;</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  initialState<span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  reducers<span class="op">:</span> {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">setName</span>(state<span class="op">,</span> action<span class="op">:</span> PayloadAction<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>) {</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      state<span class="op">.</span><span class="at">name</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">setAge</span>(state<span class="op">,</span> action<span class="op">:</span> PayloadAction<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span>) {</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      state<span class="op">.</span><span class="at">age</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> { setName<span class="op">,</span> setAge } <span class="op">=</span> userSlice<span class="op">.</span><span class="at">actions</span><span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> userSlice<span class="op">.</span><span class="at">reducer</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript automatically infers that <code>setName</code> is an
+action creator taking a <code>string</code> argument and returning an
+action of type <code>user/setName</code>. You do not need to create
+action type string constants, declare interfaces for the action objects,
+or write separate action creator functions.</p>
+<h3 id="inferring-store-types-directly-from-configuration">Inferring
+Store Types Directly from Configuration</h3>
+<p>Legacy Redux setups frequently required manually maintaining a global
+<code>RootState</code> interface that mirrored every reducer in the
+application. Redux Toolkit eliminates this by leveraging TypeScript's
+<code>ReturnType</code> and <code>typeof</code> operators on the store
+instance itself:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { configureStore } <span class="im">from</span> <span class="st">&#39;@reduxjs/toolkit&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> userReducer <span class="im">from</span> <span class="st">&#39;./userSlice&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> store <span class="op">=</span> <span class="fu">configureStore</span>({</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  reducer<span class="op">:</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    user<span class="op">:</span> userReducer<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> RootState <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> store<span class="op">.</span><span class="at">getState</span><span class="op">&gt;;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> AppDispatch <span class="op">=</span> <span class="kw">typeof</span> store<span class="op">.</span><span class="at">dispatch</span><span class="op">;</span></span></code></pre></div>
+<p>As you add or modify slices in <code>configureStore</code>,
+<code>RootState</code> and <code>AppDispatch</code> update
+automatically. There is no need to manually update a root interface when
+the store structure changes.</p>
+<h3
+id="eliminating-selector-annotations-with-pre-typed-hooks">Eliminating
+Selector Annotations with Pre-Typed Hooks</h3>
+<p>Rather than annotating the <code>state</code> parameter on every
+<code>useSelector</code> call across your component tree, Redux Toolkit
+recommends creating pre-typed hooks:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { TypedUseSelectorHook<span class="op">,</span> useDispatch<span class="op">,</span> useSelector } <span class="im">from</span> <span class="st">&#39;react-redux&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { RootState<span class="op">,</span> AppDispatch } <span class="im">from</span> <span class="st">&#39;./store&#39;</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> useAppDispatch<span class="op">:</span> () <span class="kw">=&gt;</span> AppDispatch <span class="op">=</span> useDispatch<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> useAppSelector<span class="op">:</span> TypedUseSelectorHook<span class="op">&lt;</span>RootState<span class="op">&gt;</span> <span class="op">=</span> useSelector<span class="op">;</span></span></code></pre></div>
+<p>Because <code>RootState</code> was inferred from the store,
+<code>useAppSelector</code> immediately provides full autocomplete and
+type checking for the entire state tree. Components consume state
+without requiring inline types:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// No type annotation needed on (state)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">useAppSelector</span>((state) <span class="kw">=&gt;</span> state<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="type-safe-async-logic-with-createasyncthunk">Type-Safe Async
+Logic with <code>createAsyncThunk</code></h3>
+<p>Handling asynchronous actions with <code>createAsyncThunk</code>
+removes the need to define separate <code>REQUEST</code>,
+<code>SUCCESS</code>, and <code>FAILURE</code> action types. By defining
+the return type and argument type within the thunk's generic signature,
+TypeScript infers the payload types for all generated lifecycle
+actions:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> fetchUserById <span class="op">=</span> createAsyncThunk<span class="op">&lt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  UserState<span class="op">,</span> <span class="co">// Returned payload type</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  string     <span class="co">// First argument type</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;user/fetchById&#39;</span><span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">async</span> (userId) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="vs">`/api/user/</span><span class="sc">${</span>userId<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (<span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()) <span class="im">as</span> UserState<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<p>When handling these actions in <code>extraReducers</code> using the
+builder callback notation, TypeScript automatically infers the payload
+of <code>action.payload</code> inside the <code>fulfilled</code> handler
+as <code>UserState</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>extraReducers<span class="op">:</span> (builder) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  builder<span class="op">.</span><span class="fu">addCase</span>(fetchUserById<span class="op">.</span><span class="at">fulfilled</span><span class="op">,</span> (state<span class="op">,</span> action) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// action.payload is automatically inferred as UserState</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    state<span class="op">.</span><span class="at">name</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">.</span><span class="at">name</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    state<span class="op">.</span><span class="at">age</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">.</span><span class="at">age</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The builder pattern avoids type-casting and switch-statement type
+guards entirely, relying instead on internal type mapping to enforce
+that reducers handle only the actions they declare.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

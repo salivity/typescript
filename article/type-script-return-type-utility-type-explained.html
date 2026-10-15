@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript ReturnType Utility Type Explained - typescript</title>
+    <meta name="description" content="This article explores the ReturnType utility type in TypeScript, detailing how it extracts return types from function signatures, how to apply it using the typeof operator, and how it handles asynchronous functions and overloads. By reading further, you w">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-return-type-utility-type-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript ReturnType Utility Type Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-return-type-utility-type-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores the ReturnType utility type in TypeScript, detailing how it extracts return types from function signatures, how to apply it using the typeof operator, and how it handles asynchronous functions and overloads. By reading further, you w" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-returntype-utility-type-explained">TypeScript
+ReturnType Utility Type Explained</h1>
+<p>This article explores the <code>ReturnType</code> utility type in
+TypeScript, detailing how it extracts return types from function
+signatures, how to apply it using the <code>typeof</code> operator, and
+how it handles asynchronous functions and overloads. By reading further,
+you will understand how to leverage this utility to keep your codebase
+DRY and automatically infer types directly from your application's
+logic.</p>
+<hr />
+<h3 id="what-does-returntype-resolve">What Does <code>ReturnType</code>
+Resolve?</h3>
+<p>The <code>ReturnType&lt;T&gt;</code> utility type extracts and
+resolves the output type returned by a function type <code>T</code>.
+Under the hood, TypeScript uses conditional types and the
+<code>infer</code> keyword to inspect the function signature and isolate
+the type of the value returned at runtime.</p>
+<p>If <code>T</code> represents a function signature matching
+<code>(...args: any[]) =&gt; R</code>, then
+<code>ReturnType&lt;T&gt;</code> resolves directly to
+<code>R</code>.</p>
+<h3 id="basic-usage-with-function-types">Basic Usage with Function
+Types</h3>
+<p><code>ReturnType</code> operates strictly on TypeScript types, not
+JavaScript runtime values. To extract the return type of a concrete
+function, you must pair <code>ReturnType</code> with the
+<code>typeof</code> type query operator.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createUser</span>() {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="st">&quot;Jane Doe&quot;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    isActive<span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: { id: number; name: string; isActive: boolean; }</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> createUser<span class="op">&gt;;</span></span></code></pre></div>
+<p>You can also pass standalone function signatures directly without
+<code>typeof</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Greeter <span class="op">=</span> (name<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: string</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Greeting <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span>Greeter<span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="resolving-asynchronous-functions">Resolving Asynchronous
+Functions</h3>
+<p>When dealing with <code>async</code> functions, TypeScript wraps the
+return value in a <code>Promise</code>. Consequently,
+<code>ReturnType</code> resolves to the <code>Promise&lt;T&gt;</code>
+wrapper rather than the resolved underlying value.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">fetchScore</span>() {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: Promise&lt;number&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ScorePromise <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> fetchScore<span class="op">&gt;;</span></span></code></pre></div>
+<p>To extract the unwrapped value inside the promise, combine
+<code>ReturnType</code> with the <code>Awaited</code> utility type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: number</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Score <span class="op">=</span> Awaited<span class="op">&lt;</span><span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> fetchScore<span class="op">&gt;&gt;;</span></span></code></pre></div>
+<h3 id="behavior-with-function-overloads">Behavior with Function
+Overloads</h3>
+<p>When applied to overloaded functions, <code>ReturnType</code>
+resolves to the return type of the <strong>last overload
+signature</strong>. This is because TypeScript evaluates overload
+signatures sequentially, and the final implementation or signature takes
+precedence during inference.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processInput</span>(input<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processInput</span>(input<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processInput</span>(input<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">any</span> {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> input<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: boolean (the last declared overload signature)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProcessedResult <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> processInput<span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="key-use-cases">Key Use Cases</h3>
+<ol type="1">
+<li><strong>Third-Party Libraries:</strong> Infer complex return types
+from library methods when the library does not explicitly export the
+interface or type.</li>
+<li><strong>Factory Functions:</strong> Define types dynamically based
+on factory outputs to ensure that modifications to the implementation
+automatically propagate throughout the codebase without manual
+updates.</li>
+<li><strong>Redux / State Management:</strong> Automatically derive
+action payloads and state shapes from action creators and reducer
+functions.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

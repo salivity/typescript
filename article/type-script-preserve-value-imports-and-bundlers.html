@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript preserveValueImports and Bundlers - typescript</title>
+    <meta name="description" content="This article provides an overview of TypeScript&#39;s preserveValueImports compiler option, explaining its core functionality, the problem it solves regarding import elision, and how it directly interacts with modern bundlers and build tools. You will learn w">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-preserve-value-imports-and-bundlers">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript preserveValueImports and Bundlers - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-preserve-value-imports-and-bundlers" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of TypeScript&#39;s preserveValueImports compiler option, explaining its core functionality, the problem it solves regarding import elision, and how it directly interacts with modern bundlers and build tools. You will learn w" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-preservevalueimports-and-bundlers">TypeScript
+preserveValueImports and Bundlers</h1>
+<p>This article provides an overview of TypeScript's
+<code>preserveValueImports</code> compiler option, explaining its core
+functionality, the problem it solves regarding import elision, and how
+it directly interacts with modern bundlers and build tools. You will
+learn why TypeScript removes certain imports by default, how this option
+prevents unwanted side effects in module bundling, and how it has
+evolved with newer TypeScript configurations.</p>
+<h3 id="what-is-preservevalueimports">What Is preserveValueImports?</h3>
+<p>Introduced in TypeScript 4.5, <code>preserveValueImports</code> is a
+compiler flag designed to prevent the TypeScript compiler
+(<code>tsc</code>) from automatically stripping out imported values that
+appear to be used only as types.</p>
+<p>By default, TypeScript performs a process called "type elision." If
+you import an identifier and only reference it in type positions—such as
+type annotations, interfaces, or generic parameters—TypeScript assumes
+the import is not needed at runtime and removes it from the emitted
+JavaScript.</p>
+<p>However, in certain scenarios, an imported identifier might be
+required at runtime even if the TypeScript type checker does not detect
+its usage. When <code>preserveValueImports</code> is set to
+<code>true</code>, TypeScript guarantees that any import written using
+regular import syntax (<code>import { X } from "module"</code>) will
+remain in the emitted output. The only imports that will be removed are
+those explicitly declared using the <code>type</code> modifier (e.g.,
+<code>import type { X } from "module"</code>).</p>
+<h3 id="the-problem-with-default-import-elision">The Problem with
+Default Import Elision</h3>
+<p>Consider the following example:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Component } <span class="im">from</span> <span class="st">&quot;./components&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">render</span>(item<span class="op">:</span> Component) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Component is only used as a type annotation here</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Under default settings, TypeScript eliminates
+<code>import { Component } from "./components";</code> from the
+generated JavaScript because it sees no runtime evaluation of
+<code>Component</code>.</p>
+<p>This elision behavior creates problems in multiple modern development
+workflows:</p>
+<ol type="1">
+<li><strong>Side-Effect Management:</strong> Some modules rely on the
+side effects triggered when imported. If TypeScript removes the import
+because it was only referenced as a type, those runtime side effects are
+lost.</li>
+<li><strong>Custom Compilers and Macro Systems:</strong> Frameworks like
+Vue, Svelte, or Angular often transform templates separately from the
+TypeScript compiler. A component might be used in a template markup
+rather than the <code>&lt;script&gt;</code> block. If TypeScript strips
+the import first, the runtime or secondary compiler fails to locate the
+reference.</li>
+</ol>
+<h3 id="how-preservevalueimports-interacts-with-bundlers">How
+preserveValueImports Interacts with Bundlers</h3>
+<p>Modern bundlers like Webpack, Vite, Rollup, and esbuild often rely on
+isolated compilation. When single-file transpilers (like Babel, SWC, or
+esbuild) compile a file, they do so without access to the broader type
+graph across the entire project.</p>
+<h4 id="1-compatibility-with-isolatedmodules">1. Compatibility with
+<code>isolatedModules</code></h4>
+<p>Single-file transpilers cannot always deduce whether an import is an
+interface, a type alias, or a class. When using
+<code>preserveValueImports</code> alongside
+<code>isolatedModules</code>, developers are forced to be explicit:</p>
+<ul>
+<li><p>If you want an import preserved for the bundler to process, write
+a standard import:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Action } <span class="im">from</span> <span class="st">&quot;./actions&quot;</span><span class="op">;</span></span></code></pre></div></li>
+<li><p>If an import is strictly a compile-time type, write an explicit
+type import:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { Action } <span class="im">from</span> <span class="st">&quot;./actions&quot;</span><span class="op">;</span></span></code></pre></div></li>
+</ul>
+<p>This clear separation ensures that single-file bundler transpilers do
+not make incorrect assumptions, avoiding runtime errors such as
+<code>ReferenceError: X is not defined</code>.</p>
+<h4 id="2-bundler-tree-shaking-and-dead-code-elimination">2. Bundler
+Tree-Shaking and Dead Code Elimination</h4>
+<p>When <code>preserveValueImports</code> keeps value imports intact in
+the generated code, modern bundlers can handle tree-shaking accurately.
+Rather than relying on TypeScript's conservative guesses, the bundler
+inspects the entire dependency tree and evaluates whether the imported
+symbol is truly used, whether the imported module has side effects (via
+<code>package.json</code>'s <code>"sideEffects"</code> property), and
+what can safely be dropped from the final bundle.</p>
+<h3 id="evolution-in-modern-typescript-verbatimmodulesyntax">Evolution
+in Modern TypeScript: verbatimModuleSyntax</h3>
+<p>In TypeScript 5.0, <code>preserveValueImports</code> and its
+counterpart <code>importsNotUsedAsValues</code> were deprecated in favor
+of a unified option: <code>verbatimModuleSyntax</code>.</p>
+<p>While <code>preserveValueImports</code> established the rule that
+regular imports should be kept, <code>verbatimModuleSyntax</code>
+simplifies and solidifies the contract: any import or export written
+without the <code>type</code> modifier remains completely untouched in
+the output, while anything marked with <code>type</code> is erased.</p>
+<p>For legacy codebases or projects targeting TypeScript 4.5 through
+4.9, <code>preserveValueImports</code> remains the key configuration for
+ensuring that TypeScript and bundlers interpret module bindings
+consistently.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

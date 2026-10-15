@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How typeof null Impacts TypeScript Type Narrowing - typescript</title>
+    <meta name="description" content="In JavaScript, the expression typeof null evaluates to &#39;object&#39;, a legacy behavior dating back to the language&#39;s initial release. In TypeScript, this historical quirk directly impacts control flow analysis and type narrowing logic. Because TypeScript alig">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-typeof-null-impacts-type-script-type-narrowing">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How typeof null Impacts TypeScript Type Narrowing - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-typeof-null-impacts-type-script-type-narrowing" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In JavaScript, the expression typeof null evaluates to &#39;object&#39;, a legacy behavior dating back to the language&#39;s initial release. In TypeScript, this historical quirk directly impacts control flow analysis and type narrowing logic. Because TypeScript alig" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typeof-null-impacts-typescript-type-narrowing">How typeof
+null Impacts TypeScript Type Narrowing</h1>
+<p>In JavaScript, the expression <code>typeof null</code> evaluates to
+<code>'object'</code>, a legacy behavior dating back to the language's
+initial release. In TypeScript, this historical quirk directly impacts
+control flow analysis and type narrowing logic. Because TypeScript
+aligns its type system with runtime JavaScript semantics, checking
+whether a value has a <code>typeof</code> equal to <code>'object'</code>
+does not exclude <code>null</code>. Understanding how this behavior
+shapes TypeScript's narrowing rules is crucial for preventing unexpected
+runtime errors and writing robust type guards.</p>
+<h3 id="the-javascript-root-cause">The JavaScript Root Cause</h3>
+<p>When JavaScript was created, values were represented with a type tag
+in the lower bits of their memory representations. The tag for an object
+reference was <code>000</code>. Since <code>null</code> was represented
+as a null pointer (a reference value of <code>0x00</code> in most
+platforms), its type tag also resolved to <code>000</code>.
+Consequently, <code>typeof null</code> returned <code>'object'</code>.
+Although proposals were made to fix this in ECMAScript, they were
+rejected to avoid breaking backwards compatibility with existing web
+applications.</p>
+<h3 id="how-typescript-handles-typeof--object">How TypeScript Handles
+<code>typeof === 'object'</code></h3>
+<p>TypeScript uses control flow analysis to narrow down union types
+based on conditionals. When an engineer writes a standard JavaScript
+type check, TypeScript interprets the check according to JavaScript
+runtime rules:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processValue</span>(value<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> { name<span class="op">:</span> <span class="dt">string</span> } <span class="op">|</span> <span class="dt">null</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&#39;object&#39;</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TypeScript narrows &#39;value&#39; to: { name: string } | null</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value<span class="op">.</span><span class="at">name</span>)<span class="op">;</span> <span class="co">// Error: &#39;value&#39; is possibly &#39;null&#39;.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because <code>typeof null</code> is <code>'object'</code>, the guard
+<code>typeof value === 'object'</code> cannot eliminate
+<code>null</code> from the union. TypeScript narrows
+<code>string | { name: string } | null</code> down to
+<code>{ name: string } | null</code>.</p>
+<h3 id="the-impact-under-strictnullchecks">The Impact Under
+<code>strictNullChecks</code></h3>
+<p>How this narrowing impacts code depends heavily on the compiler
+configuration:</p>
+<ol type="1">
+<li><strong>With <code>strictNullChecks</code> enabled (Default in
+modern setups):</strong> TypeScript prevents runtime failures by
+recognizing that <code>null</code> remains within the narrowed type. If
+a developer attempts to access a property immediately after a
+<code>typeof x === 'object'</code> check, the compiler emits an error
+(e.g., <code>Object is possibly 'null'</code>). This forces the
+developer to handle <code>null</code> explicitly.</li>
+<li><strong>With <code>strictNullChecks</code> disabled:</strong>
+TypeScript treats <code>null</code> as a valid subtype of all domain
+types. In this scenario, checking <code>typeof value === 'object'</code>
+incorrectly leads the developer to believe the value is safely
+accessible, bypassing compile-time safety and resulting in runtime
+<code>TypeError: Cannot read properties of null</code> exceptions.</li>
+</ol>
+<h3 id="effective-patterns-for-narrowing-objects">Effective Patterns for
+Narrowing Objects</h3>
+<p>To cleanly eliminate <code>null</code> alongside primitives,
+developers must combine checks or use alternative narrowing
+mechanisms.</p>
+<h4 id="1-compound-truthiness-guard">1. Compound Truthiness Guard</h4>
+<p>Because <code>null</code> is falsy and non-null objects are truthy,
+combining a truthiness check with <code>typeof</code> is the most common
+pattern:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (value <span class="op">&amp;&amp;</span> <span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&#39;object&#39;</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;value&#39; is safely narrowed to the object type, excluding null</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="2-explicit-non-null-comparison">2. Explicit Non-Null
+Comparison</h4>
+<p>Explicitly checking against <code>null</code> is often preferred when
+working with objects that might legitimately be empty or falsy:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&#39;object&#39;</span> <span class="op">&amp;&amp;</span> value <span class="op">!==</span> <span class="kw">null</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;value&#39; is safely narrowed to the non-null object</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="3-the-in-operator">3. The <code>in</code> Operator</h4>
+<p>The <code>in</code> operator checks for the presence of a property in
+an object. However, attempting <code>'prop' in null</code> throws a
+runtime <code>TypeError</code>. Therefore, a non-null assertion or guard
+must precede it:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (value <span class="op">&amp;&amp;</span> <span class="st">&#39;name&#39;</span> <span class="kw">in</span> value) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;value&#39; is narrowed to an object containing the &#39;name&#39; property</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="4-custom-user-defined-type-guards">4. Custom User-Defined Type
+Guards</h4>
+<p>For reusable checks, particularly across <code>unknown</code>
+payloads, a custom type guard encapsulates the null-handling logic:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">isRecord</span>(value<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> value <span class="kw">is</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&#39;object&#39;</span> <span class="op">&amp;&amp;</span> value <span class="op">!==</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleInput</span>(input<span class="op">:</span> <span class="dt">unknown</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">isRecord</span>(input)) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// &#39;input&#39; is safely typed as Record&lt;string, unknown&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(input))<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By factoring in the <code>typeof null === 'object'</code> quirk,
+TypeScript maintains type safety while adhering strictly to JavaScript
+runtime behavior, requiring explicit patterns to separate genuine
+objects from null values.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How tsconfig extends Works in TypeScript - typescript</title>
+    <meta name="description" content="Configuration inheritance in TypeScript allows developers to share common compiler settings across multiple projects or configurations using the extends property in tsconfig.json. This article explains how the extends field works, how TypeScript locates b">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-tsconfig-extends-works-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How tsconfig extends Works in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-tsconfig-extends-works-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Configuration inheritance in TypeScript allows developers to share common compiler settings across multiple projects or configurations using the extends property in tsconfig.json. This article explains how the extends field works, how TypeScript locates b" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-tsconfig-extends-works-in-typescript">How tsconfig extends
+Works in TypeScript</h1>
+<p>Configuration inheritance in TypeScript allows developers to share
+common compiler settings across multiple projects or configurations
+using the <code>extends</code> property in <code>tsconfig.json</code>.
+This article explains how the <code>extends</code> field works, how
+TypeScript locates base configuration files, how properties and options
+are merged or overwritten, and how relative file paths are resolved
+across inherited files.</p>
+<h2 id="the-extends-property-syntax">The <code>extends</code> Property
+Syntax</h2>
+<p>The <code>extends</code> field accepts a string containing a path to
+another configuration file from which you want to inherit settings. This
+path can be a relative file path, an absolute path, or a package
+resolved via Node.js module resolution.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="st">&quot;./tsconfig.base.json&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;strict&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>You can also reference configurations distributed as npm packages,
+such as the official TypeScript bases:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="st">&quot;@tsconfig/node20/tsconfig.json&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Since TypeScript 5.0, <code>extends</code> can also accept an array
+of file paths. Configurations are loaded and merged from left to right,
+meaning files listed later in the array override properties set by
+earlier files.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;./tsconfig.base.json&quot;</span><span class="ot">,</span> <span class="st">&quot;./tsconfig.strict.json&quot;</span><span class="ot">]</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="merging-and-overriding-rules">Merging and Overriding Rules</h2>
+<p>When one configuration inherits from another, TypeScript applies
+specific merging strategies depending on the property type:</p>
+<h3 id="1-compileroptions-merging">1. <code>compilerOptions</code>
+Merging</h3>
+<p>Objects under <code>compilerOptions</code> are shallowly merged. The
+derived configuration inherits all options from the base file, but any
+compiler option explicitly defined in the child configuration will
+overwrite the option defined in the base configuration.</p>
+<ul>
+<li><strong>Base config:</strong> Defines <code>"target": "ES6"</code>
+and <code>"noImplicitAny": true</code>.</li>
+<li><strong>Child config:</strong> Defines
+<code>"target": "ES2022"</code>.</li>
+<li><strong>Result:</strong> <code>"target": "ES2022"</code> and
+<code>"noImplicitAny": true</code>.</li>
+</ul>
+<h3 id="2-top-level-array-properties">2. Top-Level Array Properties</h3>
+<p>Top-level array fields—such as <code>include</code>,
+<code>exclude</code>, and <code>files</code>—do not merge. Instead, the
+derived configuration completely replaces the array defined in the base
+configuration.</p>
+<ul>
+<li><strong>Base config:</strong>
+<code>"exclude": ["node_modules", "dist"]</code></li>
+<li><strong>Child config:</strong>
+<code>"exclude": ["src/legacy"]</code></li>
+<li><strong>Result:</strong> <code>"exclude": ["src/legacy"]</code>
+(<code>node_modules</code> and <code>dist</code> are not included).</li>
+</ul>
+<p>If the child configuration omits these fields entirely, it retains
+the base configuration's values.</p>
+<h3 id="3-circular-inheritance">3. Circular Inheritance</h3>
+<p>TypeScript checks for circular dependencies in the inheritance chain.
+If file <code>A</code> extends file <code>B</code>, and file
+<code>B</code> directly or indirectly extends file <code>A</code>, the
+TypeScript compiler raises an error and halts execution.</p>
+<h2 id="path-resolution-in-inherited-configurations">Path Resolution in
+Inherited Configurations</h2>
+<p>Understanding how relative paths resolve is critical to preventing
+file resolution bugs:</p>
+<ul>
+<li><strong>File selection (<code>include</code>, <code>exclude</code>,
+<code>files</code>):</strong> Relative paths in these arrays are always
+resolved relative to the specific <code>tsconfig.json</code> file in
+which they are written, not the inheriting file.</li>
+<li><strong>Compiler options paths (<code>outDir</code>,
+<code>rootDir</code>, <code>baseUrl</code>):</strong> Relative paths
+defined inside <code>compilerOptions</code> are also resolved relative
+to the configuration file in which they are declared. If defined in the
+base file, they point to locations relative to that base file unless
+explicitly overridden by the child configuration.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

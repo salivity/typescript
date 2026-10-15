@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build a Type-Safe Query String Parser in TypeScript - typescript</title>
+    <meta name="description" content="Building a type-safe query string parser in TypeScript requires transforming a compile-time string literal into a strongly typed object representation while synchronizing it with a runtime extraction mechanism. This article covers the core type-level patt">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/build-a-type-safe-query-string-parser-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Build a Type-Safe Query String Parser in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/build-a-type-safe-query-string-parser-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Building a type-safe query string parser in TypeScript requires transforming a compile-time string literal into a strongly typed object representation while synchronizing it with a runtime extraction mechanism. This article covers the core type-level patt" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="build-a-type-safe-query-string-parser-in-typescript">Build a
+Type-Safe Query String Parser in TypeScript</h1>
+<p>Building a type-safe query string parser in TypeScript requires
+transforming a compile-time string literal into a strongly typed object
+representation while synchronizing it with a runtime extraction
+mechanism. This article covers the core type-level patterns
+needed—specifically template literal types, conditional type inference
+using the <code>infer</code> keyword, and recursive type
+definitions—alongside a paired runtime function that enforces these
+static guarantees.</p>
+<h2 id="the-core-mechanism">The Core Mechanism</h2>
+<p>The mechanism relies on two synchronized layers:</p>
+<ol type="1">
+<li><strong>Type-Level Parsing:</strong> Recursively decomposes a string
+literal type (e.g., <code>"?page=2&amp;sort=asc"</code>) into key-value
+pairs, accumulates them into an object type, and handles edge cases like
+arrays or flags.</li>
+<li><strong>Runtime Execution:</strong> Iterates over the string using
+standard APIs like <code>URLSearchParams</code> while asserting the
+return type matches the type computed by the static parser.</li>
+</ol>
+<hr />
+<h2 id="1-type-level-deconstruction">1. Type-Level Deconstruction</h2>
+<p>TypeScript's template literal types allow string pattern matching
+using the <code>infer</code> keyword. The parsing process is divided
+into three recursive steps: stripping delimiters, splitting key-value
+pairs, and merging results.</p>
+<h3 id="stripping-the-leading-query-marker">Stripping the Leading Query
+Marker</h3>
+<p>Query strings optionally start with a <code>?</code>. A helper type
+checks for this character and strips it before processing the rest of
+the string:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> StripPrefix<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="vs">`?</span><span class="sc">${</span><span class="kw">infer</span> Rest<span class="sc">}</span><span class="vs">`</span> <span class="op">?</span> Rest <span class="op">:</span> T<span class="op">;</span></span></code></pre></div>
+<h3 id="parsing-key-value-pairs">Parsing Key-Value Pairs</h3>
+<p>Individual key-value pairs are separated by the <code>=</code>
+character. If no <code>=</code> is present, the key can be interpreted
+as a boolean flag:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ParsePair<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Key<span class="sc">}</span><span class="vs">=</span><span class="sc">${</span><span class="kw">infer</span> Value<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> { [K <span class="kw">in</span> Key]<span class="op">:</span> Value }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> T <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Key<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> Key <span class="kw">extends</span> <span class="st">&quot;&quot;</span> </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">never</span><span class="op">&gt;</span> </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> { [K <span class="kw">in</span> Key]<span class="op">:</span> <span class="kw">true</span> }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">never</span><span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="merging-objects-and-handling-duplicates">Merging Objects and
+Handling Duplicates</h3>
+<p>When multiple pairs share the same key (e.g.,
+<code>tag=ts&amp;tag=js</code>), the types must merge into an array
+rather than overwrite each other:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MergeValues<span class="op">&lt;</span>Existing<span class="op">,</span> New<span class="op">&gt;</span> <span class="op">=</span> Existing <span class="kw">extends</span> <span class="dt">any</span>[]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> [<span class="op">...</span>Existing<span class="op">,</span> New]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> [Existing<span class="op">,</span> New]<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Merge<span class="op">&lt;</span>A<span class="op">,</span> B<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> A <span class="op">|</span> <span class="kw">keyof</span> B]<span class="op">:</span> K <span class="kw">extends</span> <span class="kw">keyof</span> A</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> K <span class="kw">extends</span> <span class="kw">keyof</span> B</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="op">?</span> MergeValues<span class="op">&lt;</span>A[K]<span class="op">,</span> B[K]<span class="op">&gt;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">:</span> A[K]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> K <span class="kw">extends</span> <span class="kw">keyof</span> B</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> B[K]</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="recursive-query-decomposition">Recursive Query
+Decomposition</h3>
+<p>Pairs are separated by the <code>&amp;</code> delimiter. Using
+conditional recursion, the type isolates the first segment, parses it,
+and recursively calls itself on the remaining string:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ParsePairs<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Head<span class="sc">}</span><span class="vs">&amp;</span><span class="sc">${</span><span class="kw">infer</span> Tail<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> Merge<span class="op">&lt;</span>ParsePair<span class="op">&lt;</span>Head<span class="op">&gt;,</span> ParsePairs<span class="op">&lt;</span>Tail<span class="op">&gt;&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> ParsePair<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> ParseQueryString<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> ParsePairs<span class="op">&lt;</span>StripPrefix<span class="op">&lt;</span>T<span class="op">&gt;&gt;;</span></span></code></pre></div>
+<hr />
+<h2 id="2-runtime-implementation">2. Runtime Implementation</h2>
+<p>The runtime parser executes standard JavaScript parsing logic and
+returns the inferred static type. <code>URLSearchParams</code> handles
+URL decoding and iteration natively.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">parseQuery</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span>(query<span class="op">:</span> T)<span class="op">:</span> ParseQueryString<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> cleanQuery <span class="op">=</span> query<span class="op">.</span><span class="fu">startsWith</span>(<span class="st">&quot;?&quot;</span>) <span class="op">?</span> query<span class="op">.</span><span class="fu">slice</span>(<span class="dv">1</span>) <span class="op">:</span> query<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> searchParams <span class="op">=</span> <span class="kw">new</span> <span class="fu">URLSearchParams</span>(cleanQuery)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> result<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> <span class="op">=</span> {}<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">const</span> [key<span class="op">,</span> value] <span class="kw">of</span> searchParams<span class="op">.</span><span class="fu">entries</span>()) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="bu">Object</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">hasOwnProperty</span><span class="op">.</span><span class="fu">call</span>(result<span class="op">,</span> key)) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> existing <span class="op">=</span> result[key]<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(existing)) {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        existing<span class="op">.</span><span class="fu">push</span>(value)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        result[key] <span class="op">=</span> [existing<span class="op">,</span> value]<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      result[key] <span class="op">=</span> value <span class="op">===</span> <span class="st">&quot;&quot;</span> <span class="op">?</span> <span class="kw">true</span> <span class="op">:</span> value<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> result <span class="im">as</span> ParseQueryString<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h2 id="3-practical-usage-and-type-inference">3. Practical Usage and
+Type Inference</h2>
+<p>When invoking <code>parseQuery</code> with a string literal,
+TypeScript infers exact keys and literal values without requiring manual
+type annotations:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> parsed <span class="op">=</span> <span class="fu">parseQuery</span>(<span class="st">&quot;?search=typescript&amp;filter=true&amp;tag=web&amp;tag=node&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript statically infers the type of `parsed` as:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   search: &quot;typescript&quot;;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   filter: &quot;true&quot;;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   tag: [&quot;web&quot;, &quot;node&quot;];</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> search<span class="op">:</span> <span class="st">&quot;typescript&quot;</span> <span class="op">=</span> parsed<span class="op">.</span><span class="at">search</span><span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> tags<span class="op">:</span> [<span class="st">&quot;web&quot;</span><span class="op">,</span> <span class="st">&quot;node&quot;</span>] <span class="op">=</span> parsed<span class="op">.</span><span class="at">tag</span><span class="op">;</span></span></code></pre></div>
+<p>If dynamic variables are passed instead of literals (e.g., a generic
+<code>string</code> type), the parser gracefully falls back to
+<code>Record&lt;string, unknown&gt;</code> or a generalized index
+signature, preserving type safety across dynamic and static
+contexts.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

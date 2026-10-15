@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numeric vs String Enums Serialization in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, enums allow developers to define sets of named constants, but numeric and string enums compile to fundamentally different JavaScript structures, leading to distinct serialization behaviors. While numeric enums serialize to raw numbers and g">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/numeric-vs-string-enums-serialization-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Numeric vs String Enums Serialization in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/numeric-vs-string-enums-serialization-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, enums allow developers to define sets of named constants, but numeric and string enums compile to fundamentally different JavaScript structures, leading to distinct serialization behaviors. While numeric enums serialize to raw numbers and g" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="numeric-vs-string-enums-serialization-in-typescript">Numeric vs
+String Enums Serialization in TypeScript</h1>
+<p>In TypeScript, enums allow developers to define sets of named
+constants, but numeric and string enums compile to fundamentally
+different JavaScript structures, leading to distinct serialization
+behaviors. While numeric enums serialize to raw numbers and generate
+bidirectional runtime objects, string enums serialize to meaningful
+string literals with forward-only mappings. Understanding these
+differences is critical when transmitting data over networks, storing
+state, or working with JSON payloads.</p>
+<h2 id="compiled-javascript-representation">Compiled JavaScript
+Representation</h2>
+<p>The root cause of serialization differences lies in how the
+TypeScript compiler emits JavaScript for each enum type.</p>
+<h3 id="numeric-enums">Numeric Enums</h3>
+<p>Numeric enums generate a reverse mapping by default. This allows
+lookups from enum name to value, and from value back to name:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Status {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Pending<span class="op">,</span> <span class="co">// 0</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Active<span class="op">,</span>  <span class="co">// 1</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Compiles to:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> Status<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">function</span> (Status) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Status[Status[<span class="st">&quot;Pending&quot;</span>] <span class="op">=</span> <span class="dv">0</span>] <span class="op">=</span> <span class="st">&quot;Pending&quot;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Status[Status[<span class="st">&quot;Active&quot;</span>] <span class="op">=</span> <span class="dv">1</span>] <span class="op">=</span> <span class="st">&quot;Active&quot;</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>})(Status <span class="op">||</span> (Status <span class="op">=</span> {}))<span class="op">;</span></span></code></pre></div>
+<p>At runtime, the <code>Status</code> object evaluates to:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;0&quot;</span><span class="op">:</span> <span class="st">&quot;Pending&quot;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;1&quot;</span><span class="op">:</span> <span class="st">&quot;Active&quot;</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Pending&quot;</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Active&quot;</span><span class="op">:</span> <span class="dv">1</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="string-enums">String Enums</h3>
+<p>String enums do not create reverse mappings because string keys
+cannot map back unambiguously in a standard runtime pattern without
+adding unnecessary overhead:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Status {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  Pending <span class="op">=</span> <span class="st">&quot;PENDING&quot;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  Active <span class="op">=</span> <span class="st">&quot;ACTIVE&quot;</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Compiles to:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> Status<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">function</span> (Status) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Status[<span class="st">&quot;Pending&quot;</span>] <span class="op">=</span> <span class="st">&quot;PENDING&quot;</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Status[<span class="st">&quot;Active&quot;</span>] <span class="op">=</span> <span class="st">&quot;ACTIVE&quot;</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>})(Status <span class="op">||</span> (Status <span class="op">=</span> {}))<span class="op">;</span></span></code></pre></div>
+<p>At runtime, the <code>Status</code> object evaluates strictly to:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Pending&quot;</span><span class="op">:</span> <span class="st">&quot;PENDING&quot;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Active&quot;</span><span class="op">:</span> <span class="st">&quot;ACTIVE&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="serializing-enum-values-in-json">Serializing Enum Values in
+JSON</h2>
+<p>When an enum property on an object is serialized using
+<code>JSON.stringify()</code>, the output directly reflects the enum
+member's assigned value.</p>
+<h3 id="numeric-enum-value-serialization">Numeric Enum Value
+Serialization</h3>
+<p>When serializing an object containing a numeric enum value, the JSON
+output contains only the assigned integer:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Role {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  User<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  Admin<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> account <span class="op">=</span> { id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> role<span class="op">:</span> Role<span class="op">.</span><span class="at">Admin</span> }<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(account))<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Output: {&quot;id&quot;:1,&quot;role&quot;:1}</span></span></code></pre></div>
+<ul>
+<li><strong>Advantage:</strong> Minimal payload size. Integers occupy
+fewer bytes than strings.</li>
+<li><strong>Disadvantage:</strong> Low readability. External consumers
+of the API cannot infer what <code>1</code> means without consulting
+documentation or schema definitions.</li>
+</ul>
+<h3 id="string-enum-value-serialization">String Enum Value
+Serialization</h3>
+<p>When serializing an object containing a string enum value, the output
+preserves the underlying string value:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Role {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  User <span class="op">=</span> <span class="st">&quot;USER&quot;</span><span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  Admin <span class="op">=</span> <span class="st">&quot;ADMIN&quot;</span><span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> account <span class="op">=</span> { id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> role<span class="op">:</span> Role<span class="op">.</span><span class="at">Admin</span> }<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(account))<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Output: {&quot;id&quot;:1,&quot;role&quot;:&quot;ADMIN&quot;}</span></span></code></pre></div>
+<ul>
+<li><strong>Advantage:</strong> Self-documenting payloads. Network tabs,
+logs, and database records remain easily readable without schema
+translation.</li>
+<li><strong>Disadvantage:</strong> Slightly larger network payload
+compared to integers.</li>
+</ul>
+<h2 id="serializing-the-enum-object-itself">Serializing the Enum Object
+Itself</h2>
+<p>If an application attempts to serialize the entire enum definition
+object (for example, sending all possible options to a frontend
+dropdown), the differences are significant:</p>
+<ul>
+<li><p><strong>Numeric Enums:</strong> <code>JSON.stringify(Role)</code>
+outputs both directions:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;0&quot;</span><span class="fu">:</span><span class="st">&quot;User&quot;</span><span class="fu">,</span><span class="dt">&quot;1&quot;</span><span class="fu">:</span><span class="st">&quot;Admin&quot;</span><span class="fu">,</span><span class="dt">&quot;User&quot;</span><span class="fu">:</span><span class="dv">0</span><span class="fu">,</span><span class="dt">&quot;Admin&quot;</span><span class="fu">:</span><span class="dv">1</span><span class="fu">}</span></span></code></pre></div>
+<p>Iterating over this serialized output requires filtering out numeric
+keys to avoid duplicating options.</p></li>
+<li><p><strong>String Enums:</strong> <code>JSON.stringify(Role)</code>
+outputs a clean key-value dictionary:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;User&quot;</span><span class="fu">:</span><span class="st">&quot;USER&quot;</span><span class="fu">,</span><span class="dt">&quot;Admin&quot;</span><span class="fu">:</span><span class="st">&quot;ADMIN&quot;</span><span class="fu">}</span></span></code></pre></div></li>
+</ul>
+<h2 id="deserialization-and-runtime-safety">Deserialization and Runtime
+Safety</h2>
+<p>During deserialization (<code>JSON.parse()</code>):</p>
+<ol type="1">
+<li><strong>Numeric Enums:</strong> Any number can bypass loose runtime
+validations, and missing values can easily lead to invalid states if
+payload numbers change or shift due to reordered enum definitions.</li>
+<li><strong>String Enums:</strong> Payloads are bound to explicit
+strings. Reordering definitions in TypeScript does not change the
+serialized value, preventing silent data corruption across API
+updates.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tsc --noEmit vs ESLint with TypeScript Rules - typescript</title>
+    <meta name="description" content="While both tsc --noEmit and ESLint with TypeScript rules analyze your codebase to catch errors before runtime, they serve fundamentally different purposes. tsc --noEmit runs the official TypeScript compiler solely to perform type checking across your enti">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/tsc-no-emit-vs-es-lint-with-type-script-rules">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="tsc --noEmit vs ESLint with TypeScript Rules - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/tsc-no-emit-vs-es-lint-with-type-script-rules" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="While both tsc --noEmit and ESLint with TypeScript rules analyze your codebase to catch errors before runtime, they serve fundamentally different purposes. tsc --noEmit runs the official TypeScript compiler solely to perform type checking across your enti" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="tsc---noemit-vs-eslint-with-typescript-rules">tsc --noEmit vs
+ESLint with TypeScript Rules</h1>
+<p>While both <code>tsc --noEmit</code> and ESLint with TypeScript rules
+analyze your codebase to catch errors before runtime, they serve
+fundamentally different purposes. <code>tsc --noEmit</code> runs the
+official TypeScript compiler solely to perform type checking across your
+entire project without producing JavaScript build files. In contrast,
+ESLint parses code to enforce code quality, style consistency, and best
+practices. Understanding how their internal mechanics, performance
+footprints, and rule scopes differ is essential for setting up an
+efficient development and CI/CD workflow.</p>
+<h3 id="primary-purpose-and-scope">Primary Purpose and Scope</h3>
+<ul>
+<li><strong><code>tsc --noEmit</code> (Type Checking):</strong> The
+primary goal of <code>tsc --noEmit</code> is type verification and
+semantic correctness. It inspects whether variables, function
+parameters, return values, and module contracts conform to TypeScript’s
+type system. It determines whether your code is mathematically sound
+from a type perspective (e.g., preventing you from accessing properties
+on <code>undefined</code> or passing a <code>string</code> where a
+<code>number</code> is expected).</li>
+<li><strong>ESLint (Code Quality and Linting):</strong> ESLint is an AST
+(Abstract Syntax Tree) linter designed to enforce developer guidelines,
+identify anti-patterns, and catch logic flaws that are syntactically and
+type-wise valid. For instance, <code>tsc</code> will not care if you
+leave a dangling <code>console.log</code>, write an empty function, or
+create cyclomatic complexity that makes code unreadable, but ESLint
+will.</li>
+</ul>
+<h3 id="analysis-method-and-architecture">Analysis Method and
+Architecture</h3>
+<ul>
+<li><strong>Whole-Program Type Checking:</strong> <code>tsc</code>
+evaluates your entire codebase as an interconnected program. It resolves
+cross-file dependencies, global ambient definitions, declaration merges,
+and complex generic constraints. Because it was purpose-built for type
+checking, its internal pipeline is heavily optimized for resolving deep
+type dependencies across files.</li>
+<li><strong>AST Rule Traversal:</strong> ESLint inspects files by
+traversing an Abstract Syntax Tree node-by-node. When using
+<code>@typescript-eslint</code>, ESLint leverages TypeScript's parser to
+produce an AST that mirrors TypeScript code. While ESLint can run
+"type-aware" rules by creating a TypeScript compiler instance under the
+hood, it is fundamentally designed to evaluate discrete rules on syntax
+nodes rather than validating global type integrity.</li>
+</ul>
+<h3 id="ability-to-auto-fix-code">Ability to Auto-Fix Code</h3>
+<ul>
+<li><strong><code>tsc --noEmit</code>:</strong> The TypeScript compiler
+does not automatically fix errors via the CLI. It only reports type
+mismatches, syntax errors, and missing declarations as exit codes and
+terminal logs.</li>
+<li><strong>ESLint:</strong> ESLint features a built-in
+<code>--fix</code> flag. Many lint rules (such as removing unused
+imports, enforcing specific quote styles, or rewriting deprecated
+syntax) can be automatically corrected without developer
+intervention.</li>
+</ul>
+<h3 id="performance-and-resource-usage">Performance and Resource
+Usage</h3>
+<ul>
+<li><strong>Speed of Type Validation:</strong> <code>tsc</code> is
+significantly faster at purely validating types than running ESLint with
+type-aware rules enabled.</li>
+<li><strong>Type-Aware ESLint Overhead:</strong> When ESLint rules
+require type information (like
+<code>@typescript-eslint/no-floating-promises</code>), ESLint must
+request type definitions from the TypeScript compiler API for each
+inspected node. This adds overhead and can drastically increase linting
+times on large codebases.</li>
+</ul>
+<h3 id="summary-of-differences">Summary of Differences</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><code>tsc --noEmit</code></th>
+<th style="text-align: left;">ESLint with TypeScript Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Core Function</strong></td>
+<td style="text-align: left;">Static type checking and compiler
+verification</td>
+<td style="text-align: left;">Code quality, conventions, and pattern
+enforcement</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Analyzes</strong></td>
+<td style="text-align: left;">Semantic type correctness across the
+entire project</td>
+<td style="text-align: left;">Syntax patterns, AST nodes, and style
+guidelines</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Auto-Fix</strong></td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Yes (via <code>--fix</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Style Checking</strong></td>
+<td style="text-align: left;">Minimal (only strict compiler flags)</td>
+<td style="text-align: left;">Extensive (indentation, naming
+conventions, formatting)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Speed</strong></td>
+<td style="text-align: left;">Highly optimized for full type
+evaluation</td>
+<td style="text-align: left;">Fast for syntactic rules; slower for
+type-aware rules</td>
+</tr>
+</tbody>
+</table>
+<h3 id="best-practice">Best Practice</h3>
+<p>These tools are complementary rather than mutually exclusive. The
+standard industry practice is to run both: use <code>tsc --noEmit</code>
+to verify type safety and handle type checking in your CI pipeline, and
+use ESLint to maintain clean, readable code and prevent common runtime
+and stylistic mistakes.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Uses LSP to Communicate with IDEs - typescript</title>
+    <meta name="description" content="This article explores how the TypeScript language service interfaces with modern integrated development environments (IDEs) through the Language Server Protocol (LSP). While TypeScript natively uses a standalone tool called tsserver, modern developer tool">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-uses-lsp-to-communicate-with-id-es">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Uses LSP to Communicate with IDEs - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-uses-lsp-to-communicate-with-id-es" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how the TypeScript language service interfaces with modern integrated development environments (IDEs) through the Language Server Protocol (LSP). While TypeScript natively uses a standalone tool called tsserver, modern developer tool" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-uses-lsp-to-communicate-with-ides">How TypeScript
+Uses LSP to Communicate with IDEs</h1>
+<p>This article explores how the TypeScript language service interfaces
+with modern integrated development environments (IDEs) through the
+Language Server Protocol (LSP). While TypeScript natively uses a
+standalone tool called <code>tsserver</code>, modern developer tools
+utilize an LSP wrapper to translate standardized editor requests—such as
+autocompletion, type checking, and jump-to-definition—into the
+proprietary format TypeScript understands, creating a seamless,
+cross-editor development experience.</p>
+<h2 id="the-architecture-tsserver-vs-lsp">The Architecture:
+<code>tsserver</code> vs. LSP</h2>
+<p>TypeScript was created before the Language Server Protocol existed.
+As a result, the TypeScript core team maintains <code>tsserver</code>, a
+standalone process that provides language features using TypeScript’s
+own custom JSON-based messaging protocol.</p>
+<p>To bridge <code>tsserver</code> with editors that strictly adhere to
+the Language Server Protocol (such as Neovim, Emacs, Sublime Text, or
+Eclipse Theia), the community relies on an adapter, most commonly
+<code>typescript-language-server</code>. This adapter acts as a
+proxy:</p>
+<ol type="1">
+<li><strong>LSP Client (The IDE):</strong> Speaks standard LSP.</li>
+<li><strong>LSP Server (The Adapter):</strong> Receives LSP requests and
+converts them into <code>tsserver</code> commands.</li>
+<li><strong>Core Engine (<code>tsserver</code>):</strong> Executes the
+compiler logic, semantic analysis, and type checking, then returns
+responses to the adapter.</li>
+</ol>
+<pre><code>[ IDE / Editor ] &lt;--- (LSP over JSON-RPC) ---&gt; [ typescript-language-server ] &lt;--- (tsserver protocol) ---&gt; [ tsserver ]</code></pre>
+<p><em>(Note: Visual Studio Code contains its own built-in integration
+layer to talk directly to <code>tsserver</code>, but it follows the
+exact same architectural principles.)</em></p>
+<h2 id="the-transport-layer-json-rpc">The Transport Layer: JSON-RPC</h2>
+<p>Communication between the IDE and the language server is asynchronous
+and relies on the JSON-RPC 2.0 protocol. The transmission typically
+happens over standard input and output (<code>stdio</code>), though
+sockets or Node.js IPC channels can also be used.</p>
+<p>Each message contains a header specifying the content length followed
+by a JSON payload:</p>
+<pre class="http"><code>Content-Length: 118
+
+{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;textDocument/completion&quot;,&quot;params&quot;:{&quot;textDocument&quot;:{&quot;uri&quot;:&quot;file:///app.ts&quot;},&quot;position&quot;:{&quot;line&quot;:5,&quot;character&quot;:12}}}</code></pre>
+<p>Messages fall into two main categories:</p>
+<ul>
+<li><strong>Requests and Responses:</strong> Paired messages using an
+<code>id</code> field. The client asks for information (e.g., hover
+information or completions), and the server replies.</li>
+<li><strong>Notifications:</strong> One-way messages without an
+<code>id</code>. These are used for events like file modifications or
+diagnostic reports.</li>
+</ul>
+<h2 id="key-communication-phases">Key Communication Phases</h2>
+<h3 id="1-initialization-and-handshake">1. Initialization and
+Handshake</h3>
+<p>When an IDE opens a TypeScript workspace, it starts the language
+server child process and sends an <code>initialize</code> request. This
+payload specifies the client's capabilities (e.g., whether it supports
+snippet completions or markdown hover documentation). The server
+responds with its own server capabilities, letting the editor know which
+language features it supports.</p>
+<h3 id="2-document-synchronization">2. Document Synchronization</h3>
+<p>Because disk I/O is too slow for real-time code analysis, the IDE
+keeps the language server updated with in-memory changes:</p>
+<ul>
+<li><strong><code>textDocument/didOpen</code>:</strong> Notifies the
+server that a file is active.</li>
+<li><strong><code>textDocument/didChange</code>:</strong> Sends
+incremental or full-text updates as the user types.</li>
+</ul>
+<p>The adapter receives these events, updates its internal virtual file
+tree, and notifies <code>tsserver</code> so the compiler can re-evaluate
+types and abstract syntax trees (AST).</p>
+<h3 id="3-language-feature-queries">3. Language Feature Queries</h3>
+<p>When a user triggers an action (like requesting autocomplete), the
+flow operates synchronously from the user's perspective:</p>
+<ol type="1">
+<li>The IDE sends <code>textDocument/completion</code> with the file URI
+and cursor coordinates.</li>
+<li>The LSP wrapper converts this into a <code>tsserver</code>
+<code>quickinfo</code> or <code>completions</code> command.</li>
+<li><code>tsserver</code> inspects the AST at the given position and
+calculates valid tokens.</li>
+<li>The wrapper formats these tokens into standard LSP
+<code>CompletionItem[]</code> objects.</li>
+<li>The IDE renders the autocomplete pop-up.</li>
+</ol>
+<h3 id="4-diagnostics-and-error-reporting">4. Diagnostics and Error
+Reporting</h3>
+<p>Type errors and syntax warnings do not wait for user interaction.
+When code changes, <code>tsserver</code> triggers a background
+validation cycle. The language server collects these errors and pushes a
+<code>textDocument/publishDiagnostics</code> notification to the IDE,
+allowing the editor to highlight syntax errors and populate the
+"Problems" panel instantly.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

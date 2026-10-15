@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Does TypeScript Structural Typing Work? - typescript</title>
+    <meta name="description" content="TypeScript utilizes a structural type system—often referred to as compile-time duck typing—where type compatibility and equivalence are determined solely by an object&#39;s actual shape and properties rather than its explicit name or declaration site. In cont">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-does-type-script-structural-typing-work">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Does TypeScript Structural Typing Work? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-does-type-script-structural-typing-work" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript utilizes a structural type system—often referred to as compile-time duck typing—where type compatibility and equivalence are determined solely by an object&#39;s actual shape and properties rather than its explicit name or declaration site. In cont" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-does-typescript-structural-typing-work">How Does TypeScript
+Structural Typing Work?</h1>
+<p>TypeScript utilizes a structural type system—often referred to as
+compile-time duck typing—where type compatibility and equivalence are
+determined solely by an object's actual shape and properties rather than
+its explicit name or declaration site. In contrast to nominal type
+systems found in languages like Java, C#, or C++, where two entities
+must share an explicit inheritance chain or declaration to be considered
+interchangeable, TypeScript considers any two types compatible if one
+possesses all the public members required by the other. This
+architectural choice aligns directly with the dynamic nature of
+JavaScript, allowing idiomatic runtime patterns while maintaining robust
+compile-time safety.</p>
+<h3 id="understanding-structural-typing-in-typescript">Understanding
+Structural Typing in TypeScript</h3>
+<p>In a structural type system, the compiler evaluates types by
+inspecting their internal structure. When values are assigned to a
+variable, passed as function arguments, or returned from functions,
+TypeScript verifies that the incoming value satisfies the target type's
+structural contract.</p>
+<p>Consider this basic example:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Point2D {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  x<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  y<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">printCoordinates</span>(point<span class="op">:</span> Point2D) {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`x: </span><span class="sc">\(</span><span class="vs">{point.x}, y:</span><span class="sc">\)</span><span class="vs">{point.y}`</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> vector <span class="op">=</span> { x<span class="op">:</span> <span class="dv">10</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">20</span><span class="op">,</span> z<span class="op">:</span> <span class="dv">30</span> }<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoordinates</span>(vector)<span class="op">;</span> <span class="co">// Valid</span></span></code></pre></div>
+<p>Even though <code>vector</code> was not explicitly declared as an
+implementer of <code>Point2D</code>, and despite having an extra
+property <code>z</code>, TypeScript permits the call because
+<code>vector</code> satisfies the structural requirement of having
+numeric <code>x</code> and <code>y</code> properties.</p>
+<h3 id="comparing-structural-and-nominal-typing">Comparing Structural
+and Nominal Typing</h3>
+<p>The core distinction between structural and nominal typing lies in
+what establishes identity and compatibility:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Characteristic</th>
+<th>Structural Typing (TypeScript)</th>
+<th>Nominal Typing (Java, C#, Rust)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compatibility basis</td>
+<td>Shape, members, and internal signatures</td>
+<td>Explicit name, namespace, and hierarchy</td>
+</tr>
+<tr>
+<td>Type equivalence</td>
+<td>Identical structures are identical types</td>
+<td>Identical structures are distinct unless aliased or inherited</td>
+</tr>
+<tr>
+<td>Declaration style</td>
+<td>Flexible, implicit matching</td>
+<td>Strict, explicit declaration
+(<code>class B implements A</code>)</td>
+</tr>
+<tr>
+<td>Runtime overhead</td>
+<td>None (types are erased during compilation)</td>
+<td>Often preserved for runtime reflection and dispatch</td>
+</tr>
+<tr>
+<td>Primary design goal</td>
+<td>Modeling dynamic JavaScript runtime patterns</td>
+<td>Strict domain modeling and type segregation</td>
+</tr>
+</tbody>
+</table>
+<p>In a nominal language like Java, two classes with identical fields
+cannot be substituted for one another unless they share an explicit
+interface or parent class:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Java (Nominal)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User <span class="op">{</span> <span class="kw">public</span> <span class="bu">String</span> id<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Order <span class="op">{</span> <span class="kw">public</span> <span class="bu">String</span> id<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>User user <span class="op">=</span> <span class="kw">new</span> <span class="fu">Order</span><span class="op">();</span> <span class="co">// Compile-time error: incompatible types</span></span></code></pre></div>
+<p>In TypeScript, identical structures are mutually assignable:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript (Structural)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User { id<span class="op">!:</span> <span class="dt">string</span><span class="op">;</span> }</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Order { id<span class="op">!:</span> <span class="dt">string</span><span class="op">;</span> }</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> user<span class="op">:</span> User <span class="op">=</span> <span class="kw">new</span> <span class="fu">Order</span>()<span class="op">;</span> <span class="co">// Fully valid</span></span></code></pre></div>
+<h3 id="key-mechanics-of-typescripts-structural-system">Key Mechanics of
+TypeScript's Structural System</h3>
+<p>TypeScript applies structural checks across several language
+constructs, each governed by specific rules:</p>
+<ul>
+<li><strong>Object Width and Depth:</strong> Type compatibility checks
+verify that every required property in the target type exists in the
+source type with a compatible type. Excess properties on non-literal
+values are tolerated, accommodating typical JavaScript data extension
+patterns.</li>
+<li><strong>Excess Property Checks on Literals:</strong> While
+structural typing permits extra properties in intermediate variables,
+TypeScript enforces strict excess property checks on direct object
+literals. Writing <code>printCoordinates({ x: 10, y: 20, z: 30 })</code>
+directly causes a compiler error to prevent typos and unused
+properties.</li>
+<li><strong>Function Parameter Bivariance and Contravariance:</strong>
+TypeScript checks function compatibility by evaluating parameter lists
+and return types. A function with fewer parameters can be assigned to a
+location expecting more parameters, which is essential for handling
+callback signatures in JavaScript libraries (such as
+<code>Array.prototype.forEach</code>).</li>
+<li><strong>Classes as Value-and-Type Pairs:</strong> A TypeScript class
+creates both a constructor function and an instance type. The structural
+comparison only evaluates the instance side (public properties and
+methods). Constructors and static members do not influence instance
+compatibility. However, <code>private</code> and <code>protected</code>
+members introduce nominal behavior: they must originate from the exact
+same class declaration to be considered compatible.</li>
+</ul>
+<h3 id="simulating-nominal-typing-in-typescript">Simulating Nominal
+Typing in TypeScript</h3>
+<p>When strict domain separation is necessary—such as preventing an
+unvalidated identifier from being passed where a validated entity ID is
+expected—developers can simulate nominal typing using branded or tagged
+types:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserId <span class="op">=</span> <span class="dt">string</span> <span class="op">&amp;</span> { <span class="kw">readonly</span> __brand<span class="op">:</span> unique <span class="dt">symbol</span> }<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OrderId <span class="op">=</span> <span class="dt">string</span> <span class="op">&amp;</span> { <span class="kw">readonly</span> __brand<span class="op">:</span> unique <span class="dt">symbol</span> }<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">makeUserId</span>(raw<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> UserId {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> raw <span class="im">as</span> UserId<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">deleteUser</span>(id<span class="op">:</span> UserId) {</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Logic to delete user</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> rawId <span class="op">=</span> <span class="st">&quot;user_12345&quot;</span><span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> orderId <span class="op">=</span> <span class="st">&quot;order_67890&quot;</span> <span class="im">as</span> OrderId<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">deleteUser</span>(rawId)<span class="op">;</span> <span class="co">// Error: string is not assignable to UserId</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">deleteUser</span>(orderId)<span class="op">;</span> <span class="co">// Error: OrderId is not assignable to UserId</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">deleteUser</span>(<span class="fu">makeUserId</span>(rawId))<span class="op">;</span> <span class="co">// Valid</span></span></code></pre></div>
+<p>By intersecting a primitive type with a unique dummy property, the
+structural shape becomes impossible to satisfy accidentally, combining
+structural flexibility with nominal safety.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

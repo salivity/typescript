@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preserving Generics in TypeScript Higher-Order Functions - typescript</title>
+    <meta name="description" content="Higher-order functions in TypeScript often unintentionally erase or prematurely resolve generic type arguments, reducing dynamic functions to fixed or unknown types. To preserve generic type arguments, TypeScript relies on higher-rank polymorphism, where">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/preserving-generics-in-type-script-higher-order-functions">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Preserving Generics in TypeScript Higher-Order Functions - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/preserving-generics-in-type-script-higher-order-functions" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Higher-order functions in TypeScript often unintentionally erase or prematurely resolve generic type arguments, reducing dynamic functions to fixed or unknown types. To preserve generic type arguments, TypeScript relies on higher-rank polymorphism, where" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="preserving-generics-in-typescript-higher-order-functions">Preserving
+Generics in TypeScript Higher-Order Functions</h1>
+<p>Higher-order functions in TypeScript often unintentionally erase or
+prematurely resolve generic type arguments, reducing dynamic functions
+to fixed or <code>unknown</code> types. To preserve generic type
+arguments, TypeScript relies on higher-rank polymorphism, where the
+returned function retains its own generic type parameters rather than
+binding them at the wrapper level. This article explains the mechanics
+of how TypeScript manages generic signatures within higher-order
+functions, demonstrating how to properly type wrappers, decorators, and
+composition utilities so that consumer type inference remains
+intact.</p>
+<h2 id="the-problem-premature-type-instantiation">The Problem: Premature
+Type Instantiation</h2>
+<p>A common pitfall occurs when placing type parameters on the outer
+higher-order function rather than on the returned function itself. When
+type arguments are declared on the outer function, TypeScript attempts
+to infer or lock those types at the moment the wrapper is called, rather
+than when the resulting function is executed.</p>
+<p>Consider an identity wrapper:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Incorrect: Generics instantiated prematurely</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createLogger</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(fn<span class="op">:</span> (arg<span class="op">:</span> T) <span class="kw">=&gt;</span> T) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (arg<span class="op">:</span> T) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Input:&quot;</span><span class="op">,</span> arg)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">fn</span>(arg)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you pass a generic function
+<code>identity&lt;T&gt;(x: T): T</code> into <code>createLogger</code>,
+TypeScript instantiates <code>T</code> immediately (often defaulting to
+<code>unknown</code> or inferring from contextual usage at the call
+site). The resulting function loses its ability to adapt dynamically to
+different input types across multiple invocations.</p>
+<h2 id="the-solution-rank-2-polymorphic-signatures">The Solution: Rank-2
+Polymorphic Signatures</h2>
+<p>To preserve generic behavior, the higher-order function must return a
+function that introduces its own generic parameter. This technique is
+known in type theory as higher-rank polymorphism (or rank-2 types).</p>
+<p>Instead of parameterizing the outer function, define the return type
+as a generic callable signature:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">withLogging</span>(fn<span class="op">:</span> (<span class="op">&lt;</span>T<span class="op">&gt;</span>(arg<span class="op">:</span> T) <span class="kw">=&gt;</span> T)) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>T<span class="op">&gt;</span>(arg<span class="op">:</span> T)<span class="op">:</span> T <span class="kw">=&gt;</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Calling with:&quot;</span><span class="op">,</span> arg)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> <span class="fu">fn</span>(arg)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Result:&quot;</span><span class="op">,</span> result)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Target generic function</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> identity <span class="op">=</span> <span class="op">&lt;</span>T<span class="op">&gt;</span>(x<span class="op">:</span> T)<span class="op">:</span> T <span class="kw">=&gt;</span> x<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Wrapped function preserves generic behavior</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> loggedIdentity <span class="op">=</span> <span class="fu">withLogging</span>(identity)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> num <span class="op">=</span> <span class="fu">loggedIdentity</span>(<span class="dv">42</span>)<span class="op">;</span>       <span class="co">// Inferred as number</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> str <span class="op">=</span> <span class="fu">loggedIdentity</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span>  <span class="co">// Inferred as string</span></span></code></pre></div>
+<p>In this pattern:</p>
+<ol type="1">
+<li><code>fn</code> is explicitly typed to require a generic function
+<code>&lt;T&gt;(arg: T) =&gt; T</code>.</li>
+<li>The returned wrapper declares
+<code>&lt;T&gt;(arg: T): T</code>.</li>
+<li>Type instantiation is deferred until <code>loggedIdentity</code> is
+called by the consumer.</li>
+</ol>
+<h2 id="preserving-arbitrary-signatures-with-generic-tuples">Preserving
+Arbitrary Signatures with Generic Tuples</h2>
+<p>When creating higher-order functions that accept functions with
+arbitrary arguments and return values, you can combine generic rest
+parameters with the generic wrapper pattern.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">trace</span><span class="op">&lt;</span>TArgs <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> TReturn<span class="op">&gt;</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  fn<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> TArgs) <span class="kw">=&gt;</span> TReturn</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> TArgs) <span class="kw">=&gt;</span> TReturn {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (<span class="op">...</span>args<span class="op">:</span> TArgs)<span class="op">:</span> TReturn <span class="kw">=&gt;</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Arguments:&quot;</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">fn</span>(<span class="op">...</span>args)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>While the implementation above works well for non-generic functions
+or specific calls, TypeScript cannot natively infer that an input
+function has an uninstantiated generic signature using pure type
+parameter inference (such as <code>TArgs extends any[]</code>).</p>
+<p>To preserve generic capabilities across arbitrary functions, define
+an interface for the callable shape:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> GenericTransformer {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>T<span class="op">,</span> R<span class="op">&gt;</span>(item<span class="op">:</span> T<span class="op">,</span> transform<span class="op">:</span> (val<span class="op">:</span> T) <span class="kw">=&gt;</span> R)<span class="op">:</span> R<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">decorateTransformer</span>(fn<span class="op">:</span> GenericTransformer)<span class="op">:</span> GenericTransformer {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>T<span class="op">,</span> R<span class="op">&gt;</span>(item<span class="op">:</span> T<span class="op">,</span> transform<span class="op">:</span> (val<span class="op">:</span> T) <span class="kw">=&gt;</span> R)<span class="op">:</span> R <span class="kw">=&gt;</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Processing item:&quot;</span><span class="op">,</span> item)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">fn</span>(item<span class="op">,</span> transform)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By explicitly typing both the input parameter and the return value
+with the call signature interface, the compiler enforces that the output
+function remains generic across all invocation sites.</p>
+<h2 id="higher-order-functions-with-currying">Higher-Order Functions
+with Currying</h2>
+<p>Currying requires passing type arguments from one function layer to
+the next. When preserving generics in curried patterns, ensure each
+returned function defines the exact type variables it needs to
+capture:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createPropExtractor</span><span class="op">&lt;</span>K <span class="kw">extends</span> PropertyKey<span class="op">&gt;</span>(key<span class="op">:</span> K) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>T <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span>K<span class="op">,</span> <span class="dt">any</span><span class="op">&gt;&gt;</span>(obj<span class="op">:</span> T)<span class="op">:</span> T[K] <span class="kw">=&gt;</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> obj[key]<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> getName <span class="op">=</span> <span class="fu">createPropExtractor</span>(<span class="st">&quot;name&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> age<span class="op">:</span> <span class="dv">30</span> }<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> product <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Laptop&quot;</span><span class="op">,</span> inStock<span class="op">:</span> <span class="kw">true</span> }<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getName</span>(user)<span class="op">;</span>       <span class="co">// Inferred as string</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> productName <span class="op">=</span> <span class="fu">getName</span>(product)<span class="op">;</span> <span class="co">// Inferred as string</span></span></code></pre></div>
+<p>In this implementation, <code>key</code> is bound at the first
+invocation, while the object type <code>T</code> remains generic until
+the returned function is called. This separation allows
+<code>getName</code> to accept any object structure containing a
+<code>name</code> property while computing the exact property type for
+each unique object passed to it.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

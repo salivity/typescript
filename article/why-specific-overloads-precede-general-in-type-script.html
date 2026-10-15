@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Specific Overloads Precede General in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, function overloads are evaluated sequentially from top to bottom, meaning the compiler resolves a function call to the very first overload signature that matches the provided arguments. If a more general overload is placed before a more spe">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-specific-overloads-precede-general-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Specific Overloads Precede General in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-specific-overloads-precede-general-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, function overloads are evaluated sequentially from top to bottom, meaning the compiler resolves a function call to the very first overload signature that matches the provided arguments. If a more general overload is placed before a more spe" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-specific-overloads-precede-general-in-typescript">Why
+Specific Overloads Precede General in TypeScript</h1>
+<p>In TypeScript, function overloads are evaluated sequentially from top
+to bottom, meaning the compiler resolves a function call to the very
+first overload signature that matches the provided arguments. If a more
+general overload is placed before a more specific one, the broader
+signature will eagerly capture the invocation, effectively shadowing and
+disabling the narrower signature beneath it. Arranging signatures from
+most specific to most general ensures that callers receive the most
+accurate return types and strictest argument checking possible.</p>
+<h3 id="the-mechanics-of-overload-resolution">The Mechanics of Overload
+Resolution</h3>
+<p>When you invoke an overloaded function, TypeScript checks the call
+against each overload signature in the exact order they are declared in
+the source code. The resolution algorithm halts immediately upon finding
+the first compatible match. It does not look ahead to see if a later
+signature offers a more precise fit.</p>
+<p>Because TypeScript's type system is based on structural subtyping,
+broader types naturally encompass narrower types:</p>
+<ul>
+<li>A literal type like <code>'submit'</code> is a subtype of
+<code>string</code>.</li>
+<li>A specific interface like <code>HTMLInputElement</code> is a subtype
+of <code>HTMLElement</code>.</li>
+<li>Any type is a subtype of <code>unknown</code> or
+<code>any</code>.</li>
+</ul>
+<p>If an overload accepting <code>string</code> appears before an
+overload accepting <code>'submit'</code>, an argument of value
+<code>'submit'</code> satisfies the <code>string</code> condition. The
+compiler selects that first definition and skips the rest.</p>
+<h3 id="the-masking-problem-in-practice">The Masking Problem in
+Practice</h3>
+<p>Consider an event-handling utility where different event names yield
+different event objects.</p>
+<h4 id="incorrect-ordering-general-first">Incorrect Ordering (General
+First)</h4>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Incorrect: The general string signature shadows the specific one</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="bu">Event</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="st">&quot;click&quot;</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="bu">MouseEvent</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="dt">any</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// implementation</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Result:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;e&#39; is inferred as Event, not MouseEvent!</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// MouseEvent-specific properties like e.clientX will trigger errors.</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because <code>"click"</code> is assignable to <code>string</code>,
+the compiler matches the first signature immediately. The specific
+<code>"click"</code> overload is rendered unreachable dead code.</p>
+<h4 id="correct-ordering-specific-first">Correct Ordering (Specific
+First)</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct: Most specific types appear first</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="st">&quot;click&quot;</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="bu">MouseEvent</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="bu">Event</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">on</span>(event<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> callback<span class="op">:</span> (e<span class="op">:</span> <span class="dt">any</span>) <span class="kw">=&gt;</span> <span class="dt">void</span>) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// implementation</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Result:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;e&#39; is correctly inferred as MouseEvent</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span>(<span class="st">&quot;custom-event&quot;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;e&#39; falls back to generic Event</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Here, TypeScript evaluates the <code>"click"</code> signature first.
+If the argument matches, it uses the precise <code>MouseEvent</code>
+type. If it does not match, it proceeds downward to the broader
+<code>string</code> fallback.</p>
+<h3 id="impact-on-return-type-inference">Impact on Return Type
+Inference</h3>
+<p>The ordering of overloads is equally critical for determining return
+types. When overloads map specific inputs to specific outputs,
+misordered signatures cause the compiler to return broadened types.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Specific first guarantees exact return types</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">parse</span>(input<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">parse</span>(input<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">unknown</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">parse</span>(input<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">any</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">typeof</span> input <span class="op">===</span> <span class="st">&quot;string&quot;</span> <span class="op">?</span> input<span class="op">.</span><span class="fu">split</span>(<span class="st">&quot;,&quot;</span>) <span class="op">:</span> input<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">parse</span>(<span class="st">&quot;a,b,c&quot;</span>)<span class="op">;</span> <span class="co">// Inferred strictly as string[]</span></span></code></pre></div>
+<p>If <code>parse(input: any): unknown</code> were placed at the top,
+<code>parse("a,b,c")</code> would evaluate to <code>unknown</code>,
+forcing developers to use unnecessary type assertions
+(<code>as string[]</code>).</p>
+<h3 id="summary-of-best-practices">Summary of Best Practices</h3>
+<p>To prevent signature shadowing and maintain precise type
+inference:</p>
+<ol type="1">
+<li><strong>Sort by Narrowness</strong>: Place literal types before
+primitives, derived interfaces before base interfaces, and strict
+signatures before signatures accepting <code>any</code> or
+<code>unknown</code>.</li>
+<li><strong>Use Broad Signatures as Fallbacks</strong>: Reserve
+generalized signatures for the bottom of the overload list to catch
+non-specific usage patterns.</li>
+<li><strong>Consider Union Types or Generics</strong>: If multiple
+overloads differ only by parameter types and share identical structures,
+evaluate whether a single generic signature or a discriminated union
+provides a simpler alternative to function overloading.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

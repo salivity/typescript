@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript: Extract Path Params with Template Literals - typescript</title>
+    <meta name="description" content="TypeScript template literal types enable compile-time parsing of string patterns, allowing developers to build strictly typed URL routing systems. This article demonstrates how to construct recursive conditional types that parse route strings containing p">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-extract-path-params-with-template-literals">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript: Extract Path Params with Template Literals - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-extract-path-params-with-template-literals" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript template literal types enable compile-time parsing of string patterns, allowing developers to build strictly typed URL routing systems. This article demonstrates how to construct recursive conditional types that parse route strings containing p" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-extract-path-params-with-template-literals">TypeScript:
+Extract Path Params with Template Literals</h1>
+<p>TypeScript template literal types enable compile-time parsing of
+string patterns, allowing developers to build strictly typed URL routing
+systems. This article demonstrates how to construct recursive
+conditional types that parse route strings containing parameters (such
+as <code>"/users/:id/posts/:postId"</code>), extracting them into a
+strongly typed object shape to guarantee type safety in route handler
+arguments.</p>
+<h3 id="the-mechanism-recursive-conditional-types">The Mechanism:
+Recursive Conditional Types</h3>
+<p>To parse dynamic segments within a string literal, TypeScript uses
+template literal types combined with the <code>infer</code> keyword. By
+recursively splitting a path string at each delimiter (such as
+<code>/</code> and <code>:</code>), you can isolate dynamic parameter
+names and accumulate them into an object type.</p>
+<p>Here is the utility type that implements this extraction logic:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ExtractRouteParams<span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Path <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> _Prefix<span class="sc">}</span><span class="vs">:</span><span class="sc">${</span><span class="kw">infer</span> Rest<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> Rest <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Param<span class="sc">}</span><span class="vs">/</span><span class="sc">${</span><span class="kw">infer</span> Suffix<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="op">?</span> { [K <span class="kw">in</span> Param]<span class="op">:</span> <span class="dt">string</span> } <span class="op">&amp;</span> ExtractRouteParams<span class="op">&lt;</span><span class="vs">`/</span><span class="sc">${</span>Suffix<span class="sc">}</span><span class="vs">`</span><span class="op">&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">:</span> { [K <span class="kw">in</span> Rest]<span class="op">:</span> <span class="dt">string</span> }</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> {}<span class="op">;</span></span></code></pre></div>
+<p>To flatten the resulting intersection types (e.g.,
+<code>{ id: string } &amp; { postId: string }</code>) into a single,
+clean object type, use a helper utility:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Simplify<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> { [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K] } <span class="op">&amp;</span> {}<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> RouteParams<span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> Simplify<span class="op">&lt;</span>ExtractRouteParams<span class="op">&lt;</span>Path<span class="op">&gt;&gt;;</span></span></code></pre></div>
+<h3 id="how-the-type-works">How the Type Works</h3>
+<ol type="1">
+<li><strong>Parameter Detection</strong>: <code>Path extends</code><span
+class="math inline">\({infer _Prefix}:\)</span>{infer
+Rest}`<code>searches the string from left to right for the first colon (</code>:<code>). The substring before the colon is discarded via</code>_Prefix<code>, and the remainder is captured in</code>Rest`.</li>
+<li><strong>Segment Delimitation</strong>:
+<code>Rest extends</code><span class="math inline">\({infer
+Param}/\)</span>{infer
+Suffix}`<code>checks if another forward slash exists after the parameter. If so, it extracts the current parameter name (</code>Param<code>) and creates a mapped type</code>{
+[K in Param]: string }`.</li>
+<li><strong>Recursion</strong>: The type then calls itself recursively
+with the remaining path (<code>/${Suffix}</code>) to catch subsequent
+parameters.</li>
+<li><strong>Base Case</strong>: If no further slash is present after the
+colon, the entire remaining <code>Rest</code> string is captured as the
+final parameter name. If no colon exists at all, it evaluates to
+<code>{}</code>.</li>
+</ol>
+<h3 id="building-the-type-safe-router">Building the Type-Safe
+Router</h3>
+<p>Once the extraction utility is defined, it can be applied to route
+registration methods on a router class or interface:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RouteHandler<span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  params<span class="op">:</span> RouteParams<span class="op">&lt;</span>Path<span class="op">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>) <span class="kw">=&gt;</span> <span class="kw">void</span> <span class="op">|</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">void</span><span class="op">&gt;;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Router {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span><span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span>(path<span class="op">:</span> Path<span class="op">,</span> handler<span class="op">:</span> RouteHandler<span class="op">&lt;</span>Path<span class="op">&gt;</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Runtime registration logic here</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="example-usage">Example Usage</h3>
+<p>When registering routes, TypeScript infers the exact string literal
+passed to the <code>path</code> argument and computes the
+<code>params</code> argument type automatically:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> router <span class="op">=</span> <span class="kw">new</span> <span class="fu">Router</span>()<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Single parameter</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">get</span>(<span class="st">&quot;/users/:id&quot;</span><span class="op">,</span> (params) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// params is typed as { id: string }</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(params<span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Multiple parameters</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">get</span>(<span class="st">&quot;/orgs/:orgId/teams/:teamId&quot;</span><span class="op">,</span> (params) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// params is typed as { orgId: string; teamId: string }</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(params<span class="op">.</span><span class="at">orgId</span><span class="op">,</span> params<span class="op">.</span><span class="at">teamId</span>)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Static route without parameters</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>router<span class="op">.</span><span class="fu">get</span>(<span class="st">&quot;/about&quot;</span><span class="op">,</span> (params) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// params is typed as {}</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>If a developer attempts to access a property that was not defined in
+the path literal—such as <code>params.userId</code> instead of
+<code>params.id</code>—the TypeScript compiler raises an error at
+compile time, eliminating runtime errors caused by mismatched URL
+segment names.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

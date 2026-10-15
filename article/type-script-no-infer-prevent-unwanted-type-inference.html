@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript NoInfer: Prevent Unwanted Type Inference - typescript</title>
+    <meta name="description" content="TypeScript 5.4 introduced the NoInfer&lt;T&gt; intrinsic utility type to give developers precise control over generic type argument inference. By default, TypeScript attempts to infer generic types from every parameter where the type appears, which can unintent">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-no-infer-prevent-unwanted-type-inference">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript NoInfer: Prevent Unwanted Type Inference - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-no-infer-prevent-unwanted-type-inference" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript 5.4 introduced the NoInfer&lt;T&gt; intrinsic utility type to give developers precise control over generic type argument inference. By default, TypeScript attempts to infer generic types from every parameter where the type appears, which can unintent" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-noinfer-prevent-unwanted-type-inference">TypeScript
+NoInfer: Prevent Unwanted Type Inference</h1>
+<p>TypeScript 5.4 introduced the <code>NoInfer&lt;T&gt;</code> intrinsic
+utility type to give developers precise control over generic type
+argument inference. By default, TypeScript attempts to infer generic
+types from every parameter where the type appears, which can
+unintentionally widen types or allow invalid values to pass without
+compile errors. This article explains how generic inference works,
+demonstrates the problems caused by multi-site inference, and shows how
+<code>NoInfer</code> restricts inference candidates to ensure specific
+parameters only consume types rather than contribute to them.</p>
+<h3 id="the-problem-with-default-generic-inference">The Problem with
+Default Generic Inference</h3>
+<p>When a function accepts a generic type <code>T</code> across multiple
+parameters, TypeScript inspects all provided arguments to determine the
+shape of <code>T</code>. Instead of prioritizing one argument over
+another, the compiler creates a union of all inferred types.</p>
+<p>Consider a function designed to define allowable options and set an
+initial fallback:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setSelection</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span>(options<span class="op">:</span> T[]<span class="op">,</span> defaultOption<span class="op">:</span> T) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Desired behavior: error on &quot;purple&quot;, because it is not in the array.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Actual behavior: TS infers T as &quot;red&quot; | &quot;green&quot; | &quot;blue&quot; | &quot;purple&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">setSelection</span>([<span class="st">&quot;red&quot;</span><span class="op">,</span> <span class="st">&quot;green&quot;</span><span class="op">,</span> <span class="st">&quot;blue&quot;</span>]<span class="op">,</span> <span class="st">&quot;purple&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>In this scenario, rather than checking if <code>"purple"</code>
+exists within <code>["red", "green", "blue"]</code>, TypeScript uses
+<code>"purple"</code> as a candidate to infer <code>T</code>.
+Consequently, <code>T</code> becomes
+<code>"red" | "green" | "blue" | "purple"</code>. The invalid default
+option passes compilation quietly because TypeScript inferred the type
+from both parameters simultaneously.</p>
+<p>Before <code>NoInfer</code>, developers relied on complex type hacks,
+such as <code>[T][T extends any ? 0 : never]</code>, to trick the
+compiler into ignoring an argument during inference. These workarounds
+were difficult to read, hard to maintain, and prone to breaking in
+subtle edge cases.</p>
+<h3 id="how-noinfer-works">How NoInfer Works</h3>
+<p>The <code>NoInfer&lt;T&gt;</code> intrinsic type instructs the
+TypeScript compiler to exclude an argument position from candidate type
+inference. The parameter wrapped in <code>NoInfer&lt;T&gt;</code> still
+requires the type <code>T</code>, but it cannot contribute to what
+<code>T</code> is resolved to.</p>
+<p>Rewriting the previous example with <code>NoInfer</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setSelection</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  options<span class="op">:</span> T[]<span class="op">,</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  defaultOption<span class="op">:</span> NoInfer<span class="op">&lt;</span>T<span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Type Error: Argument of type &#39;&quot;purple&quot;&#39; is not assignable </span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// to parameter of type &#39;&quot;red&quot; | &quot;green&quot; | &quot;blue&quot;&#39;.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">setSelection</span>([<span class="st">&quot;red&quot;</span><span class="op">,</span> <span class="st">&quot;green&quot;</span><span class="op">,</span> <span class="st">&quot;blue&quot;</span>]<span class="op">,</span> <span class="st">&quot;purple&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Here, TypeScript resolves the type of <code>T</code> solely from the
+<code>options</code> argument, establishing <code>T</code> as
+<code>"red" | "green" | "blue"</code>. When evaluating
+<code>defaultOption</code>, the compiler sees
+<code>NoInfer&lt;T&gt;</code> and refrains from adding
+<code>"purple"</code> to the inference candidates. Instead, it checks
+<code>"purple"</code> against the already resolved <code>T</code>,
+properly triggering a compiler error.</p>
+<h3 id="underlying-mechanism">Underlying Mechanism</h3>
+<p>During type checking, TypeScript operates in phases:</p>
+<ol type="1">
+<li><strong>Candidate Collection:</strong> The compiler traverses the
+arguments and collects candidate types for each generic type
+parameter.</li>
+<li><strong>Type Resolution:</strong> The candidates are merged
+(typically into a union or intersection) to establish the final type for
+the generic parameter.</li>
+<li><strong>Type Checking:</strong> Arguments are checked against the
+resolved parameters.</li>
+</ol>
+<p>When an expression is wrapped in <code>NoInfer&lt;T&gt;</code>,
+TypeScript skips that expression during step 1 (Candidate Collection).
+The compiler defers evaluating that parameter until step 2 is complete.
+Once <code>T</code> is resolved using the non-wrapped parameters, the
+<code>NoInfer&lt;T&gt;</code> position is unblocked and evaluated
+strictly during step 3 (Type Checking).</p>
+<h3 id="common-use-cases">Common Use Cases</h3>
+<h4 id="1-function-handlers-with-state">1. Function Handlers with
+State</h4>
+<p>When configuring handlers that should only access properties defined
+in an initial state object:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> StateConfig<span class="op">&lt;</span>S<span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  initialState<span class="op">:</span> S<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  reducers<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> (state<span class="op">:</span> NoInfer<span class="op">&lt;</span>S<span class="op">&gt;</span>) <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">&gt;;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createStore</span><span class="op">&lt;</span>S<span class="op">&gt;</span>(config<span class="op">:</span> StateConfig<span class="op">&lt;</span>S<span class="op">&gt;</span>) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> config<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">createStore</span>({</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  initialState<span class="op">:</span> { count<span class="op">:</span> <span class="dv">0</span> }<span class="op">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  reducers<span class="op">:</span> {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    increment<span class="op">:</span> (state) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="co">// TypeScript knows state has `count`.</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="co">// It won&#39;t let reducers infer a wider state shape.</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      state<span class="op">.</span><span class="at">count</span> <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="2-event-listeners-and-callbacks">2. Event Listeners and
+Callbacks</h4>
+<p>When an event listener needs to infer the event name, but callback
+parameters must strictly match the inferred event without defining their
+own:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">emit</span><span class="op">&lt;</span>Events <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">any</span><span class="op">&gt;,</span> K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  eventName<span class="op">:</span> K<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  payload<span class="op">:</span> NoInfer<span class="op">&lt;</span>Events[K]<span class="op">&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By placing <code>NoInfer</code> on the payload, the payload must
+conform strictly to the event schema dictated by <code>eventName</code>,
+preventing mismatched payload structures from altering the inference of
+<code>K</code>.</p>
+<h3 id="summary">Summary</h3>
+<p>The <code>NoInfer</code> intrinsic solves a fundamental ambiguity in
+TypeScript's generic resolution. By explicitly marking parameters that
+should act solely as consumers of a type, it prevents accidental type
+widening and eliminates the need for obscure compiler workarounds.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

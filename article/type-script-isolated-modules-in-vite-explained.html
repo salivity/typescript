@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript isolatedModules in Vite Explained - typescript</title>
+    <meta name="description" content="When building modern web applications with Vite and TypeScript, enabling the isolatedModules flag in your configuration is essential for preventing subtle compilation and runtime bugs. Vite achieves its blazing-fast build and development speed by using es">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-isolated-modules-in-vite-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript isolatedModules in Vite Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-isolated-modules-in-vite-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When building modern web applications with Vite and TypeScript, enabling the isolatedModules flag in your configuration is essential for preventing subtle compilation and runtime bugs. Vite achieves its blazing-fast build and development speed by using es" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-isolatedmodules-in-vite-explained">TypeScript
+isolatedModules in Vite Explained</h1>
+<p>When building modern web applications with Vite and TypeScript,
+enabling the <code>isolatedModules</code> flag in your configuration is
+essential for preventing subtle compilation and runtime bugs. Vite
+achieves its blazing-fast build and development speed by using esbuild
+to transpile each TypeScript file individually, rather than processing
+the entire project's type dependency graph at once. This article
+explains what the <code>isolatedModules</code> flag does, why Vite's
+architecture depends on it, and the common coding patterns it flags to
+keep your code safe.</p>
+<h2 id="how-vite-transpiles-typescript">How Vite Transpiles
+TypeScript</h2>
+<p>Traditional TypeScript compilation through <code>tsc</code> analyzes
+your entire project simultaneously. This whole-program awareness allows
+<code>tsc</code> to inspect external files to determine whether an
+imported identifier is a type, a value, or an inlined enum.</p>
+<p>Vite handles TypeScript differently. During development and
+production bundling, Vite uses esbuild to strip types from files. To
+remain fast, esbuild performs <strong>single-file
+transpilation</strong>: it transforms one file at a time without reading
+or resolving types from imported files. Because esbuild lacks access to
+project-wide type definitions, certain TypeScript patterns that rely on
+full type knowledge cannot be safely compiled.</p>
+<h2 id="the-purpose-of-isolatedmodules">The Purpose of
+<code>isolatedModules</code></h2>
+<p>The <code>isolatedModules</code> compiler option is set in your
+<code>tsconfig.json</code> under <code>compilerOptions</code>. When set
+to <code>true</code>, the TypeScript language server and
+<code>tsc</code> will warn you whenever you write code that cannot be
+safely transpiled by a single-file transpiler like esbuild or Babel.</p>
+<p>It does not change how your code is transpiled; instead, it acts as a
+linter and safety net, ensuring you write TypeScript code that is fully
+compatible with isolated, file-by-file compilation.</p>
+<h2 id="key-issues-prevented-by-isolatedmodules">Key Issues Prevented by
+<code>isolatedModules</code></h2>
+<p>Enabling <code>isolatedModules</code> protects your Vite project from
+three primary categories of errors:</p>
+<h3 id="1-ambiguous-type-re-exports">1. Ambiguous Type Re-exports</h3>
+<p>In standard TypeScript, you can re-export identifiers without
+specifying if they are types or values:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// types.ts</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> UserRole <span class="op">=</span> <span class="st">&#39;admin&#39;</span> <span class="op">|</span> <span class="st">&#39;user&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// index.ts</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> { UserRole } <span class="im">from</span> <span class="st">&#39;./types&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>A single-file transpiler processing <code>index.ts</code> cannot tell
+if <code>UserRole</code> is a JavaScript runtime object (like a class or
+variable) or merely a type. If it assumes it is a value, it leaves
+<code>export { UserRole }</code> in the output, causing a runtime
+<code>ReferenceError</code> because the exported value does not
+exist.</p>
+<p>With <code>isolatedModules</code> enabled, TypeScript forces you to
+use explicit type-only exports:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> { UserRole } <span class="im">from</span> <span class="st">&#39;./types&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>This makes it unambiguous to esbuild that the statement should be
+stripped completely during transpilation.</p>
+<h3 id="2-const-enums">2. Const Enums</h3>
+<p>TypeScript's <code>const enum</code> feature inlines enum values
+directly into call sites at compile time to save space. To inline these
+values across different files, a compiler must inspect the file where
+the <code>const enum</code> was defined.</p>
+<p>Because single-file transpilers cannot inspect external files, they
+cannot inline these values. When <code>isolatedModules</code> is
+enabled, TypeScript produces an error if you attempt to use
+<code>const enum</code>, directing you to use regular enums, literal
+union types, or <code>as const</code> object maps instead.</p>
+<h3 id="3-non-module-files">3. Non-Module Files</h3>
+<p>TypeScript by default treats files without top-level
+<code>import</code> or <code>export</code> statements as global scripts
+whose declarations pollute the global scope. Single-file transpilers
+assume every file is an ES module. With <code>isolatedModules</code>
+turned on, TypeScript flags any file lacking an <code>import</code> or
+<code>export</code> statement, prompting you to add an explicit
+<code>export {}</code> to ensure module boundaries are clear.</p>
+<h2 id="summary">Summary</h2>
+<p>Vite relies on single-file transpilation via esbuild to deliver
+instant hot module replacement and fast builds. Setting
+<code>"isolatedModules": true</code> in your <code>tsconfig.json</code>
+ensures your TypeScript code adheres to single-file constraints,
+preventing runtime export errors and unsupported syntax before your code
+ever hits the bundler.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

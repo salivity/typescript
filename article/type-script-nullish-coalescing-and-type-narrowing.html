@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Nullish Coalescing and Type Narrowing - typescript</title>
+    <meta name="description" content="The nullish coalescing operator (??) in TypeScript provides targeted type narrowing by eliminating only null and undefined from a type union while preserving other falsy values such as 0, &quot;&quot;, and false. This article explores how TypeScript’s control flow">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-nullish-coalescing-and-type-narrowing">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Nullish Coalescing and Type Narrowing - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-nullish-coalescing-and-type-narrowing" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The nullish coalescing operator (??) in TypeScript provides targeted type narrowing by eliminating only null and undefined from a type union while preserving other falsy values such as 0, &quot;&quot;, and false. This article explores how TypeScript’s control flow" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-nullish-coalescing-and-type-narrowing">TypeScript
+Nullish Coalescing and Type Narrowing</h1>
+<p>The nullish coalescing operator (<code>??</code>) in TypeScript
+provides targeted type narrowing by eliminating only <code>null</code>
+and <code>undefined</code> from a type union while preserving other
+falsy values such as <code>0</code>, <code>""</code>, and
+<code>false</code>. This article explores how TypeScript’s control flow
+analysis handles expressions using <code>??</code>, compares its
+narrowing behavior against the logical OR operator (<code>||</code>),
+and demonstrates how to leverage it for precise fallback assignments and
+type safety.</p>
+<h2 id="how-the-nullish-coalescing-operator-works">How the Nullish
+Coalescing Operator Works</h2>
+<p>In JavaScript and TypeScript, the expression <code>a ?? b</code>
+evaluates to <code>b</code> if and only if <code>a</code> is strictly
+<code>null</code> or <code>undefined</code>. If <code>a</code> holds any
+other value—including falsy values like <code>false</code>,
+<code>0</code>, <code>NaN</code>, or an empty string <code>""</code>—the
+expression evaluates to <code>a</code>.</p>
+<p>TypeScript mirrors this runtime behavior directly within its static
+type system via control flow analysis.</p>
+<h2 id="type-inference-with-">Type Inference with <code>??</code></h2>
+<p>When you apply the nullish coalescing operator to an expression,
+TypeScript computes the resulting type by taking the left-hand operand's
+type, removing <code>null</code> and <code>undefined</code>, and
+creating a union with the right-hand operand's type:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="op">=</span> <span class="bu">NonNullable</span><span class="op">&lt;</span>TypeOfLeft<span class="op">&gt;</span> <span class="op">|</span> TypeOfRight<span class="op">;</span></span></code></pre></div>
+<h3 id="example-basic-narrowing">Example: Basic Narrowing</h3>
+<p>Consider a variable with a nullable type:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getPort</span>(customPort<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">|</span> <span class="dt">undefined</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> port <span class="op">=</span> customPort <span class="op">??</span> <span class="dv">3000</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> port<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In this case:</p>
+<ol type="1">
+<li><code>customPort</code> has the type
+<code>number | null | undefined</code>.</li>
+<li>TypeScript narrows the left side by stripping <code>null</code> and
+<code>undefined</code>, leaving <code>number</code>.</li>
+<li>The fallback <code>3000</code> is a <code>number</code>.</li>
+<li>The inferred type of <code>port</code> becomes
+<code>number | number</code>, which simplifies directly to
+<code>number</code>.</li>
+</ol>
+<h2 id="-vs--the-difference-in-type-narrowing"><code>??</code> vs.
+<code>||</code>: The Difference in Type Narrowing</h2>
+<p>The logical OR operator (<code>||</code>) falls back on <em>any</em>
+falsy value, whereas <code>??</code> only falls back on <em>nullish</em>
+values. This fundamental difference drastically alters how TypeScript
+narrows types.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">configureTimeout</span>(timeout<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">undefined</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Using logical OR:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If timeout is 0, it falls back to 5000 at runtime.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> orTimeout <span class="op">=</span> timeout <span class="op">||</span> <span class="dv">5000</span><span class="op">;</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Using nullish coalescing:</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If timeout is 0, 0 is retained.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> nullishTimeout <span class="op">=</span> timeout <span class="op">??</span> <span class="dv">5000</span><span class="op">;</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When literal types or unions containing falsy values are involved,
+the type distinctions become critical:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Status <span class="op">=</span> <span class="st">&quot;active&quot;</span> <span class="op">|</span> <span class="st">&quot;&quot;</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleStatus</span>(input<span class="op">:</span> Status) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Logical OR removes &quot;&quot; along with null</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The resulting type is &quot;active&quot; | &quot;default&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> orResult <span class="op">=</span> input <span class="op">||</span> <span class="st">&quot;default&quot;</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Nullish coalescing preserves &quot;&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The resulting type is &quot;active&quot; | &quot;&quot; | &quot;default&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> nullishResult <span class="op">=</span> input <span class="op">??</span> <span class="st">&quot;default&quot;</span><span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>TypeScript recognizes that <code>""</code> is not nullish, so it
+preserves the empty string in the final union type for
+<code>nullishResult</code>.</p>
+<h2 id="chained-operations-and-optional-chaining">Chained Operations and
+Optional Chaining</h2>
+<p>Nullish coalescing is frequently paired with optional chaining
+(<code>?.</code>). TypeScript tracks narrowing through the entire
+chain:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  settings<span class="op">?:</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    theme<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getTheme</span>(profile<span class="op">:</span> UserProfile)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// profile.settings?.theme has type: string | null | undefined</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// theme will be narrowed to: string</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> theme <span class="op">=</span> profile<span class="op">.</span><span class="at">settings</span><span class="op">?.</span><span class="at">theme</span> <span class="op">??</span> <span class="st">&quot;light&quot;</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> theme<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>At each <code>?.</code> step, TypeScript accounts for potential
+<code>undefined</code> values. The terminal <code>??</code> resolves all
+accumulated <code>null</code> and <code>undefined</code> possibilities
+in one operation.</p>
+<h2 id="assertions-and-unreachable-fallbacks">Assertions and Unreachable
+Fallbacks</h2>
+<p>If the left operand cannot be nullish, TypeScript detects this during
+type checking. In strict mode (<code>strictNullChecks: true</code>),
+providing a fallback for a non-nullable type will either result in an
+unused branch or a compiler warning if the code is unreachable:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">printName</span>(name<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript knows &#39;name&#39; is already &#39;string&#39;.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;fallback&#39; is unreachable at runtime.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> resolvedName <span class="op">=</span> name <span class="op">??</span> <span class="st">&quot;Anonymous&quot;</span><span class="op">;</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// resolvedName is inferred strictly as string.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you enable the ESLint rule
+<code>@typescript-eslint/no-unnecessary-condition</code> or similar
+compiler linting flags, TypeScript-aware linters will flag
+<code>name ?? "Anonymous"</code> as redundant.</p>
+<h2 id="summary-of-narrowing-rules">Summary of Narrowing Rules</h2>
+<ul>
+<li><strong>Left-hand side contains <code>null</code> or
+<code>undefined</code>:</strong> TypeScript extracts
+<code>NonNullable&lt;T&gt;</code> from the left-hand type and unions it
+with the right-hand type.</li>
+<li><strong>Falsy values (<code>0</code>, <code>""</code>,
+<code>false</code>):</strong> These are retained by the left-hand type
+and do not trigger the right-hand fallback type.</li>
+<li><strong>Non-nullable left-hand side:</strong> The right-hand
+expression is treated as redundant, and the resulting type matches the
+left-hand operand.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

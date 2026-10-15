@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript downlevelIteration Explained - typescript</title>
+    <meta name="description" content="When compiling modern TypeScript code to older JavaScript versions like ES5 or ES3, certain ECMAScript 2015+ features cannot be mapped directly to legacy syntax. This article explains the role of the downlevelIteration compiler flag in TypeScript, detaili">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-downlevel-iteration-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript downlevelIteration Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-downlevel-iteration-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When compiling modern TypeScript code to older JavaScript versions like ES5 or ES3, certain ECMAScript 2015+ features cannot be mapped directly to legacy syntax. This article explains the role of the downlevelIteration compiler flag in TypeScript, detaili" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-downleveliteration-explained">TypeScript
+downlevelIteration Explained</h1>
+<p>When compiling modern TypeScript code to older JavaScript versions
+like ES5 or ES3, certain ECMAScript 2015+ features cannot be mapped
+directly to legacy syntax. This article explains the role of the
+<code>downlevelIteration</code> compiler flag in TypeScript, detailing
+how it bridges the gap between modern iteration protocols—such as
+<code>for...of</code> loops and spread syntax—and legacy runtimes, while
+highlighting the trade-offs in bundle size and performance.</p>
+<h3 id="the-problem-with-default-downleveling">The Problem with Default
+Downleveling</h3>
+<p>By default, when targeting ES5 or ES3, TypeScript optimizes for
+smaller bundle sizes by assuming that iterables are standard arrays. For
+example, a modern <code>for...of</code> loop is naively transformed into
+a traditional index-based <code>for</code> loop:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Input</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">const</span> item <span class="kw">of</span> collection) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(item)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Default ES5 Output (without downlevelIteration)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">var</span> _i <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> collection_1 <span class="op">=</span> collection<span class="op">;</span> _i <span class="op">&lt;</span> collection_1<span class="op">.</span><span class="at">length</span><span class="op">;</span> _i<span class="op">++</span>) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> item <span class="op">=</span> collection_1[_i]<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(item)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This assumption breaks when <code>collection</code> is not an array.
+Non-array iterables—such as <code>Set</code>, <code>Map</code>, custom
+iterators implementing <code>[Symbol.iterator]</code>, or strings
+containing multi-byte UTF-16 characters (surrogate pairs)—fail silently
+or throw runtime errors when iterated using basic index access.</p>
+<h3 id="what-downleveliteration-does">What
+<code>downlevelIteration</code> Does</h3>
+<p>Setting <code>"downlevelIteration": true</code> in your
+<code>tsconfig.json</code> forces the TypeScript compiler to fully
+adhere to the ES6 iteration protocol, even when generating ES5 or ES3
+output.</p>
+<p>Instead of converting iterables to simple indexed loops, TypeScript
+emits helper functions (such as <code>__values</code>,
+<code>__read</code>, and <code>__spreadArray</code>). These helpers
+inspect the target object at runtime to check for a native or polyfilled
+<code>Symbol.iterator</code> method.</p>
+<p>With the flag enabled:</p>
+<ul>
+<li><strong><code>for...of</code> loops</strong> properly invoke
+<code>.next()</code> on the iterator and handle iteration cleanup via
+the <code>.return()</code> method in <code>finally</code> blocks.</li>
+<li><strong>Spread syntax</strong> (<code>[...iterable]</code>)
+correctly consumes any valid iterable rather than relying on
+<code>Array.prototype.concat</code> or slice-based transforms.</li>
+<li><strong>Array destructuring with rest elements</strong>
+(<code>const [first, ...rest] = iterable</code>) respects custom
+iterator implementations.</li>
+<li><strong>Strings</strong> are iterated by character code points
+rather than raw 16-bit code units, preventing emojis and rare symbols
+from splitting incorrectly.</li>
+</ul>
+<h3 id="requirements-and-trade-offs">Requirements and Trade-offs</h3>
+<p>Using <code>downlevelIteration</code> introduces two main
+considerations:</p>
+<ol type="1">
+<li><strong>Symbol Polyfill:</strong> Because the emitted helpers look
+for <code>Symbol.iterator</code>, the runtime environment must support
+<code>Symbol</code>. If you are targeting true legacy environments
+without native ES6 support, you must provide a polyfill for
+<code>Symbol</code> and <code>Symbol.iterator</code>.</li>
+<li><strong>Code Size Overhead:</strong> Emitting full iterator
+compliance generates significantly more boilerplate JavaScript. To avoid
+code bloat across multiple files, pair
+<code>downlevelIteration: true</code> with
+<code>"importHelpers": true</code> and include the <code>tslib</code>
+package in your dependencies. This ensures that the generated helper
+logic is imported from a single shared module rather than injected into
+every compiled file.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Exclude Filters Union Members in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript&#39;s built-in Exclude&lt;T, U&gt; utility type constructs a new type by removing all union members from T that are assignable to U. This article explains the underlying mechanism of Exclude, breaking down how distributive conditional types evaluate each">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-exclude-filters-union-members-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Exclude Filters Union Members in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-exclude-filters-union-members-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript&#39;s built-in Exclude&lt;T, U&gt; utility type constructs a new type by removing all union members from T that are assignable to U. This article explains the underlying mechanism of Exclude, breaking down how distributive conditional types evaluate each" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-exclude-filters-union-members-in-typescript">How Exclude
+Filters Union Members in TypeScript</h1>
+<p>TypeScript's built-in <code>Exclude&lt;T, U&gt;</code> utility type
+constructs a new type by removing all union members from <code>T</code>
+that are assignable to <code>U</code>. This article explains the
+underlying mechanism of <code>Exclude</code>, breaking down how
+distributive conditional types evaluate each member of a union
+individually and why the <code>never</code> type is used to eliminate
+unwanted variants.</p>
+<h2 id="the-definition-of-exclude">The Definition of Exclude</h2>
+<p>In TypeScript's standard library, <code>Exclude</code> is defined
+using a conditional type:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="bu">Exclude</span><span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> U <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> T<span class="op">;</span></span></code></pre></div>
+<p>This definition relies on two key TypeScript behaviors: distributive
+conditional types and the pruning behavior of the <code>never</code>
+type in unions.</p>
+<h2 id="distributive-conditional-types">Distributive Conditional
+Types</h2>
+<p>When a conditional type acts on a generic parameter <code>T</code>,
+and <code>T</code> is given a union type, the conditional type becomes
+<strong>distributive</strong>. Instead of evaluating the entire union at
+once, TypeScript splits the union into individual members, applies the
+condition to each member separately, and then combines the results back
+into a single union.</p>
+<p>For example, consider filtering a union of string literals:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Status <span class="op">=</span> <span class="st">&quot;pending&quot;</span> <span class="op">|</span> <span class="st">&quot;success&quot;</span> <span class="op">|</span> <span class="st">&quot;error&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ActionableStatus <span class="op">=</span> <span class="bu">Exclude</span><span class="op">&lt;</span>Status<span class="op">,</span> <span class="st">&quot;pending&quot;</span><span class="op">&gt;;</span></span></code></pre></div>
+<p>Because <code>T</code> (<code>Status</code>) is a naked type
+parameter receiving a union, TypeScript expands the operation into:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ActionableStatus <span class="op">=</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> (<span class="st">&quot;pending&quot;</span> <span class="kw">extends</span> <span class="st">&quot;pending&quot;</span> <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> <span class="st">&quot;pending&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> (<span class="st">&quot;success&quot;</span> <span class="kw">extends</span> <span class="st">&quot;pending&quot;</span> <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> <span class="st">&quot;success&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> (<span class="st">&quot;error&quot;</span> <span class="kw">extends</span> <span class="st">&quot;pending&quot;</span> <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> <span class="st">&quot;error&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="the-role-of-never-in-unions">The Role of <code>never</code> in
+Unions</h2>
+<p>TypeScript evaluates each branch independently:</p>
+<ol type="1">
+<li><code>"pending" extends "pending"</code> is true, so it evaluates to
+<code>never</code>.</li>
+<li><code>"success" extends "pending"</code> is false, so it evaluates
+to <code>"success"</code>.</li>
+<li><code>"error" extends "pending"</code> is false, so it evaluates to
+<code>"error"</code>.</li>
+</ol>
+<p>The intermediate result is:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ActionableStatus <span class="op">=</span> <span class="dt">never</span> <span class="op">|</span> <span class="st">&quot;success&quot;</span> <span class="op">|</span> <span class="st">&quot;error&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>In TypeScript, <code>never</code> represents an empty set or a value
+that can never occur. When <code>never</code> appears inside a union
+type, TypeScript automatically removes it:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ActionableStatus <span class="op">=</span> <span class="st">&quot;success&quot;</span> <span class="op">|</span> <span class="st">&quot;error&quot;</span><span class="op">;</span></span></code></pre></div>
+<h2 id="filtering-by-assignability-not-just-exact-matches">Filtering by
+Assignability, Not Just Exact Matches</h2>
+<p>The condition <code>T extends U</code> checks whether a member is
+<em>assignable</em> to <code>U</code>. This means <code>Exclude</code>
+can filter out subtypes, not just exact literal matches.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Events <span class="op">=</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;click&quot;</span><span class="op">;</span> x<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> y<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;hover&quot;</span><span class="op">;</span> element<span class="op">:</span> <span class="dt">string</span> }</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;scroll&quot;</span><span class="op">;</span> offset<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Remove any event that has a &#39;scroll&#39; type</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserInteractions <span class="op">=</span> <span class="bu">Exclude</span><span class="op">&lt;</span>Events<span class="op">,</span> { type<span class="op">:</span> <span class="st">&quot;scroll&quot;</span> }<span class="op">&gt;;</span></span></code></pre></div>
+<p>In this case:</p>
+<ul>
+<li><code>{ type: "click"; ... } extends { type: "scroll" }</code> is
+false, returning the click event type.</li>
+<li><code>{ type: "hover"; ... } extends { type: "scroll" }</code> is
+false, returning the hover event type.</li>
+<li><code>{ type: "scroll"; ... } extends { type: "scroll" }</code> is
+true, returning <code>never</code>.</li>
+</ul>
+<p>After removing <code>never</code>, <code>UserInteractions</code>
+consists only of the <code>click</code> and <code>hover</code> event
+object types.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

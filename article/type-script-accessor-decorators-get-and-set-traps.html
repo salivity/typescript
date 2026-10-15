@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Accessor Decorators: Get and Set Traps - typescript</title>
+    <meta name="description" content="Modern TypeScript (version 5.0 and later) adopts the ECMAScript Stage 3 decorators standard, introducing dedicated decorators for auto-accessors defined with the accessor keyword. By applying a decorator to an auto-accessor, developers can return an objec">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-accessor-decorators-get-and-set-traps">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Accessor Decorators: Get and Set Traps - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-accessor-decorators-get-and-set-traps" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Modern TypeScript (version 5.0 and later) adopts the ECMAScript Stage 3 decorators standard, introducing dedicated decorators for auto-accessors defined with the accessor keyword. By applying a decorator to an auto-accessor, developers can return an objec" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-accessor-decorators-get-and-set-traps">TypeScript
+Accessor Decorators: Get and Set Traps</h1>
+<p>Modern TypeScript (version 5.0 and later) adopts the ECMAScript Stage
+3 decorators standard, introducing dedicated decorators for
+auto-accessors defined with the <code>accessor</code> keyword. By
+applying a decorator to an auto-accessor, developers can return an
+object containing custom <code>get</code> and <code>set</code> methods
+that wrap the underlying storage slot. These methods act as traps,
+intercepting property access and mutation directly at the prototype
+level to enable validation, logging, reactivity, and lazy evaluation
+without the boilerplate of manually declaring private backing
+fields.</p>
+<h3 id="the-auto-accessor-keyword">The Auto-Accessor Keyword</h3>
+<p>Before decorators can intercept read and write operations, the
+property must be defined as an auto-accessor using the
+<code>accessor</code> keyword:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  accessor name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(name<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">name</span> <span class="op">=</span> name<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Under the hood, TypeScript desugars this syntax into a private
+backing field combined with a standard getter and setter pair on the
+class prototype:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  #name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">name</span>() { <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span>#<span class="at">name</span><span class="op">;</span> }</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">name</span>(value<span class="op">:</span> <span class="dt">string</span>) { <span class="kw">this</span><span class="op">.</span>#<span class="at">name</span> <span class="op">=</span> value<span class="op">;</span> }</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="decorator-signature-and-return-types">Decorator Signature and
+Return Types</h3>
+<p>An accessor decorator receives two arguments:</p>
+<ol type="1">
+<li><code>target</code>: An object containing the original
+<code>get</code> and <code>set</code> functions representing the default
+auto-accessor behavior:
+<code>{ get: () =&gt; T, set: (value: T) =&gt; void }</code>.</li>
+<li><code>context</code>: A <code>ClassAccessorDecoratorContext</code>
+object that provides metadata such as the property <code>name</code>,
+<code>access</code> utilities, and lifecycle methods like
+<code>addInitializer</code>.</li>
+</ol>
+<p>To introduce get and set traps, the decorator returns a
+<code>ClassAccessorDecoratorResult</code> object. This object may
+define:</p>
+<ul>
+<li><code>get</code>: A replacement getter function.</li>
+<li><code>set</code>: A replacement setter function.</li>
+<li><code>init</code>: An optional function that transforms the initial
+value passed during construction.</li>
+</ul>
+<h3 id="implementing-get-and-set-traps">Implementing Get and Set
+Traps</h3>
+<p>When an accessor decorator returns replacement functions, TypeScript
+routes all property access through the newly provided methods. The
+original accessors passed via <code>target</code> are invoked explicitly
+within the traps to interact with the underlying private slot.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AccessorTarget<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span><span class="op">:</span> (this<span class="op">:</span> This) <span class="kw">=&gt;</span> Value<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span><span class="op">:</span> (this<span class="op">:</span> This<span class="op">,</span> value<span class="op">:</span> Value) <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">logged</span><span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> AccessorTarget<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassAccessorDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> propertyKey <span class="op">=</span> <span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">get</span>(<span class="kw">this</span><span class="op">:</span> This)<span class="op">:</span> Value {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> value <span class="op">=</span> target<span class="op">.</span><span class="at">get</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`[GET] </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs"> read as: </span><span class="sc">${</span>value<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> value<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span>(<span class="kw">this</span><span class="op">:</span> This<span class="op">,</span> value<span class="op">:</span> Value)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`[SET] </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs"> changing to: </span><span class="sc">${</span>value<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>      target<span class="op">.</span><span class="at">set</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span><span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">init</span>(<span class="kw">this</span><span class="op">:</span> This<span class="op">,</span> initialValue<span class="op">:</span> Value)<span class="op">:</span> Value {</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`[INIT] </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs"> initialized to: </span><span class="sc">${</span>initialValue<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> initialValue<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Product {</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  @logged</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>  accessor price<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(price<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">price</span> <span class="op">=</span> price<span class="op">;</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> item <span class="op">=</span> <span class="kw">new</span> <span class="fu">Product</span>(<span class="dv">100</span>)<span class="op">;</span> <span class="co">// Logs [INIT] and [SET]</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>item<span class="op">.</span><span class="at">price</span> <span class="op">=</span> <span class="dv">150</span><span class="op">;</span>              <span class="co">// Logs [SET] price changing to: 150</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> current <span class="op">=</span> item<span class="op">.</span><span class="at">price</span><span class="op">;</span>    <span class="co">// Logs [GET] price read as: 150</span></span></code></pre></div>
+<h3 id="how-traps-intercept-property-mutations">How Traps Intercept
+Property Mutations</h3>
+<p>The <code>set</code> trap receives the incoming value before it is
+written to the backing store. This allows developers to enforce
+invariant conditions, validate types at runtime, normalize data, or
+trigger external observers.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">positiveOnly</span><span class="op">&lt;</span>This<span class="op">&gt;</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> AccessorTarget<span class="op">&lt;</span>This<span class="op">,</span> <span class="dt">number</span><span class="op">&gt;,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassAccessorDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> <span class="dt">number</span><span class="op">&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span>(<span class="kw">this</span><span class="op">:</span> This<span class="op">,</span> value<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (value <span class="op">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">RangeError</span>(<span class="vs">`</span><span class="sc">${</span><span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="sc">}</span><span class="vs"> must be a positive number.`</span>)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      target<span class="op">.</span><span class="at">set</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span><span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Account {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  @positiveOnly</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  accessor balance<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If an assignment violates the validation logic, execution halts
+before <code>target.set.call(this, value)</code> is reached, preventing
+the internal state from corrupting.</p>
+<h3 id="how-traps-intercept-property-reads">How Traps Intercept Property
+Reads</h3>
+<p>The <code>get</code> trap intercepts the retrieval pipeline, enabling
+behaviors such as memoization, reactive dependency registration, or
+transformation of the retrieved value.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">trimmed</span><span class="op">&lt;</span>This<span class="op">&gt;</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> AccessorTarget<span class="op">&lt;</span>This<span class="op">,</span> <span class="dt">string</span><span class="op">&gt;,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassAccessorDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">get</span>(<span class="kw">this</span><span class="op">:</span> This)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> raw <span class="op">=</span> target<span class="op">.</span><span class="at">get</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> raw <span class="op">?</span> raw<span class="op">.</span><span class="fu">trim</span>() <span class="op">:</span> raw<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Whenever the property is referenced, the trap invokes
+<code>target.get.call(this)</code> to obtain the stored state, applies
+the transformation, and returns the modified result.</p>
+<h3 id="advantages-over-legacy-decorators-and-proxies">Advantages Over
+Legacy Decorators and Proxies</h3>
+<p>Compared to experimental TypeScript decorators, modern accessor
+decorators do not require direct manipulation of
+<code>Object.defineProperty</code> or manual traversal of prototype
+property descriptors. Compared to <code>Proxy</code> objects, accessor
+decorators introduce traps directly on the class prototype without
+creating wrapper objects, preserving instance identity
+(<code>this</code>), and avoiding the memory overhead associated with
+proxying entire object instances.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

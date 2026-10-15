@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limitations of Type-Erasing Transpilers in TypeScript - typescript</title>
+    <meta name="description" content="Type-erasing transpilers such as Babel, esbuild, and SWC dramatically accelerate JavaScript build pipelines by stripping TypeScript type annotations without performing type checks. However, relying solely on type erasure introduces distinct architectural">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/limitations-of-type-erasing-transpilers-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Limitations of Type-Erasing Transpilers in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/limitations-of-type-erasing-transpilers-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Type-erasing transpilers such as Babel, esbuild, and SWC dramatically accelerate JavaScript build pipelines by stripping TypeScript type annotations without performing type checks. However, relying solely on type erasure introduces distinct architectural" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="limitations-of-type-erasing-transpilers-in-typescript">Limitations
+of Type-Erasing Transpilers in TypeScript</h1>
+<p>Type-erasing transpilers such as Babel, esbuild, and SWC dramatically
+accelerate JavaScript build pipelines by stripping TypeScript type
+annotations without performing type checks. However, relying solely on
+type erasure introduces distinct architectural and functional drawbacks.
+This article details the primary limitations developers encounter when
+using single-file type-erasing tools instead of the official TypeScript
+compiler (<code>tsc</code>), covering syntax restrictions, missing
+build-time validation, and tooling trade-offs.</p>
+<h2 id="single-file-transpilation-constraints">Single-File Transpilation
+Constraints</h2>
+<p>Type-erasing transpilers generally operate on one file at a time.
+Because they do not resolve references across multiple files or load the
+entire project graph, they cannot determine whether an imported
+identifier represents a runtime value or a compile-time type. This
+architecture imposes strict limitations on how code must be written:</p>
+<ul>
+<li><strong>Const Enums:</strong> In standard TypeScript,
+<code>const enum</code> members are completely inlined at compile time
+based on their definitions in other files. Single-file transpilers
+cannot resolve these cross-file definitions, causing build failures or
+requiring the compiler to emit them as standard runtime objects, which
+violates intended optimizations.</li>
+<li><strong>Ambiguous Type Re-exports:</strong> If a module imports an
+identifier from another file and re-exports it, a single-file transpiler
+cannot know whether it should be emitted into the final JavaScript
+output. Without explicit <code>export type</code> syntax, the transpiler
+may emit a reference to a nonexistent runtime value, causing runtime
+<code>ReferenceError</code> crashes.</li>
+<li><strong>Namespace Merging:</strong> TypeScript allows declarations
+of classes, functions, and namespaces with the same name across multiple
+files to merge. Single-file transpilers cannot merge symbols defined
+across module boundaries.</li>
+</ul>
+<p>To avoid runtime bugs caused by these issues, projects must enable
+the <code>isolatedModules</code> flag in <code>tsconfig.json</code>,
+which restricts the use of language features that require whole-program
+understanding.</p>
+<h2 id="absence-of-build-time-type-safety">Absence of Build-Time Type
+Safety</h2>
+<p>The speed of tools like SWC and esbuild stems from bypassing the
+type-checking phase entirely. As a result:</p>
+<ul>
+<li><strong>Silent Type Errors:</strong> Code containing critical type
+violations will compile successfully without warnings. A typo in a
+property name or an incompatible function argument will make it directly
+into production bundles unless caught by unit tests or an external
+validation step.</li>
+<li><strong>Dual-Pipeline Requirement:</strong> Teams must still run
+<code>tsc --noEmit</code> in their continuous integration (CI)
+environments or background editor processes to ensure type correctness.
+This introduces tooling fragmentation and negates some of the
+convenience gained by faster local compilation.</li>
+</ul>
+<h2 id="inability-to-generate-declaration-files">Inability to Generate
+Declaration Files</h2>
+<p>Type-erasing transpilers cannot generate <code>.d.ts</code>
+declaration files. Creating declaration files requires traversing the
+full type graph to compute inferred return types, public interfaces, and
+class shapes.</p>
+<p>For library authors, this means a type-erasing compiler cannot serve
+as an all-in-one build solution. Authors must still invoke
+<code>tsc</code> with <code>--emitDeclarationOnly</code> to publish
+accurate typings alongside their compiled JavaScript bundles.</p>
+<h2 id="limited-metadata-and-decorator-support">Limited Metadata and
+Decorator Support</h2>
+<p>Certain TypeScript configurations depend on runtime reflection:</p>
+<ul>
+<li><strong><code>emitDecoratorMetadata</code>:</strong> Frameworks like
+NestJS, TypeORM, and Angular rely on TypeScript emitting runtime type
+metadata for constructor injection and property definitions. Because
+this requires evaluating the type system to determine property types,
+type-erasing tools historically cannot generate this metadata accurately
+or require specialized plugins with known edge-case failures.</li>
+<li><strong>Legacy vs. TC39 Decorators:</strong> Variations in how
+experimental decorators and modern TC39 Stage 3 decorators are compiled
+can lead to discrepancies between <code>tsc</code> output and
+type-erasing transpiler output, occasionally altering runtime
+behavior.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

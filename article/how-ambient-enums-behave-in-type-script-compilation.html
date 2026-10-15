@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Ambient Enums Behave in TypeScript Compilation - typescript</title>
+    <meta name="description" content="Ambient enums in TypeScript, declared using the declare enum syntax, serve as compile-time type annotations that describe the shape of an enum that already exists at runtime. This article explains how the TypeScript compiler processes ambient enums declar">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-ambient-enums-behave-in-type-script-compilation">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Ambient Enums Behave in TypeScript Compilation - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-ambient-enums-behave-in-type-script-compilation" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Ambient enums in TypeScript, declared using the declare enum syntax, serve as compile-time type annotations that describe the shape of an enum that already exists at runtime. This article explains how the TypeScript compiler processes ambient enums declar" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-ambient-enums-behave-in-typescript-compilation">How Ambient
+Enums Behave in TypeScript Compilation</h1>
+<p>Ambient enums in TypeScript, declared using the
+<code>declare enum</code> syntax, serve as compile-time type annotations
+that describe the shape of an enum that already exists at runtime. This
+article explains how the TypeScript compiler processes ambient enums
+declared in external files, detailing their complete erasure from
+compiled output, member value evaluation, and the critical differences
+between standard ambient enums and ambient const enums.</p>
+<h2 id="zero-javascript-emission">Zero JavaScript Emission</h2>
+<p>The primary behavior of any ambient declaration in
+TypeScript—including ambient enums—is that the compiler emits zero
+JavaScript code for the declaration itself. When an enum is declared
+with the <code>declare</code> keyword, typically in a <code>.d.ts</code>
+definition file or an external module, TypeScript assumes the object is
+defined globally or provided by an external library at runtime.
+Consequently, the compiled output contains no object definitions,
+runtime lookups, or reverse mappings for that enum.</p>
+<h2 id="reference-emission-at-call-sites">Reference Emission at Call
+Sites</h2>
+<p>While the enum declaration generates no code, how TypeScript treats
+usages of the enum depends heavily on whether it is a regular ambient
+enum or an ambient const enum:</p>
+<h3 id="standard-ambient-enums-declare-enum">Standard Ambient Enums
+(<code>declare enum</code>)</h3>
+<p>For a regular ambient enum, member expressions are treated as having
+computed values unless explicitly assigned an initializer. When a member
+is referenced in your code (e.g., <code>let x = Status.Active;</code>),
+the TypeScript compiler does not inline the value. Instead, it emits the
+reference directly into the target JavaScript:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> x <span class="op">=</span> Status<span class="op">.</span><span class="at">Active</span><span class="op">;</span></span></code></pre></div>
+<p>Because TypeScript emits this property access directly, the
+<code>Status</code> object must exist in the runtime environment (such
+as on the global scope or imported module scope). If the underlying
+runtime object is missing when the compiled JavaScript executes, it
+results in a runtime
+<code>ReferenceError: Status is not defined</code>.</p>
+<h3 id="ambient-const-enums-declare-const-enum">Ambient Const Enums
+(<code>declare const enum</code>)</h3>
+<p>When an ambient enum is declared with the <code>const</code>
+modifier, the compiler changes its behavior:</p>
+<ul>
+<li>All enum members must have constant values.</li>
+<li>During compilation, TypeScript inlines the raw literal value
+wherever an enum member is referenced in consuming code.</li>
+<li>No property access (e.g., <code>Status.Active</code>) remains in the
+emitted JavaScript; it is replaced directly with its string or numeric
+literal (e.g., <code>0</code> or <code>"ACTIVE"</code>).</li>
+</ul>
+<p>The only exception occurs when the compiler flag
+<code>preserveConstEnums</code> is set to <code>true</code>. Even with
+this flag, the declaration itself is not emitted, but the compiler
+avoids stripping references in some contexts if external access is
+needed.</p>
+<h2 id="the-impact-of-isolatedmodules">The Impact of
+<code>isolatedModules</code></h2>
+<p>When using modern build pipelines with tools like Babel, SWC, or
+Vite, the <code>isolatedModules</code> compiler option is commonly
+enabled. Single-file transpilers process files independently without
+reading type definition files simultaneously.</p>
+<p>Because standard ambient enums leave property accesses in place, they
+function under <code>isolatedModules</code>. However, ambient
+<code>const</code> enums cannot be safely inlined by single-file
+transpilers because the transpiler cannot look up the value declared in
+an external ambient file. As a result, referencing external ambient
+<code>const</code> enums under <code>isolatedModules</code> will trigger
+a TypeScript compilation error.</p>
+<h2 id="summary-of-runtime-expectations">Summary of Runtime
+Expectations</h2>
+<p>When using ambient enums across external TypeScript files:</p>
+<ul>
+<li><strong><code>declare enum</code></strong>: The compiler strips the
+declaration, emits the variable references unchanged, and relies
+entirely on your bundling or execution environment to supply the actual
+runtime object.</li>
+<li><strong><code>declare const enum</code></strong>: The compiler
+strips the declaration, inlines literal values at every call site, and
+leaves no runtime dependency behind.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

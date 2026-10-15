@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Infer TypeScript Types from Runtime Schemas - typescript</title>
+    <meta name="description" content="Static TypeScript types can be inferred directly from runtime validation schemas by using generic schema definitions paired with TypeScript&#39;s type-level operators, such as the infer keyword and conditional types. Instead of manually maintaining separate T">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-infer-type-script-types-from-runtime-schemas">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Infer TypeScript Types from Runtime Schemas - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-infer-type-script-types-from-runtime-schemas" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Static TypeScript types can be inferred directly from runtime validation schemas by using generic schema definitions paired with TypeScript&#39;s type-level operators, such as the infer keyword and conditional types. Instead of manually maintaining separate T" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-infer-typescript-types-from-runtime-schemas">How to Infer
+TypeScript Types from Runtime Schemas</h1>
+<p>Static TypeScript types can be inferred directly from runtime
+validation schemas by using generic schema definitions paired with
+TypeScript's type-level operators, such as the <code>infer</code>
+keyword and conditional types. Instead of manually maintaining separate
+TypeScript interfaces and runtime validators, developers can define a
+single runtime schema—using libraries like Zod, Yup, Valibot, or
+TypeBox—and extract the corresponding static type automatically. This
+approach establishes a single source of truth for data models,
+eliminating type drift and reducing boilerplate code across
+applications.</p>
+<h3 id="the-problem-of-dual-declarations">The Problem of Dual
+Declarations</h3>
+<p>In standard TypeScript development, handling external data (such as
+API payloads or form inputs) often leads to redundancy:</p>
+<ol type="1">
+<li>A static TypeScript <code>interface</code> or <code>type</code> is
+written to satisfy compile-time checking.</li>
+<li>A runtime validation schema or parsing function is written to ensure
+the incoming data actually matches that structure at execution
+time.</li>
+</ol>
+<p>When the data contract changes, developers must update both
+declarations. Failing to update one results in runtime errors or
+misleading static checks.</p>
+<h3 id="how-type-inference-from-schemas-works">How Type Inference from
+Schemas Works</h3>
+<p>Runtime libraries bridge runtime and compile-time domains by carrying
+type metadata within their schema definitions.</p>
+<p>At a conceptual level, a schema instance is typed generically with
+the shape it validates:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Schema<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parse</span>(input<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When you define a schema using helper functions, the library builds
+up this generic <code>T</code> through mapped types and generic
+constraints.</p>
+<p>To retrieve <code>T</code> as a standalone static type, TypeScript's
+<code>infer</code> keyword extracts the generic type parameter from the
+schema instance:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> InferSchemaType<span class="op">&lt;</span>S<span class="op">&gt;</span> <span class="op">=</span> S <span class="kw">extends</span> Schema<span class="op">&lt;</span><span class="kw">infer</span> T<span class="op">&gt;</span> <span class="op">?</span> T <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span></code></pre></div>
+<h3 id="implementing-type-inference-with-popular-libraries">Implementing
+Type Inference with Popular Libraries</h3>
+<p>Modern schema validation libraries provide built-in type inference
+utilities that follow this pattern.</p>
+<h4 id="example-zod">Example: Zod</h4>
+<p>In Zod, schemas wrap data rules, and the <code>z.infer&lt;&gt;</code>
+utility extracts the static type via <code>typeof</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { z } <span class="im">from</span> <span class="st">&quot;zod&quot;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Define the runtime schema</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> UserSchema <span class="op">=</span> z<span class="op">.</span><span class="fu">object</span>({</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">.</span><span class="fu">uuid</span>()<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">.</span><span class="fu">min</span>(<span class="dv">1</span>)<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  email<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">.</span><span class="fu">email</span>()<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  role<span class="op">:</span> z<span class="op">.</span><span class="fu">enum</span>([<span class="st">&quot;admin&quot;</span><span class="op">,</span> <span class="st">&quot;user&quot;</span>])<span class="op">.</span><span class="fu">default</span>(<span class="st">&quot;user&quot;</span>)<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  tags<span class="op">:</span> z<span class="op">.</span><span class="fu">array</span>(z<span class="op">.</span><span class="fu">string</span>())<span class="op">.</span><span class="fu">optional</span>()<span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Infer the static TypeScript type</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> z<span class="op">.</span><span class="at">infer</span><span class="op">&lt;</span><span class="kw">typeof</span> UserSchema<span class="op">&gt;;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// The resolved static type is:</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">// type User = {</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">//   id: string;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">//   name: string;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">//   email: string;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">//   role: &quot;admin&quot; | &quot;user&quot;;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">//   tags?: string[] | undefined;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<p>Any modification to <code>UserSchema</code> immediately reflects in
+the <code>User</code> type throughout the codebase during
+compilation.</p>
+<h4 id="example-valibot">Example: Valibot</h4>
+<p>Valibot functions similarly while focusing on modularity and
+tree-shaking, using <code>InferOutput</code> to extract static
+shapes:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> v <span class="im">from</span> <span class="st">&quot;valibot&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ProductSchema <span class="op">=</span> v<span class="op">.</span><span class="fu">object</span>({</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> v<span class="op">.</span><span class="fu">number</span>()<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  title<span class="op">:</span> v<span class="op">.</span><span class="fu">string</span>()<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  price<span class="op">:</span> v<span class="op">.</span><span class="fu">number</span>()<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Product <span class="op">=</span> v<span class="op">.</span><span class="at">InferOutput</span><span class="op">&lt;</span><span class="kw">typeof</span> ProductSchema<span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="creating-a-minimal-custom-type-inference-engine">Creating a
+Minimal Custom Type-Inference Engine</h3>
+<p>Understanding how this operates without external dependencies
+requires only a few primitive validators:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Base Validator type carrying phantom type T</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Validator<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  validate<span class="op">:</span> (value<span class="op">:</span> <span class="dt">unknown</span>) <span class="kw">=&gt;</span> value <span class="kw">is</span> T<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Factory functions that generate typed validators</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> stringValidator<span class="op">:</span> Validator<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  validate<span class="op">:</span> (v)<span class="op">:</span> v <span class="kw">is</span> <span class="dt">string</span> <span class="kw">=&gt;</span> <span class="kw">typeof</span> v <span class="op">===</span> <span class="st">&quot;string&quot;</span><span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numberValidator<span class="op">:</span> Validator<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  validate<span class="op">:</span> (v)<span class="op">:</span> v <span class="kw">is</span> <span class="dt">number</span> <span class="kw">=&gt;</span> <span class="kw">typeof</span> v <span class="op">===</span> <span class="st">&quot;number&quot;</span><span class="op">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Object validator combining schema properties</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ObjectSchema<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> { [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> Validator<span class="op">&lt;</span>T[K]<span class="op">&gt;</span> }<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createObjectValidator</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(schema<span class="op">:</span> ObjectSchema<span class="op">&lt;</span>T<span class="op">&gt;</span>)<span class="op">:</span> Validator<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    validate<span class="op">:</span> (value<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> value <span class="kw">is</span> T <span class="kw">=&gt;</span> {</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">!==</span> <span class="st">&quot;object&quot;</span> <span class="op">||</span> value <span class="op">===</span> <span class="kw">null</span>) <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">entries</span>(schema)<span class="op">.</span><span class="fu">every</span>(([key<span class="op">,</span> validator]) <span class="kw">=&gt;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        (validator <span class="im">as</span> Validator<span class="op">&lt;</span><span class="dt">unknown</span><span class="op">&gt;</span>)<span class="op">.</span><span class="fu">validate</span>((value <span class="im">as</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span>)[key])</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      )<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Extraction utility using conditional inference</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FromValidator<span class="op">&lt;</span>V<span class="op">&gt;</span> <span class="op">=</span> V <span class="kw">extends</span> Validator<span class="op">&lt;</span><span class="kw">infer</span> T<span class="op">&gt;</span> <span class="op">?</span> T <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ConfigSchema <span class="op">=</span> <span class="fu">createObjectValidator</span>({</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> stringValidator<span class="op">,</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> numberValidator<span class="op">,</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AppConfig <span class="op">=</span> FromValidator<span class="op">&lt;</span><span class="kw">typeof</span> ConfigSchema<span class="op">&gt;;</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolved: type AppConfig = { host: string; port: number; }</span></span></code></pre></div>
+<h3 id="key-considerations">Key Considerations</h3>
+<ul>
+<li><strong>Input vs. Output Types</strong>: Some schemas transform data
+during parsing (e.g., converting an ISO date string into a
+<code>Date</code> object, or applying default values). Libraries like
+Zod address this by offering both
+<code>z.input&lt;typeof Schema&gt;</code> and
+<code>z.output&lt;typeof Schema&gt;</code> (which is what
+<code>z.infer</code> aliases).</li>
+<li><strong>Compile-Time Performance</strong>: Highly complex schemas
+with deep nesting or recursive properties can increase compiler
+workload. Using modular schemas and avoiding unnecessary recursive
+definitions keeps compilation fast.</li>
+<li><strong>Type Narrowing</strong>: When a schema parses unvalidated
+data (such as request bodies), the parser functions as a type guard,
+transforming dynamic <code>unknown</code> types into guaranteed static
+types safely at application boundaries.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

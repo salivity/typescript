@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Interfaces Merge Declarations in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, interfaces can merge declarations while type aliases cannot due to fundamental differences in their architectural design and intended use cases. Interfaces were engineered to be open and extensible to accurately model JavaScript’s dynamic r">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-interfaces-merge-declarations-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Interfaces Merge Declarations in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-interfaces-merge-declarations-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, interfaces can merge declarations while type aliases cannot due to fundamental differences in their architectural design and intended use cases. Interfaces were engineered to be open and extensible to accurately model JavaScript’s dynamic r" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-interfaces-merge-declarations-in-typescript">Why Interfaces
+Merge Declarations in TypeScript</h1>
+<p>In TypeScript, interfaces can merge declarations while type aliases
+cannot due to fundamental differences in their architectural design and
+intended use cases. Interfaces were engineered to be open and extensible
+to accurately model JavaScript’s dynamic runtime environment and library
+augmentation, whereas type aliases were created as immutable, direct
+bindings to represent specific type expressions, including primitives,
+unions, and tuples.</p>
+<h3 id="architectural-intent-open-vs-closed">Architectural Intent: Open
+vs. Closed</h3>
+<p>The primary reason for this distinction lies in the concept of "open"
+versus "closed" type systems:</p>
+<ul>
+<li><strong>Interfaces are "open":</strong> They are specifically
+designed to describe the shape of objects that may evolve across
+different files, packages, or scopes. This open-ended nature allows
+multiple definitions with the same name to automatically combine into a
+single, unified definition.</li>
+<li><strong>Type Aliases are "closed":</strong> A type alias is not a
+declaration of a new object shape; it is an alias—an exact alternative
+name—for an underlying type expression. Because it functions as a
+distinct identifier binding, defining the same name twice creates a
+duplicate identifier collision.</li>
+</ul>
+<h3 id="the-problem-of-defining-merge-semantics-for-types">The Problem
+of Defining Merge Semantics for Types</h3>
+<p>Interfaces only describe object shapes and method signatures, making
+the rules for merging straightforward: properties are aggregated, and
+identical method signatures are overloaded.</p>
+<p>Type aliases, however, can represent any type, such as primitives,
+unions, intersections, or tuples:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Value <span class="op">=</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Value <span class="op">=</span> <span class="dt">number</span><span class="op">;</span> <span class="co">// What should this mean?</span></span></code></pre></div>
+<p>If TypeScript allowed declaration merging for type aliases, the
+compiler would need arbitrary rules to handle conflicts:</p>
+<ul>
+<li>Should <code>Value</code> become a union
+(<code>string | number</code>)?</li>
+<li>Should it become an intersection (<code>string &amp; number</code>,
+which evaluates to <code>never</code>)?</li>
+<li>Should the second definition overwrite the first?</li>
+</ul>
+<p>Because no single, intuitive rule applies to all non-object types,
+merging type aliases is prohibited entirely to preserve type safety and
+predictability.</p>
+<h3 id="practical-necessity-global-and-library-augmentation">Practical
+Necessity: Global and Library Augmentation</h3>
+<p>TypeScript was designed to easily interface with existing JavaScript
+environments, where scripts and libraries frequently augment global
+objects (such as <code>window</code> or
+<code>Array.prototype</code>).</p>
+<p>Declaration merging enables developers to extend built-in APIs or
+third-party declarations without modifying the original source code:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initial definition (e.g., inside a third-party library)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="bu">Document</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  title<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// User augmentation (in a local project file)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="bu">Document</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  customProperty<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: Document has both &#39;title&#39; and &#39;customProperty&#39;</span></span></code></pre></div>
+<p>If interfaces were closed like type aliases, extending global
+runtimes or modular libraries would require completely overriding the
+original types or using complex intersection patterns everywhere.</p>
+<h3 id="composition-strategies">Composition Strategies</h3>
+<p>Because of these design rules, each construct has a dedicated
+approach for combining shapes:</p>
+<ul>
+<li><strong>Interfaces</strong> rely on <strong>declaration
+merging</strong> (implicit extension) and the
+<strong><code>extends</code></strong> keyword (explicit
+inheritance).</li>
+<li><strong>Type aliases</strong> rely on <strong>intersection types
+(<code>&amp;</code>)</strong> for explicit composition without mutating
+or augmenting existing definitions.</li>
+</ul>
+<p>This separation ensures that interfaces provide the necessary
+flexibility for library authoring and environment typing, while type
+aliases provide stable, immutable references for advanced type
+composition.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

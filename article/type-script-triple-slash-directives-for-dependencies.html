@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Triple-Slash Directives for Dependencies - typescript</title>
+    <meta name="description" content="Triple-slash directives in TypeScript are single-line comments containing XML tags that instruct the compiler how to resolve file dependencies, include ambient type declarations, and configure compiler settings. Before the widespread adoption of ES6 modul">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-triple-slash-directives-for-dependencies">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Triple-Slash Directives for Dependencies - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-triple-slash-directives-for-dependencies" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Triple-slash directives in TypeScript are single-line comments containing XML tags that instruct the compiler how to resolve file dependencies, include ambient type declarations, and configure compiler settings. Before the widespread adoption of ES6 modul" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-triple-slash-directives-for-dependencies">TypeScript
+Triple-Slash Directives for Dependencies</h1>
+<p>Triple-slash directives in TypeScript are single-line comments
+containing XML tags that instruct the compiler how to resolve file
+dependencies, include ambient type declarations, and configure compiler
+settings. Before the widespread adoption of ES6 module syntax, these
+directives served as the primary mechanism to define relationships
+between files. Today, they remain essential for declaration files
+(<code>.d.ts</code>), global type definitions, and explicitly managing
+compile-time dependencies without producing runtime import
+statements.</p>
+<h3 id="how-the-preprocessing-phase-works">How the Preprocessing Phase
+Works</h3>
+<p>When the TypeScript compiler (<code>tsc</code>) processes a project,
+it initiates a preprocessing pass on all input files before performing
+type checking or code generation. During this phase:</p>
+<ol type="1">
+<li>The compiler scans the very top of each file for comments beginning
+with three slashes (<code>///</code>).</li>
+<li>It parses the XML tags embedded within these comments to identify
+referenced files, external packages, or core library definitions.</li>
+<li>It recursively resolves each reference, building a directed acyclic
+graph (DAG) of dependencies.</li>
+<li>It includes all discovered files into the compilation context,
+ensuring that types declared across different files are available in the
+correct resolution order.</li>
+</ol>
+<p>If a triple-slash directive appears after any statement or
+declaration other than single-line comments, multi-line comments, or
+other triple-slash directives, TypeScript treats it as an ordinary
+comment and ignores its dependency instructions.</p>
+<h3 id="core-directives-for-dependency-management">Core Directives for
+Dependency Management</h3>
+<p>TypeScript provides several reference directives to manage different
+types of dependencies.</p>
+<h4 id="1-file-dependencies--reference-path-">1. File Dependencies:
+<code>/// &lt;reference path="..." /&gt;</code></h4>
+<p>The <code>path</code> directive declares a direct dependency between
+local files:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> path=</span><span class="dt">&quot;./models/user.ts&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> path=</span><span class="dt">&quot;./utils/validator.ts&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> activeUser<span class="op">:</span> User <span class="op">=</span> { id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> }<span class="op">;</span></span></code></pre></div>
+<p>The compiler resolves the path relative to the file containing the
+directive. It ensures that the referenced file is included in the
+program build, allowing access to global or ambient variables defined in
+that file. In projects compiling into a single output file using the
+<code>--outFile</code> flag, the <code>path</code> directive also
+determines the concatenation order of the output JavaScript.</p>
+<h4 id="2-package-dependencies--reference-types-">2. Package
+Dependencies: <code>/// &lt;reference types="..." /&gt;</code></h4>
+<p>The <code>types</code> directive declares a dependency on an external
+declaration package (typically residing within
+<code>node_modules/@types</code>):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> types=</span><span class="dt">&quot;node&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> fs <span class="im">from</span> <span class="st">&quot;fs&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>Similar to configuring the <code>types</code> array in
+<code>tsconfig.json</code>, this directive instructs the compiler to
+include the ambient declarations of the named package during
+compilation. It is commonly used in generated <code>.d.ts</code> files
+to indicate that the module relies on ambient typings from third-party
+libraries without forcing the consumer to manually alter their
+<code>tsconfig.json</code>.</p>
+<h4 id="3-standard-library-dependencies--reference-lib-">3. Standard
+Library Dependencies:
+<code>/// &lt;reference lib="..." /&gt;</code></h4>
+<p>The <code>lib</code> directive allows a file to explicitly depend on
+a built-in TypeScript standard library file (such as <code>dom</code>,
+<code>es2020</code>, or <code>webworker</code>):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> lib=</span><span class="dt">&quot;es2021.string&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> text <span class="op">=</span> <span class="st">&quot;foo bar foo&quot;</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> replaced <span class="op">=</span> text<span class="op">.</span><span class="fu">replaceAll</span>(<span class="st">&quot;foo&quot;</span><span class="op">,</span> <span class="st">&quot;baz&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>This directive enables localized access to standard JavaScript
+runtime APIs on a per-file basis without requiring project-wide
+enablement in the <code>compilerOptions.lib</code> setting.</p>
+<h3 id="triple-slash-directives-vs-es6-imports">Triple-Slash Directives
+vs. ES6 Imports</h3>
+<p>Modern TypeScript applications rely primarily on standard ES module
+syntax (<code>import</code> and <code>export</code>) to manage runtime
+code dependencies. While ES imports produce both a compile-time type
+link and a runtime module loading mechanism, triple-slash directives
+operate strictly at compile time.</p>
+<p>Triple-slash directives do not emit runtime code; they solely modify
+the TypeScript compiler's internal symbol table and file inclusion
+lists. As a result, standard imports should be used for code
+structuring, while triple-slash directives are reserved for authoring
+type declaration files, managing global namespaces, and bundling ambient
+typings.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

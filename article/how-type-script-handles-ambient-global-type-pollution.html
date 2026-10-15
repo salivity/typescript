@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Handles Ambient Global Type Pollution - typescript</title>
+    <meta name="description" content="Ambient declaration files (.d.ts) provide type information for JavaScript code without altering runtime output, but without top-level import or export statements, they treat their contents as globally accessible. This behavior frequently leads to global t">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-handles-ambient-global-type-pollution">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Handles Ambient Global Type Pollution - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-handles-ambient-global-type-pollution" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Ambient declaration files (.d.ts) provide type information for JavaScript code without altering runtime output, but without top-level import or export statements, they treat their contents as globally accessible. This behavior frequently leads to global t" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-handles-ambient-global-type-pollution">How
+TypeScript Handles Ambient Global Type Pollution</h1>
+<p>Ambient declaration files (<code>.d.ts</code>) provide type
+information for JavaScript code without altering runtime output, but
+without top-level import or export statements, they treat their contents
+as globally accessible. This behavior frequently leads to global type
+pollution, namespace collisions, and shadowed types across large
+codebases. TypeScript handles and mitigates this issue through module
+isolation boundaries, deliberate global augmentation mechanisms,
+compiler flags that restrict ambient type discovery, and strict
+declaration-merging rules.</p>
+<p>In TypeScript, any file lacking a top-level <code>import</code> or
+<code>export</code> statement is classified as a script rather than a
+module. Types declared within scripts automatically merge into the
+global execution context. When a package or local declaration file
+declares types in this manner, those types become visible across the
+entire compilation context—even in files that never explicitly
+referenced or imported them.</p>
+<p>The primary mechanism to contain ambient declarations is converting
+script files into external modules. Adding <code>export {}</code> to an
+ambient <code>.d.ts</code> file immediately drops it out of the global
+scope, encapsulating all internal types. Once a file is treated as a
+module, its declarations are isolated and must be explicitly exported
+and imported where needed, entirely preventing unintentional global
+pollution.</p>
+<p>When genuine global augmentation is required—such as modifying
+<code>window</code>, <code>process.env</code>, or global
+prototypes—TypeScript requires the use of the
+<code>declare global</code> block within a module context. This
+separates global additions from module-scoped types. Developers can
+declare localized internal types safely while strictly scoping global
+modifications inside an explicit block:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> {}<span class="op">;</span> <span class="co">// Marks the file as a module</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="bu">global</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">interface</span> <span class="bu">Window</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    customAnalytics<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Beyond file-level scoping, TypeScript gives developers control over
+ambient type loading through <code>tsconfig.json</code>. By default, the
+compiler scans all visible <code>node_modules/@types</code> directories
+and includes them in the global scope. This behavior can be restricted
+using the <code>types</code> array under <code>compilerOptions</code>.
+Specifying an explicit list of packages (for example,
+<code>"types": ["node", "jest"]</code>) instructs TypeScript to ignore
+all other ambient packages found in <code>node_modules</code>, directly
+cutting off untrusted or conflicting global definitions.</p>
+<p>Similarly, configuring <code>typeRoots</code> allows teams to control
+the directories where TypeScript looks for declaration files, while the
+<code>include</code>, <code>exclude</code>, and <code>files</code>
+settings ensure that rogue internal <code>.d.ts</code> scripts are not
+inadvertently sucked into the compilation program.</p>
+<p>When two ambient declarations introduce the same identifier,
+TypeScript relies on declaration merging. If the identifier is an
+interface, TypeScript merges the properties from both declarations into
+a single definition. However, if the merged properties possess
+incompatible types, or if conflicting declarations use non-mergeable
+constructs such as <code>type</code> aliases, <code>const</code>, or
+<code>class</code>, the compiler issues an immediate error (such as
+<code>Duplicate identifier</code>). This strict collision detection
+prevents silent type mutations from propagating through the project.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

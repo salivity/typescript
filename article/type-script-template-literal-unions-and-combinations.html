@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Template Literal Unions and Combinations - typescript</title>
+    <meta name="description" content="Template literal types in TypeScript allow developers to build flexible string types by embedding expressions directly inside string literals. When combined with union types, TypeScript automatically calculates the Cartesian product of the inputs to produ">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-template-literal-unions-and-combinations">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Template Literal Unions and Combinations - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-template-literal-unions-and-combinations" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Template literal types in TypeScript allow developers to build flexible string types by embedding expressions directly inside string literals. When combined with union types, TypeScript automatically calculates the Cartesian product of the inputs to produ" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-template-literal-unions-and-combinations">TypeScript
+Template Literal Unions and Combinations</h1>
+<p>Template literal types in TypeScript allow developers to build
+flexible string types by embedding expressions directly inside string
+literals. When combined with union types, TypeScript automatically
+calculates the Cartesian product of the inputs to produce every valid
+string permutation. This article explains how template literal unions
+work, breaks down the mechanics behind cross-product generation, and
+explores practical applications and performance considerations.</p>
+<h2 id="what-are-template-literal-types">What Are Template Literal
+Types?</h2>
+<p>Introduced in TypeScript 4.1, template literal types mirror
+JavaScript's template literal syntax using backticks (<code>`</code>)
+and the <code>${}</code> placeholder. Instead of evaluating runtime
+values, TypeScript evaluates them at compile time within the type
+system:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> World <span class="op">=</span> <span class="st">&quot;world&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Greeting <span class="op">=</span> <span class="vs">`hello </span><span class="sc">${</span>World<span class="sc">}</span><span class="vs">`</span><span class="op">;</span> <span class="co">// Type is &quot;hello world&quot;</span></span></code></pre></div>
+<p>When string literal types are inserted, the resulting type is a
+strictly defined, single-string literal.</p>
+<h2 id="how-unions-trigger-cross-product-combinations">How Unions
+Trigger Cross-Product Combinations</h2>
+<p>The true power of template literal types emerges when union types are
+passed into the interpolation slots. When TypeScript encounters a union
+within a template literal, it distributes over each member of that
+union.</p>
+<p>If multiple unions are used in the same template literal type,
+TypeScript calculates the Cartesian product (or cross-product), pairing
+every constituent of the first union with every constituent of each
+subsequent union:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VerticalAlignment <span class="op">=</span> <span class="st">&quot;top&quot;</span> <span class="op">|</span> <span class="st">&quot;bottom&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HorizontalAlignment <span class="op">=</span> <span class="st">&quot;left&quot;</span> <span class="op">|</span> <span class="st">&quot;right&quot;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="bu">Position</span> <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span>VerticalAlignment<span class="sc">}</span><span class="vs">-</span><span class="sc">${</span>HorizontalAlignment<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>The resulting <code>Position</code> type resolves to:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;top-left&quot;</span> <span class="op">|</span> <span class="st">&quot;top-right&quot;</span> <span class="op">|</span> <span class="st">&quot;bottom-left&quot;</span> <span class="op">|</span> <span class="st">&quot;bottom-right&quot;</span></span></code></pre></div>
+<h3 id="the-distribution-mechanism">The Distribution Mechanism</h3>
+<p>The cross-product behavior occurs because TypeScript resolves
+template literal types by distributing unions one by one from left to
+right:</p>
+<ol type="1">
+<li>It takes the first member of <code>VerticalAlignment</code>
+(<code>"top"</code>) and combines it with every member of
+<code>HorizontalAlignment</code> (<code>"left"</code>,
+<code>"right"</code>), generating <code>"top-left"</code> and
+<code>"top-right"</code>.</li>
+<li>It takes the next member of <code>VerticalAlignment</code>
+(<code>"bottom"</code>) and repeats the process, generating
+<code>"bottom-left"</code> and <code>"bottom-right"</code>.</li>
+<li>It joins all individual results into a single flattened union.</li>
+</ol>
+<p>Adding a third union multiplies the total permutations
+accordingly:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Device <span class="op">=</span> <span class="st">&quot;mobile&quot;</span> <span class="op">|</span> <span class="st">&quot;desktop&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Layout <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span>Device<span class="sc">}</span><span class="vs">-</span><span class="sc">${</span><span class="bu">Position</span><span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Results in 8 permutations:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;mobile-top-left&quot; | &quot;mobile-top-right&quot; | ... | &quot;desktop-bottom-right&quot;</span></span></code></pre></div>
+<h2 id="built-in-string-manipulation-utilities">Built-in String
+Manipulation Utilities</h2>
+<p>TypeScript includes intrinsic string utility types that can be
+combined with template literal unions to format generated variants:</p>
+<ul>
+<li><code>Uppercase&lt;StringType&gt;</code></li>
+<li><code>Lowercase&lt;StringType&gt;</code></li>
+<li><code>Capitalize&lt;StringType&gt;</code></li>
+<li><code>Uncapitalize&lt;StringType&gt;</code></li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Action <span class="op">=</span> <span class="st">&quot;create&quot;</span> <span class="op">|</span> <span class="st">&quot;update&quot;</span> <span class="op">|</span> <span class="st">&quot;delete&quot;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Resource <span class="op">=</span> <span class="st">&quot;user&quot;</span> <span class="op">|</span> <span class="st">&quot;order&quot;</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HandlerName <span class="op">=</span> <span class="vs">`handle</span><span class="sc">${</span>Capitalize<span class="op">&lt;</span>Action<span class="op">&gt;</span><span class="sc">}${</span>Capitalize<span class="op">&lt;</span>Resource<span class="op">&gt;</span><span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;handleCreateUser&quot; | &quot;handleCreateOrder&quot; | &quot;handleUpdateUser&quot; | ...</span></span></code></pre></div>
+<h2 id="practical-applications">Practical Applications</h2>
+<p>Cross-product generation via template literals is useful across
+several real-world architectures:</p>
+<ul>
+<li><strong>Design Systems and CSS Utilities:</strong> Generate all
+permutations of component classes, such as
+<code>btn-primary-large</code> or <code>padding-x-4</code>.</li>
+<li><strong>Event Systems:</strong> Strongly type event listeners
+dynamically, such as mapping <code>"change"</code> and
+<code>"input"</code> to <code>"onChange"</code> and
+<code>"onInput"</code>.</li>
+<li><strong>API Routing:</strong> Create strongly typed endpoints
+combining resource names, versions, and sub-routes (e.g.,
+<code>/api/v1/users/profile</code>).</li>
+</ul>
+<h2 id="managing-combinatorial-explosion">Managing Combinatorial
+Explosion</h2>
+<p>Because template literal unions generate Cartesian products, the
+number of generated types grows exponentially:</p>
+<p><span class="math display">\[\text{Total Types} = |A| \times |B|
+\times |C|\]</span></p>
+<p>If three unions contain 10, 10, and 10 members respectively, the
+resulting type contains 1,000 members. TypeScript enforces limits on
+union size to maintain compiler performance. Exceeding these limits can
+trigger compiler errors such as
+<code>Expression produces a union type that is too complex to represent</code>.
+Keep input unions small and focused on genuine use cases to maintain
+fast type-checking times.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

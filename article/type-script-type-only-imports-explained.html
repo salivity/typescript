@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Type-Only Imports Explained - typescript</title>
+    <meta name="description" content="This article provides an overview of type-only imports and import declarations in TypeScript, detailing their core purpose, mechanics, and runtime behavior. You will learn how explicitly marking imports as types optimizes build bundles, prevents unintende">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-type-only-imports-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Type-Only Imports Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-type-only-imports-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of type-only imports and import declarations in TypeScript, detailing their core purpose, mechanics, and runtime behavior. You will learn how explicitly marking imports as types optimizes build bundles, prevents unintende" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-type-only-imports-explained">TypeScript Type-Only
+Imports Explained</h1>
+<p>This article provides an overview of type-only imports and import
+declarations in TypeScript, detailing their core purpose, mechanics, and
+runtime behavior. You will learn how explicitly marking imports as types
+optimizes build bundles, prevents unintended side effects, ensures
+compatibility with single-file transpilers like Babel and esbuild, and
+resolves circular dependency issues.</p>
+<h2 id="what-are-type-only-imports">What Are Type-Only Imports?</h2>
+<p>TypeScript 3.8 introduced type-only imports and exports using the
+<code>import type</code> syntax. Later, TypeScript 4.5 expanded this
+with inline type qualifiers, allowing developers to prefix specific
+identifiers with the <code>type</code> keyword.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TS 3.8+ full import statement</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { User } <span class="im">from</span> <span class="st">&#39;./models&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// TS 4.5+ inline type import</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { apiCall<span class="op">,</span> <span class="kw">type</span> RequestConfig } <span class="im">from</span> <span class="st">&#39;./api&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>When TypeScript compiles code to JavaScript, any declaration marked
+with <code>type</code> is completely erased from the generated
+output.</p>
+<h2 id="the-core-purposes-of-type-only-imports">The Core Purposes of
+Type-Only Imports</h2>
+<h3 id="1-guaranteed-runtime-elision">1. Guaranteed Runtime Elision</h3>
+<p>Under standard TypeScript compilation, the compiler attempts to
+detect whether an imported identifier is used as a value or solely as a
+type. If it is only used in type positions (such as type annotations or
+interface implementations), the compiler elides (removes) the import
+from the JavaScript output.</p>
+<p>However, automatic elision can occasionally be ambiguous, especially
+in complex re-export chains. Explicitly declaring an import with
+<code>type</code> eliminates ambiguity. It acts as an absolute
+instruction to the compiler that the imported entity must never emit
+code into the final JavaScript output.</p>
+<h3 id="2-preventing-unintended-runtime-side-effects">2. Preventing
+Unintended Runtime Side Effects</h3>
+<p>In ECMAScript modules, importing a file executes that module's
+top-level code. If you import an identifier purely for its static type
+from a file that contains side effects (such as global state mutations,
+analytics initialization, or polyfills), a normal <code>import</code>
+might cause that module to be evaluated at runtime.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Might cause &#39;./sideEffectModule&#39; to execute at runtime</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { DatabaseSchema } <span class="im">from</span> <span class="st">&#39;./sideEffectModule&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Guaranteed to be stripped entirely; runtime evaluation will not occur</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { DatabaseSchema } <span class="im">from</span> <span class="st">&#39;./sideEffectModule&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>By ensuring the import is stripped completely,
+<code>import type</code> guarantees that the imported file is never
+loaded or executed simply because a type was referenced.</p>
+<h3 id="3-compatibility-with-single-file-transpilers">3. Compatibility
+with Single-File Transpilers</h3>
+<p>Modern build pipelines frequently use tools like Babel, SWC, Vite,
+and esbuild to transpile TypeScript files into JavaScript rapidly. These
+tools operate on a file-by-file basis (isolated modules) without
+analyzing the entire project's type hierarchy.</p>
+<p>When a single-file transpiler encounters:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SomeIdentifier } <span class="im">from</span> <span class="st">&#39;./module&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>It cannot determine whether <code>SomeIdentifier</code> is a
+TypeScript <code>interface</code>/<code>type</code> alias (which should
+be stripped) or a <code>class</code>/<code>const</code> value (which
+must be preserved). If the tool strips it incorrectly, runtime errors
+occur; if it preserves it, unused code remains.</p>
+<p>Using <code>import type</code> removes the guesswork. Tools
+configured with the <code>--isolatedModules</code> flag enforce explicit
+type-only imports so single-file transpilers can safely discard the
+imports without full program analysis.</p>
+<h3 id="4-eliminating-circular-runtime-dependencies">4. Eliminating
+Circular Runtime Dependencies</h3>
+<p>Circular dependencies between types are common and entirely valid in
+domain modeling (for example, a <code>User</code> type referencing an
+<code>Order</code> type, and an <code>Order</code> referencing a
+<code>User</code>).</p>
+<p>However, circular runtime imports can lead to module evaluation
+deadlocks or <code>undefined</code> references during execution. Marking
+one or both cross-references with <code>import type</code> breaks the
+runtime dependency cycle while preserving full type safety during
+development.</p>
+<h2
+id="clarification-type-imports-vs-ecmascript-import-attributes">Clarification:
+Type Imports vs. ECMAScript Import Attributes</h2>
+<p>It is important to distinguish TypeScript's <code>import type</code>
+from ECMAScript <strong>Import Attributes</strong> (formerly known as
+Import Assertions), which use the <code>with</code> or
+<code>assert</code> keyword:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ECMAScript Import Attribute (runtime module type assertion)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> data <span class="im">from</span> <span class="st">&#39;./data.json&#39;</span> <span class="cf">with</span> { type<span class="op">:</span> <span class="st">&#39;json&#39;</span> }<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript Type-Only Import (compile-time type elision)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { UserData } <span class="im">from</span> <span class="st">&#39;./data&#39;</span><span class="op">;</span></span></code></pre></div>
+<ul>
+<li><strong>Import Attributes</strong>
+(<code>with { type: 'json' }</code>): Instruct the JavaScript runtime
+environment (e.g., V8, Node.js, browsers) how to parse and validate the
+target module resource. They exist in the runtime output.</li>
+<li><strong>Type-Only Imports</strong> (<code>import type</code>):
+Instruct the TypeScript compiler that the imported token exists strictly
+in the static type space and must be removed before runtime.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can a TypeScript Decorator Return a New Constructor? - typescript</title>
+    <meta name="description" content="Yes, a class decorator in TypeScript can return a new constructor function or class to replace the original target class. This article explores how class decorator replacement works, demonstrating implementations for both modern standard decorators (TypeS">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/can-a-type-script-decorator-return-a-new-constructor">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can a TypeScript Decorator Return a New Constructor? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/can-a-type-script-decorator-return-a-new-constructor" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Yes, a class decorator in TypeScript can return a new constructor function or class to replace the original target class. This article explores how class decorator replacement works, demonstrating implementations for both modern standard decorators (TypeS" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="can-a-typescript-decorator-return-a-new-constructor">Can a
+TypeScript Decorator Return a New Constructor?</h1>
+<p>Yes, a class decorator in TypeScript can return a new constructor
+function or class to replace the original target class. This article
+explores how class decorator replacement works, demonstrating
+implementations for both modern standard decorators (TypeScript 5.0+)
+and legacy experimental decorators, while addressing the type-checking
+implications of swapping constructors at runtime.</p>
+<h3 id="how-constructor-replacement-works">How Constructor Replacement
+Works</h3>
+<p>When a class decorator returns a new constructor function or a new
+class, TypeScript and JavaScript runtime engines replace the original
+constructor with the returned one. Any subsequent instantiation using
+the <code>new</code> keyword will execute the new constructor instead of
+the original one.</p>
+<p>Typically, the replacement class extends the original target class to
+preserve existing prototype methods and properties while adding or
+overriding behavior.</p>
+<h3 id="modern-stage-3-decorators-typescript-50">Modern Stage 3
+Decorators (TypeScript 5.0+)</h3>
+<p>Starting with TypeScript 5.0, decorators align with the official
+ECMAScript Stage 3 proposal. Under this standard, a class decorator
+receives the original class as its first parameter and a context object
+as its second parameter. If the decorator returns a new class or
+constructor, it substitutes the target class.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> LoggedClass<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> <span class="dt">any</span><span class="op">&gt;</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassDecoratorContext</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> target {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constructor</span>(<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Creating an instance of </span><span class="sc">${</span>context<span class="op">.</span><span class="at">name</span> <span class="op">||</span> <span class="st">&quot;AnonymousClass&quot;</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">super</span>(<span class="op">...</span>args)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>@LoggedClass</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">public</span> name<span class="op">:</span> <span class="dt">string</span>) {}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="kw">new</span> <span class="fu">User</span>(<span class="st">&quot;Alice&quot;</span>)<span class="op">;</span> </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Console output: &quot;Creating an instance of User&quot;</span></span></code></pre></div>
+<p>In modern decorators, the returned constructor can modify
+instantiation behavior, inspect or log constructor parameters, or inject
+additional runtime properties.</p>
+<h3 id="legacy-experimental-decorators">Legacy Experimental
+Decorators</h3>
+<p>In earlier TypeScript implementations using the
+<code>"experimentalDecorators": true</code> flag in
+<code>tsconfig.json</code>, constructor replacement works similarly by
+returning a subclass constructor:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Timestamped</span><span class="op">&lt;</span>T <span class="kw">extends</span> { <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[])<span class="op">:</span> {} }<span class="op">&gt;</span>(constructor<span class="op">:</span> T) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> <span class="kw">constructor</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    createdAt <span class="op">=</span> <span class="kw">new</span> <span class="bu">Date</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>@Timestamped</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="bu">Document</span> {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">public</span> title<span class="op">:</span> <span class="dt">string</span>) {}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> doc <span class="op">=</span> <span class="kw">new</span> <span class="bu">Document</span>(<span class="st">&quot;Invoice&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>((doc <span class="im">as</span> <span class="dt">any</span>)<span class="op">.</span><span class="at">createdAt</span>)<span class="op">;</span> <span class="co">// Outputs current Date</span></span></code></pre></div>
+<h3 id="typescript-type-checking-limitations">TypeScript Type-Checking
+Limitations</h3>
+<p>While runtime replacement works seamlessly in both modern and
+experimental decorator specifications, TypeScript's static type checker
+has an important limitation:</p>
+<ol type="1">
+<li><strong>Static Shape Invariance:</strong> Decorators cannot change
+the static compile-time type signature of a class. If the new
+constructor adds new properties or methods (like <code>createdAt</code>
+in the example above), TypeScript will not recognize these new members
+on instances unless you explicitly cast the instance or apply a class
+wrapper function instead of a decorator.</li>
+<li><strong>Signature Compatibility:</strong> The returned constructor
+must be construct-compatible with the original class. It must accept
+constructor arguments compatible with the decorated class's constructor
+arguments.</li>
+</ol>
+<p>A TypeScript class decorator can fully replace the target class
+constructor at runtime, which is an effective pattern for cross-cutting
+concerns like logging, dependency injection, and instance
+virtualization.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

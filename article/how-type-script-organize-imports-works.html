@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Organize Imports Works - typescript</title>
+    <meta name="description" content="The organizeImports feature in the TypeScript language service is an automated code refactoring tool that detects, removes, coalesces, and sorts import declarations within a source file. This article details the internal pipeline used by the TypeScript co">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-organize-imports-works">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Organize Imports Works - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-organize-imports-works" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The organizeImports feature in the TypeScript language service is an automated code refactoring tool that detects, removes, coalesces, and sorts import declarations within a source file. This article details the internal pipeline used by the TypeScript co" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-organize-imports-works">How TypeScript Organize
+Imports Works</h1>
+<p>The <code>organizeImports</code> feature in the TypeScript language
+service is an automated code refactoring tool that detects, removes,
+coalesces, and sorts import declarations within a source file. This
+article details the internal pipeline used by the TypeScript compiler
+API—specifically within the language service layer—to transform messy,
+duplicated, or unused imports into a clean, canonical structure while
+preserving code semantics.</p>
+<h3 id="triggering-the-service-and-ast-inspection">Triggering the
+Service and AST Inspection</h3>
+<p>When a user or editor invokes "Organize Imports," the editor sends a
+request to the TypeScript Language Service method
+<code>organizeImports</code>. The language service accesses the
+corresponding <code>SourceFile</code> node in the Abstract Syntax Tree
+(AST).</p>
+<p>The process begins by scanning top-level statements in the file to
+identify all import constructs, primarily:</p>
+<ul>
+<li>Standard ES6 imports (<code>ImportDeclaration</code>)</li>
+<li>TypeScript import-equals statements
+(<code>import x = require('x')</code>)</li>
+<li>Type-only imports (<code>import type { A } from 'b'</code>)</li>
+</ul>
+<p>Side-effect-only imports (such as
+<code>import "./styles.css";</code>) are flagged early because they
+execute global code and their relative ordering can alter application
+runtime behavior.</p>
+<h3 id="detecting-and-removing-unused-imports">Detecting and Removing
+Unused Imports</h3>
+<p>Once imports are gathered, the language service uses the TypeScript
+type checker to identify unused symbols.</p>
+<ol type="1">
+<li><strong>Symbol Resolution</strong>: The checker resolves the
+bindings introduced by each import specifier (default imports, namespace
+imports, and individual named specifiers).</li>
+<li><strong>Reference Checking</strong>: The service checks whether
+references exist for those symbols within the rest of the AST.</li>
+<li><strong>Pruning</strong>: Unreferenced named specifiers are marked
+for removal. If all specifiers within an import declaration are unused,
+the entire statement is discarded—unless it is a side-effect
+import.</li>
+</ol>
+<h3 id="coalescing-and-merging-imports">Coalescing and Merging
+Imports</h3>
+<p>After eliminating unused symbols, the service groups the remaining
+imports by their module specifier (the string literal representing the
+path or package). If multiple declarations import from the same path,
+the service merges them:</p>
+<ul>
+<li><strong>Combining Named Imports</strong>: Distinct named imports
+from the same module are merged into a single specifier list.</li>
+<li><strong>Handling Default and Namespace Imports</strong>: Default
+imports and named imports can be merged into a single clause (e.g.,
+<code>import React, { useState } from 'react'</code>). If an import
+includes a namespace import (<code>* as Foo</code>), it cannot be
+combined with named imports in standard ES syntax, so it remains
+separate or merges only with a default import if valid.</li>
+<li><strong>Type-Only Import Segregation</strong>: Imports marked
+explicitly with the <code>type</code> keyword at the declaration level
+(<code>import type { X } from 'foo'</code>) are either kept distinct or
+normalized using inline <code>type</code> specifiers, depending on the
+configured compiler options like <code>verbatimModuleSyntax</code>.</li>
+</ul>
+<h3 id="sorting-logic">Sorting Logic</h3>
+<p>After merging, the remaining imports and their internal specifiers
+are sorted. The TypeScript compiler applies a deterministic,
+multi-tiered sorting algorithm:</p>
+<ol type="1">
+<li><strong>Top-Level Declaration Sorting</strong>:
+<ul>
+<li>Side-effect imports are typically grouped or preserved in their
+original relative positions to prevent breaking runtime initialization
+order.</li>
+<li>Non-relative imports (external modules like
+<code>node_modules</code> packages) are prioritized over relative
+imports (e.g., <code>./utils</code> or <code>../types</code>).</li>
+<li>Paths are compared using a deterministic ordinal comparison based on
+Unicode code points or locale-agnostic comparisons, placing shorter or
+root-relative paths consistently.</li>
+</ul></li>
+<li><strong>Named Specifier Sorting</strong>:
+<ul>
+<li>Within each import declaration, named specifiers inside
+<code>{ ... }</code> are sorted alphabetically (e.g.,
+<code>{ b, a }</code> becomes <code>{ a, b }</code>).</li>
+<li>Type-only specifiers inside a combined import are typically sorted
+alphabetically alongside values, retaining their <code>type</code>
+modifier.</li>
+</ul></li>
+</ol>
+<h3 id="generating-text-changes">Generating Text Changes</h3>
+<p>The language service does not rewrite the entire file. Instead, it
+computes the exact span covering the original imports and calculates the
+replacement string using the project's formatting settings (such as
+indentation, quote styles, and trailing commas).</p>
+<p>It returns an array containing a single <code>TextChange</code>
+object to the client editor. This change replaces the old block of
+imports with the coalesced, sorted block, ensuring fast execution and
+minimal disruption to the file's undo history.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

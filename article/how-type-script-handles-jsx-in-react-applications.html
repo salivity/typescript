@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Handles JSX in React Applications - typescript</title>
+    <meta name="description" content="TypeScript natively integrates JSX parsing, type-checking, and code transformation into its compiler to support React applications. By pairing .tsx file extensions with custom compiler flags and React-specific type definitions, TypeScript validates compon">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-handles-jsx-in-react-applications">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Handles JSX in React Applications - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-handles-jsx-in-react-applications" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript natively integrates JSX parsing, type-checking, and code transformation into its compiler to support React applications. By pairing .tsx file extensions with custom compiler flags and React-specific type definitions, TypeScript validates compon" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-handles-jsx-in-react-applications">How TypeScript
+Handles JSX in React Applications</h1>
+<p>TypeScript natively integrates JSX parsing, type-checking, and code
+transformation into its compiler to support React applications. By
+pairing <code>.tsx</code> file extensions with custom compiler flags and
+React-specific type definitions, TypeScript validates component props,
+children, and HTML elements at compile time before emitting clean,
+standardized JavaScript.</p>
+<h2 id="the-tsx-file-extension">The <code>.tsx</code> File
+Extension</h2>
+<p>To handle JSX syntax, TypeScript requires files to use the
+<code>.tsx</code> file extension rather than standard <code>.ts</code>.
+This distinguishes JSX tags from standard TypeScript type assertions
+that use angle brackets (e.g., <code>&lt;Type&gt;value</code>), avoiding
+ambiguity during syntax parsing.</p>
+<h2 id="the-jsx-compiler-option">The <code>jsx</code> Compiler
+Option</h2>
+<p>TypeScript’s behavior toward JSX is controlled via the
+<code>"jsx"</code> property in <code>tsconfig.json</code>. The primary
+options include:</p>
+<ul>
+<li><strong><code>react-jsx</code></strong>: Designed for React 17 and
+newer. It transforms JSX into calls to <code>_jsx</code> imported from
+<code>react/jsx-runtime</code>, omitting the need to explicitly import
+<code>React</code> into scope.</li>
+<li><strong><code>react-jsxdev</code></strong>: Similar to
+<code>react-jsx</code>, but emits code suited for development, providing
+extra debugging information.</li>
+<li><strong><code>react</code></strong>: The legacy approach for React
+16 and older. It converts JSX tags into <code>React.createElement</code>
+calls, requiring <code>React</code> to be imported in the file.</li>
+<li><strong><code>preserve</code></strong>: Leaves the JSX intact in the
+output <code>.jsx</code> file, allowing an external bundler or compiler
+like Babel or SWC to handle the final transformation.</li>
+</ul>
+<h2 id="how-typescript-type-checks-jsx">How TypeScript Type-Checks
+JSX</h2>
+<p>TypeScript divides JSX elements into two categories to perform type
+verification: <strong>intrinsic elements</strong> and
+<strong>value-based elements</strong>.</p>
+<h3 id="1-intrinsic-elements">1. Intrinsic Elements</h3>
+<p>Intrinsic elements are built-in HTML or SVG tags, such as
+<code>&lt;div&gt;</code>, <code>&lt;span&gt;</code>, or
+<code>&lt;button&gt;</code>. TypeScript detects them because they begin
+with a lowercase letter.</p>
+<p>To validate them, TypeScript looks for an interface named
+<code>IntrinsicElements</code> inside the global <code>JSX</code>
+namespace, provided by <code>@types/react</code>. If an attribute passed
+to a <code>&lt;div&gt;</code> does not exist on
+<code>JSX.IntrinsicElements['div']</code>, the compiler raises a type
+error.</p>
+<h3 id="2-value-based-elements">2. Value-Based Elements</h3>
+<p>Value-based elements correspond to React custom components and begin
+with an uppercase letter. TypeScript evaluates these components as
+functions or classes:</p>
+<ul>
+<li><strong>Function Components</strong>: TypeScript validates the
+arguments passed to the function against the component's defined props
+interface.</li>
+<li><strong>Class Components</strong>: TypeScript checks the element
+against the component instance's <code>props</code> type.</li>
+</ul>
+<pre class="tsx"><code>interface ButtonProps {
+  label: string;
+  onClick: () =&gt; void;
+  disabled?: boolean;
+}
+
+export const Button = ({ label, onClick, disabled = false }: ButtonProps) =&gt; {
+  return (
+    &lt;button onClick={onClick} disabled={disabled}&gt;
+      {label}
+    &lt;/button&gt;
+  );
+};</code></pre>
+<p>When rendering
+<code>&lt;Button label="Submit" onClick={handleClick} /&gt;</code>,
+TypeScript verifies that all required properties are present and that
+their types match <code>ButtonProps</code>.</p>
+<h2 id="children-and-return-type-verification">Children and Return Type
+Verification</h2>
+<p>TypeScript checks JSX children by treating them as a special prop
+named <code>children</code>. In modern React types, components
+explicitly specify whether they accept children using types such as
+<code>React.ReactNode</code>.</p>
+<p>TypeScript also verifies that the component returns a valid JSX
+expression, typically resolving to <code>JSX.Element</code>,
+<code>React.ReactNode</code>, or <code>null</code>. If a component
+returns an unsupported type (such as an unhandled object), the compiler
+flags the error immediately during development.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

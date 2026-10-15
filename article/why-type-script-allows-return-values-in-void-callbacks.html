@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why TypeScript Allows Return Values in Void Callbacks - typescript</title>
+    <meta name="description" content="TypeScript allows functions with a void return type in callback signatures to return arbitrary values to balance practical usability with type safety. While this behavior might initially seem like a loophole in the type system, it is an intentional design">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-type-script-allows-return-values-in-void-callbacks">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why TypeScript Allows Return Values in Void Callbacks - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-type-script-allows-return-values-in-void-callbacks" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript allows functions with a void return type in callback signatures to return arbitrary values to balance practical usability with type safety. While this behavior might initially seem like a loophole in the type system, it is an intentional design" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-typescript-allows-return-values-in-void-callbacks">Why
+TypeScript Allows Return Values in Void Callbacks</h1>
+<p>TypeScript allows functions with a <code>void</code> return type in
+callback signatures to return arbitrary values to balance practical
+usability with type safety. While this behavior might initially seem
+like a loophole in the type system, it is an intentional design choice
+rooted in function substitutability and common JavaScript idioms. By
+treating a <code>void</code> callback return type as "the caller will
+ignore the return value" rather than "the function must return nothing,"
+TypeScript prevents unnecessary boilerplate without introducing runtime
+errors.</p>
+<h3 id="the-semantic-meaning-of-void-in-callbacks">The Semantic Meaning
+of <code>void</code> in Callbacks</h3>
+<p>In TypeScript, a return type of <code>void</code> behaves differently
+depending on whether it is an explicit function declaration or a
+callback type definition:</p>
+<ol type="1">
+<li><p><strong>Explicit Function Declaration:</strong> When you declare
+a standalone function with an explicit <code>void</code> return type,
+returning a value is prohibited.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">logMessage</span>()<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span> <span class="co">// Error: Type &#39;boolean&#39; is not assignable to type &#39;void&#39;.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+<li><p><strong>Callback Type Definition:</strong> When a function
+signature defines a callback parameter as returning <code>void</code>
+(e.g., <code>cb: () =&gt; void</code>), it indicates that the caller
+will not observe, inspect, or rely on any returned value.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">runCallback</span>(cb<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">void</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cb</span>()<span class="op">;</span> <span class="co">// The caller simply executes the callback and ignores whatever it yields.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">runCallback</span>(() <span class="kw">=&gt;</span> <span class="dv">42</span>)<span class="op">;</span> <span class="co">// Allowed</span></span></code></pre></div></li>
+</ol>
+<h3 id="preserving-idiomatic-javascript">Preserving Idiomatic
+JavaScript</h3>
+<p>The primary motivation for this design is developer ergonomics when
+using standard JavaScript APIs. Many common built-in methods return
+values that are frequently ignored.</p>
+<p>A classic example is <code>Array.prototype.forEach</code>, which
+expects a callback returning <code>void</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numberSet <span class="op">=</span> <span class="kw">new</span> <span class="bu">Set</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Set.prototype.add() returns the Set instance itself</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">forEach</span>(num <span class="kw">=&gt;</span> numberSet<span class="op">.</span><span class="fu">add</span>(num))<span class="op">;</span></span></code></pre></div>
+<p>If TypeScript strictly enforced that <code>() =&gt; void</code> could
+only return <code>undefined</code>, the arrow function
+<code>num =&gt; numberSet.add(num)</code> would produce a type error
+because it returns <code>Set&lt;number&gt;</code>. Developers would be
+forced to write verbose curly-brace syntax with an empty return to
+discard the value:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Unnecessary boilerplate if strict void were enforced:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">forEach</span>(num <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  numberSet<span class="op">.</span><span class="fu">add</span>(num)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Allowing arbitrary return values permits single-expression arrow
+functions to remain concise and idiomatic.</p>
+<h3 id="function-substitutability-and-type-safety">Function
+Substitutability and Type Safety</h3>
+<p>This behavior aligns with the concept of function substitutability
+(subtyping). It is always runtime-safe to substitute a function that
+produces a value in a place where no value is expected.</p>
+<p>Because the consuming function treats the result as
+<code>void</code>, it will not attempt to call methods on or read
+properties from that return value. Consequently, returning an arbitrary
+value cannot cause a runtime exception down the call stack.</p>
+<p>TypeScript maintains safety by preventing the consumer from using the
+returned value:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">execute</span>(callback<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">void</span>) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> result <span class="op">=</span> <span class="fu">callback</span>()<span class="op">;</span> <span class="co">// &#39;result&#39; is typed as &#39;void&#39;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  result<span class="op">.</span><span class="fu">toString</span>()<span class="op">;</span> <span class="co">// Error: Property &#39;toString&#39; does not exist on type &#39;void&#39;.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="enforcing-strict-undefined-when-needed">Enforcing Strict
+Undefined When Needed</h3>
+<p>If you strictly require a callback to return nothing other than
+<code>undefined</code>, you should type the return value as
+<code>undefined</code> rather than <code>void</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">strictCallback</span>(cb<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">undefined</span>) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cb</span>()<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">strictCallback</span>(() <span class="kw">=&gt;</span> <span class="st">&quot;hello&quot;</span>)<span class="op">;</span> <span class="co">// Error: Type &#39;string&#39; is not assignable to type &#39;undefined&#39;.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">strictCallback</span>(() <span class="kw">=&gt;</span> <span class="kw">undefined</span>)<span class="op">;</span> <span class="co">// Allowed</span></span></code></pre></div>
+<p>By distinguishing between <code>void</code> (ignore the return value)
+and <code>undefined</code> (require an explicit <code>undefined</code>
+return), TypeScript enables both flexibility in general callback
+handling and strictness when precise control over outputs is
+required.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

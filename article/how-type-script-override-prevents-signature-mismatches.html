@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Override Prevents Signature Mismatches - typescript</title>
+    <meta name="description" content="The override keyword in TypeScript ensures that a subclass method or property explicitly corresponds to an existing member in its parent class. By requiring intentionality when overriding inherited members, TypeScript produces a compile-time error if the">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-override-prevents-signature-mismatches">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Override Prevents Signature Mismatches - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-override-prevents-signature-mismatches" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The override keyword in TypeScript ensures that a subclass method or property explicitly corresponds to an existing member in its parent class. By requiring intentionality when overriding inherited members, TypeScript produces a compile-time error if the" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-override-prevents-signature-mismatches">How
+TypeScript Override Prevents Signature Mismatches</h1>
+<p>The <code>override</code> keyword in TypeScript ensures that a
+subclass method or property explicitly corresponds to an existing member
+in its parent class. By requiring intentionality when overriding
+inherited members, TypeScript produces a compile-time error if the
+parent class method is renamed, removed, or if the subclass introduces a
+typo. This mechanism prevents silent runtime bugs caused by accidental
+method shadowing or orphaned methods resulting from upstream
+refactoring.</p>
+<h3 id="the-problem-with-implicit-overrides">The Problem with Implicit
+Overrides</h3>
+<p>Before the introduction of the <code>override</code> keyword in
+TypeScript 4.3, overriding methods was implicit. When you defined a
+method in a subclass with the same name as a method in the superclass,
+TypeScript assumed you intended to override it.</p>
+<p>This implicit behavior creates two major points of failure:</p>
+<ol type="1">
+<li><strong>Typos in the Subclass:</strong> If a developer attempts to
+override <code>calculateTotal()</code> but accidentally types
+<code>calculateTotals()</code>, the subclass simply creates a new,
+separate method. The parent class's <code>calculateTotal()</code>
+remains active, and the subclass version never gets called by inherited
+code.</li>
+<li><strong>Fragile Base Class Refactoring:</strong> If the base class
+changes <code>calculateTotal()</code> to <code>computeTotal()</code>,
+the subclass method silently becomes an unused, standalone method. The
+code still compiles, but the intended runtime polymorphism is
+broken.</li>
+</ol>
+<h3 id="how-the-override-keyword-fixes-this">How the
+<code>override</code> Keyword Fixes This</h3>
+<p>Marking a member with the <code>override</code> keyword instructs the
+TypeScript compiler to verify that the parent class contains a member
+with the exact same name and a compatible signature.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseService {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveData</span>(data<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Saving base data:&quot;</span><span class="op">,</span> data)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ExtendedService <span class="kw">extends</span> BaseService {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  override <span class="fu">saveData</span>(data<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Saving extended data:&quot;</span><span class="op">,</span> data)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If the <code>BaseService</code> is refactored and
+<code>saveData</code> is renamed to <code>persistData</code>, the
+compiler immediately flags an error on <code>ExtendedService</code>:</p>
+<blockquote>
+<p><code>This member cannot have an 'override' modifier because it is not declared in the base class 'BaseService'.</code></p>
+</blockquote>
+<p>This alert guarantees that developers catch stale or mismatched
+signatures during compilation rather than diagnosing silent logic
+failures in production.</p>
+<h3 id="enforcing-strict-safety-with-noimplicitoverride">Enforcing
+Strict Safety with <code>noImplicitOverride</code></h3>
+<p>While using the <code>override</code> keyword is optional by default,
+TypeScript provides the <code>noImplicitOverride</code> compiler flag in
+<code>tsconfig.json</code>. When this setting is set to
+<code>true</code>, TypeScript strictly prohibits any subclass from
+overriding an inherited member unless the <code>override</code> keyword
+is explicitly present.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;noImplicitOverride&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Enabling this setting ensures that:</p>
+<ul>
+<li>Any intentional override must use the <code>override</code>
+keyword.</li>
+<li>Any unintentional name collision between a subclass and a superclass
+generates an error, preventing developers from accidentally overriding
+parent methods without realizing it.</li>
+</ul>
+<h3 id="signature-compatibility-verification">Signature Compatibility
+Verification</h3>
+<p>Beyond verifying name existence, the <code>override</code> keyword
+works in tandem with TypeScript’s structural type system to enforce
+strict signature compatibility:</p>
+<ul>
+<li><strong>Parameter Count and Types:</strong> The overriding method
+must accept parameter types that are compatible with the base class
+implementation (bivariant or contravariant, depending on compiler
+flags).</li>
+<li><strong>Return Types:</strong> The return type of the overriding
+method must be a subtype of the return type declared in the parent
+method (covariant).</li>
+</ul>
+<p>If the base class expects <code>saveData(data: string): void</code>
+and the subclass attempts
+<code>override saveData(data: number): void</code>, TypeScript triggers
+a type mismatch error because the method signature violates inheritance
+contracts.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

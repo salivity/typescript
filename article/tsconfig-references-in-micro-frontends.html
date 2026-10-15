@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tsconfig References in Micro-Frontends - typescript</title>
+    <meta name="description" content="This article explores the critical role of TypeScript&#39;s tsconfig project references in micro-frontend architectures. In distributed front-end systems and monorepos, scaling type safety across independent applications often introduces slow compilation time">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/tsconfig-references-in-micro-frontends">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="tsconfig References in Micro-Frontends - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/tsconfig-references-in-micro-frontends" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores the critical role of TypeScript&#39;s tsconfig project references in micro-frontend architectures. In distributed front-end systems and monorepos, scaling type safety across independent applications often introduces slow compilation time" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="tsconfig-references-in-micro-frontends">tsconfig References in
+Micro-Frontends</h1>
+<p>This article explores the critical role of TypeScript's
+<code>tsconfig</code> project references in micro-frontend
+architectures. In distributed front-end systems and monorepos, scaling
+type safety across independent applications often introduces slow
+compilation times and blurred architectural boundaries. Project
+references address these issues by partitioning the codebase into
+smaller, modular builds, enabling incremental type-checking, enforcing
+strict isolation between micro-frontends, and dramatically optimizing
+developer tooling.</p>
+<h2 id="what-are-tsconfig-project-references">What Are tsconfig Project
+References?</h2>
+<p>Introduced in TypeScript 3.0, project references allow a single
+TypeScript program to depend on other distinct TypeScript programs. By
+setting <code>"composite": true</code> in a dependency's
+<code>tsconfig.json</code> and pointing to it via the
+<code>"references"</code> array in a consuming configuration, TypeScript
+treats each project as an independent compilation unit. Instead of
+parsing raw source files across the entire repository, TypeScript
+consumes pre-compiled declaration files (<code>.d.ts</code>), mirroring
+how external npm packages are consumed.</p>
+<h2 id="enforcing-domain-boundaries-between-micro-frontends">Enforcing
+Domain Boundaries Between Micro-Frontends</h2>
+<p>The primary philosophy of micro-frontends is autonomy: teams should
+build, test, and deploy features without leaking domain logic or
+creating tight coupling with sibling micro-frontends.</p>
+<p>Without project references, a monorepo containing multiple
+micro-frontends often relies on a single, global
+<code>tsconfig.json</code> or path aliases that allow any micro-frontend
+to import files from another unchecked. Using project references
+enforces structural boundaries:</p>
+<ul>
+<li><strong>Explicit Dependencies:</strong> Micro-frontends can only
+import from projects explicitly declared in their
+<code>references</code> array.</li>
+<li><strong>Encapsulation:</strong> Teams can expose a dedicated public
+API (typically an <code>index.ts</code> export) for shared utilities,
+contracts, or design system components, preventing consumers from
+reaching into internal, private modules.</li>
+<li><strong>Circular Dependency Prevention:</strong> TypeScript
+prohibits circular references between referenced projects, stopping
+accidental architectural tangles between independent micro-apps.</li>
+</ul>
+<h2 id="faster-incremental-builds">Faster Incremental Builds</h2>
+<p>As a micro-frontend codebase grows to dozens of applications and
+shared packages, full type-checking can take minutes. Project references
+solve this by integrating with TypeScript’s build mode
+(<code>tsc --build</code> or <code>tsc -b</code>).</p>
+<p>When running in build mode:</p>
+<ol type="1">
+<li>TypeScript analyzes the dependency graph defined by the
+<code>references</code> field.</li>
+<li>It detects which micro-frontends or shared libraries have changed
+since the last build using <code>.tsbuildinfo</code> cache files.</li>
+<li>It only rebuilds modified projects and their direct dependents,
+completely skipping up-to-date applications.</li>
+<li>Downstream applications rely on generated <code>.d.ts</code> files
+rather than re-evaluating the complete Abstract Syntax Trees (ASTs) of
+upstream packages.</li>
+</ol>
+<p>This significantly cuts CI/CD pipeline runtimes and keeps local build
+steps fast.</p>
+<h2 id="optimizing-developer-experience-and-ide-performance">Optimizing
+Developer Experience and IDE Performance</h2>
+<p>Micro-frontend architectures often place high memory demands on the
+TypeScript Language Server (TSServer) inside code editors like VS Code.
+In a monolithic TypeScript configuration, the editor attempts to hold
+every file from every micro-frontend in memory simultaneously.</p>
+<p>Project references enable the language server to scope its analysis.
+The editor only loads the active micro-frontend and the
+<code>.d.ts</code> output of its dependencies. This drastically reduces
+editor memory consumption, speeds up autocompletion, and eliminates lag
+when opening large monorepos.</p>
+<h2 id="type-safety-across-runtime-integration-module-federation">Type
+Safety Across Runtime Integration (Module Federation)</h2>
+<p>Most micro-frontends use runtime composition techniques like Webpack
+Module Federation or native ES Modules. While these technologies load
+code dynamically at runtime, they lack built-in compile-time type
+safety.</p>
+<p>Project references bridge this gap. Teams can define shared
+contracts—such as event bus interfaces, shared state shapes, or remote
+component props—inside a dedicated "contracts" library. By referencing
+this shared contract project in both the host container and remote
+micro-frontend configurations, teams guarantee type safety across the
+runtime boundary without tightly coupling the runtime implementation
+code of the two applications.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

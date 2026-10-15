@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extend tsconfig.json from an npm Package - typescript</title>
+    <meta name="description" content="TypeScript allows you to share and standardize compiler configurations across multiple projects by extending a tsconfig.json file directly from an installed npm package. This article explains how the &quot;extends&quot; property works with node module resolution, h">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/extend-tsconfig-json-from-an-npm-package">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Extend tsconfig.json from an npm Package - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/extend-tsconfig-json-from-an-npm-package" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript allows you to share and standardize compiler configurations across multiple projects by extending a tsconfig.json file directly from an installed npm package. This article explains how the &quot;extends&quot; property works with node module resolution, h" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="extend-tsconfigjson-from-an-npm-package">Extend tsconfig.json
+from an npm Package</h1>
+<p>TypeScript allows you to share and standardize compiler
+configurations across multiple projects by extending a
+<code>tsconfig.json</code> file directly from an installed npm package.
+This article explains how the <code>"extends"</code> property works with
+node module resolution, how to install and implement pre-configured base
+settings, and how to customize or override specific rules for your
+project.</p>
+<h3 id="how-extending-from-npm-packages-works">How Extending from npm
+Packages Works</h3>
+<p>The <code>tsconfig.json</code> file contains a top-level
+<code>"extends"</code> property designed to inherit compiler options and
+file configurations from another file. TypeScript uses Node-style module
+resolution to locate configuration files inside the
+<code>node_modules</code> directory.</p>
+<p>When you specify a package name in the <code>"extends"</code> field,
+TypeScript searches <code>node_modules</code> for the target package,
+reads its configuration, and applies those settings to your local
+setup.</p>
+<h3 id="using-standard-configuration-bases">Using Standard Configuration
+Bases</h3>
+<p>The TypeScript team maintains community-recommended configurations
+under the <code>@tsconfig</code> namespace on npm, tailored to various
+runtimes and frameworks.</p>
+<p>To use one of these shared configurations, install the desired
+package as a development dependency:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="at">--save-dev</span> @tsconfig/node20</span></code></pre></div>
+<p>Next, reference the installed package in your project's
+<code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="st">&quot;@tsconfig/node20/tsconfig.json&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;include&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;src/**/*&quot;</span><span class="ot">]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>TypeScript also supports omitting the <code>/tsconfig.json</code>
+suffix if the package defines a <code>"tsconfig.json"</code> entry in
+its root directory or sets the <code>"files"</code> field in its
+<code>package.json</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="st">&quot;@tsconfig/node20&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="overriding-inherited-configurations">Overriding Inherited
+Configurations</h3>
+<p>Configurations resolved through <code>"extends"</code> are merged
+with the host project's configuration. Any property explicitly declared
+in your local <code>tsconfig.json</code> takes precedence over the
+extended configuration.</p>
+<p>For example, if the extended package specifies
+<code>"strict": true</code>, but you need to disable a single strict
+check, declare it under your local <code>compilerOptions</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;extends&quot;</span><span class="fu">:</span> <span class="st">&quot;@tsconfig/recommended/tsconfig.json&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;noImplicitAny&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Top-level arrays such as <code>include</code>, <code>exclude</code>,
+and <code>files</code> do not merge; the local configuration completely
+overwrites the inherited arrays.</p>
+<h3 id="creating-a-shareable-tsconfig-package">Creating a Shareable
+tsconfig Package</h3>
+<p>To create and publish an internal or public configuration package for
+your team:</p>
+<ol type="1">
+<li>Initialize a new npm package.</li>
+<li>Create a <code>tsconfig.json</code> file containing your base
+settings.</li>
+<li>In <code>package.json</code>, include the file in the
+<code>"files"</code> array:</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;@my-org/tsconfig&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0.0&quot;</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;files&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;tsconfig.json&quot;</span><span class="ot">]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ol start="4" type="1">
+<li>Publish the package to npm or a private registry.</li>
+</ol>
+<p>Consumers can then install <code>@my-org/tsconfig</code> and extend
+it by referencing <code>"extends": "@my-org/tsconfig"</code>.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

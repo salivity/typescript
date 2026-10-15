@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Function Return Type Compatibility - typescript</title>
+    <meta name="description" content="TypeScript uses a structural type system to evaluate function signature compatibility, determining whether one function can be safely assigned to another based on its shape rather than its explicit declaration. When assessing return types, TypeScript enfo">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-function-return-type-compatibility">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Function Return Type Compatibility - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-function-return-type-compatibility" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript uses a structural type system to evaluate function signature compatibility, determining whether one function can be safely assigned to another based on its shape rather than its explicit declaration. When assessing return types, TypeScript enfo" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-function-return-type-compatibility">TypeScript
+Function Return Type Compatibility</h1>
+<p>TypeScript uses a structural type system to evaluate function
+signature compatibility, determining whether one function can be safely
+assigned to another based on its shape rather than its explicit
+declaration. When assessing return types, TypeScript enforces
+covariance, meaning a target function can accept a source function whose
+return type is a subtype of the target's return type. Additionally,
+TypeScript applies specialized rules for the <code>void</code> type to
+accommodate common JavaScript programming patterns. Understanding these
+rules ensures safe function assignments and prevents unexpected runtime
+errors.</p>
+<h2 id="covariance-in-return-types">Covariance in Return Types</h2>
+<p>Return types in TypeScript are covariant. This means that a function
+type expecting a broader (supertype) return value can be satisfied by a
+function that returns a narrower (subtype) value. Because the caller
+expects a certain set of properties or behaviors, receiving a more
+specific type guarantees that all required properties exist.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Animal {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Dog <span class="kw">extends</span> Animal {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    breed<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> getDog<span class="op">:</span> () <span class="kw">=&gt;</span> Dog <span class="op">=</span> () <span class="kw">=&gt;</span> ({ name<span class="op">:</span> <span class="st">&quot;Buddy&quot;</span><span class="op">,</span> breed<span class="op">:</span> <span class="st">&quot;Golden Retriever&quot;</span> })<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> getAnimal<span class="op">:</span> () <span class="kw">=&gt;</span> Animal<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: Dog is assignable to Animal</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>getAnimal <span class="op">=</span> getDog<span class="op">;</span> </span></code></pre></div>
+<p>In this example, <code>getDog</code> returns a <code>Dog</code>,
+which contains all properties needed to satisfy an <code>Animal</code>.
+Assigning <code>getDog</code> to <code>getAnimal</code> is valid because
+the caller of <code>getAnimal</code> will always receive at least the
+structure of <code>Animal</code>.</p>
+<p>Conversely, assigning a function returning <code>Animal</code> to a
+variable expecting a function returning <code>Dog</code> will fail:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;Animal&#39; is not assignable to type &#39;Dog&#39;.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>getDog <span class="op">=</span> getAnimal<span class="op">;</span></span></code></pre></div>
+<h2 id="the-special-handling-of-void">The Special Handling of
+<code>void</code></h2>
+<p>A unique case in TypeScript return type compatibility involves
+<code>void</code>. In TypeScript, a function type returning
+<code>void</code> means "the caller will ignore the return value," not
+necessarily that the function must return <code>undefined</code>.</p>
+<p>This design decision allows callback functions that return concrete
+values to be assigned to positions where the return value is not
+consumed.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VoidCallback <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> logNumber<span class="op">:</span> VoidCallback <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">42</span><span class="op">;</span> <span class="co">// Allowed, even though 42 is a number</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>This behavior is particularly common with built-in JavaScript
+methods, such as <code>Array.prototype.forEach</code>. The callback
+expected by <code>forEach</code> has a return type of
+<code>void</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result<span class="op">:</span> <span class="dt">number</span>[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Array.prototype.push returns a number, but forEach expects a void return</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">forEach</span>(num <span class="kw">=&gt;</span> result<span class="op">.</span><span class="fu">push</span>(num))<span class="op">;</span></span></code></pre></div>
+<p>If TypeScript strictly required <code>void</code> callbacks to return
+<code>undefined</code>, the concise arrow function above would produce a
+type error. However, when a function is typed as returning
+<code>void</code>, any attempt to use the returned value directly will
+trigger a compile-time error:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> value <span class="op">=</span> <span class="fu">logNumber</span>()<span class="op">;</span> <span class="co">// Type of value is &#39;void&#39;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Operator &#39;+&#39; cannot be applied to types &#39;void&#39; and &#39;number&#39;.</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value <span class="op">+</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="any-and-never-in-return-types"><code>any</code> and
+<code>never</code> in Return Types</h2>
+<p>The <code>any</code> and <code>never</code> types occupy special
+positions in TypeScript's type hierarchy and affect return
+compatibility:</p>
+<ul>
+<li><strong><code>any</code></strong>: Disables type checking. A
+function returning <code>any</code> can be assigned to a function
+expecting any specific return type, and vice versa.</li>
+<li><strong><code>never</code></strong>: The bottom type representing
+values that never occur (e.g., functions that throw an error or contain
+infinite loops). A function returning <code>never</code> can be assigned
+to a function expecting any return type because execution will never
+produce an incompatible value.</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> throwError<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">never</span> <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;Failure&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> getNumber<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>getNumber <span class="op">=</span> throwError<span class="op">;</span> <span class="co">// Valid: &#39;never&#39; is a subtype of every type</span></span></code></pre></div>
+<h2 id="literal-and-primitive-compatibility">Literal and Primitive
+Compatibility</h2>
+<p>Return compatibility follows TypeScript's standard subtyping rules
+for literals, unions, and primitives:</p>
+<ul>
+<li>A literal type is assignable to its corresponding primitive type
+(e.g., <code>'active'</code> is assignable to <code>string</code>).</li>
+<li>A narrower union is assignable to a wider union (e.g.,
+<code>'a' | 'b'</code> is assignable to
+<code>'a' | 'b' | 'c'</code>).</li>
+<li>Primitive types are not mutually assignable (e.g.,
+<code>number</code> is not assignable to <code>string</code>).</li>
+</ul>
+<p>By checking return types through structural subtyping and covariance,
+TypeScript maintains type safety while allowing the flexibility required
+by idiomatic JavaScript code.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

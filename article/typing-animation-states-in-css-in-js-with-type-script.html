@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Animation States in CSS-in-JS with TypeScript - typescript</title>
+    <meta name="description" content="Combining CSS-in-JS libraries with TypeScript offers robust compile-time guarantees for design systems, but modeling complex animation states presents unique architectural hurdles. This article examines the core challenges developers encounter when typing">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-animation-states-in-css-in-js-with-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing Animation States in CSS-in-JS with TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-animation-states-in-css-in-js-with-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Combining CSS-in-JS libraries with TypeScript offers robust compile-time guarantees for design systems, but modeling complex animation states presents unique architectural hurdles. This article examines the core challenges developers encounter when typing" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-animation-states-in-css-in-js-with-typescript">Typing
+Animation States in CSS-in-JS with TypeScript</h1>
+<p>Combining CSS-in-JS libraries with TypeScript offers robust
+compile-time guarantees for design systems, but modeling complex
+animation states presents unique architectural hurdles. This article
+examines the core challenges developers encounter when typing dynamic
+animations, including variant explosions, type-checking dynamic
+keyframes, synchronizing runtime animation lifecycles with static types,
+and managing compiler performance bottlenecks.</p>
+<h2 id="the-combinatorial-explosion-of-animation-states">The
+Combinatorial Explosion of Animation States</h2>
+<p>Complex user interface elements rarely exist in binary states. An
+element might transition through discrete phases such as
+<code>entering</code>, <code>entered</code>, <code>exiting</code>, and
+<code>exited</code>, while simultaneously accepting modifiers like
+<code>direction</code>, <code>speed</code>, and
+<code>interrupted</code>.</p>
+<p>Representing these intersecting conditions using TypeScript unions
+often leads to combinatorial explosion:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> BaseState <span class="op">=</span> <span class="st">&#39;entering&#39;</span> <span class="op">|</span> <span class="st">&#39;entered&#39;</span> <span class="op">|</span> <span class="st">&#39;exiting&#39;</span> <span class="op">|</span> <span class="st">&#39;exited&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Direction <span class="op">=</span> <span class="st">&#39;top&#39;</span> <span class="op">|</span> <span class="st">&#39;bottom&#39;</span> <span class="op">|</span> <span class="st">&#39;left&#39;</span> <span class="op">|</span> <span class="st">&#39;right&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Rapidly expands into dozens of distinct variant branches</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AnimationState <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span>BaseState<span class="sc">}</span><span class="vs">-</span><span class="sc">${</span>Direction<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>When mapped to CSS-in-JS style objects, each permutation requires
+precise property definitions. If a property is only applicable during a
+specific phase (for example, <code>pointer-events: none</code> during
+<code>exiting</code>), developers must write complex conditional types
+or nested records. Maintaining strict type safety across these
+combinations without creating unreadable, deeply nested ternary types is
+a major challenge.</p>
+<h2 id="dynamic-keyframes-and-template-literal-limitations">Dynamic
+Keyframes and Template Literal Limitations</h2>
+<p>CSS-in-JS libraries like Emotion and styled-components rely heavily
+on tagged template literals or nested objects to define keyframes. While
+TypeScript introduced template literal types, applying them to dynamic
+CSS keyframes remains difficult.</p>
+<p>Animations frequently depend on runtime calculations, such as dynamic
+element dimensions, cursor positions, or user-defined timing functions.
+Expressing these dynamic values inside static types often results
+in:</p>
+<ul>
+<li><strong>Type Widening:</strong> Dynamic expressions usually evaluate
+to <code>string</code> or <code>number</code>, bypassing strict CSS
+property validation.</li>
+<li><strong>Malformed Keyframe Blocks:</strong> TypeScript cannot
+reliably validate the syntactic correctness of CSS blocks written inside
+string interpolation at compile time, leading to silent runtime styling
+failures.</li>
+</ul>
+<p>Attempting to enforce strict typing on intermediate keyframe steps
+(e.g., ensuring <code>0%</code>, <code>50%</code>, and <code>100%</code>
+contain uniform properties) requires extensive type scaffolding that
+standard CSS-in-JS types do not natively support.</p>
+<h2 id="bridging-asynchronous-lifecycles-with-static-types">Bridging
+Asynchronous Lifecycles with Static Types</h2>
+<p>CSS animations operate asynchronously on the browser's render thread.
+Browser lifecycle events—such as <code>transitionrun</code>,
+<code>animationstart</code>, and <code>animationend</code>—drive the
+visual representation, while TypeScript operates entirely at compile
+time.</p>
+<p>Aligning React or DOM state machines with native CSS events creates a
+synchronization gap:</p>
+<ol type="1">
+<li><strong>State Desynchronization:</strong> If an animation is
+interrupted midway, the DOM state might revert immediately while the
+visual element transitions gradually.</li>
+<li><strong>Missing Invariants:</strong> TypeScript cannot guarantee
+that a component's declared CSS transition duration matches the timeout
+or callback delay set in JavaScript logic, leading to race conditions
+where unmounting occurs before an animation completes.</li>
+</ol>
+<p>Typing finite state machines (FSMs) using libraries like XState
+mitigates this to an extent, but binding that machine's states directly
+to CSS-in-JS props without boilerplate remains difficult.</p>
+<h2 id="compiler-performance-and-deep-type-inference">Compiler
+Performance and Deep Type Inference</h2>
+<p>CSS-in-JS libraries already place significant demands on the
+TypeScript compiler due to extensive object structures like
+<code>CSSObject</code> or <code>CSSProperties</code> from packages like
+<code>csstype</code>.</p>
+<p>Introducing complex generics to handle animation parameters compounds
+this problem:</p>
+<ul>
+<li><strong>Exceeded Stack Depth:</strong> Recursive types used to
+resolve dynamic styles across multi-stage transitions can easily trigger
+<code>Type instantiation is excessively deep and possibly infinite (TS2589)</code>.</li>
+<li><strong>Editor Latency:</strong> Autocomplete suggestions and
+language server responsiveness degrade sharply when large component
+trees evaluate complex generic constraints on style props.</li>
+<li><strong>Bundle Size vs. Type Safety:</strong> Resolving these type
+limitations often tempts developers to introduce large utility libraries
+or runtime type validators, increasing the final JavaScript bundle size
+to solve a purely static problem.</li>
+</ul>
+<h2 id="type-incompatibilities-in-polymorphic-components">Type
+Incompatibilities in Polymorphic Components</h2>
+<p>Modern component libraries heavily utilize the polymorphic
+<code>as</code> prop to allow consumers to change the underlying HTML
+element. When polymorphic components are combined with complex dynamic
+animation props, TypeScript struggles to unify the generic element props
+with the dynamic CSS interpolation parameters.</p>
+<p>Developers are frequently forced to cast types using
+<code>as any</code> or write extensive overloads to silence
+false-positive type errors, ultimately defeating the purpose of static
+type checking for animated UI elements.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Proxy Type Inference Limitations - typescript</title>
+    <meta name="description" content="JavaScript Proxy objects allow developers to intercept and redefine fundamental operations such as property lookup, assignment, and function invocation at runtime. However, because TypeScript operates entirely at compile time, its static type checker cann">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-proxy-type-inference-limitations">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Proxy Type Inference Limitations - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-proxy-type-inference-limitations" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="JavaScript Proxy objects allow developers to intercept and redefine fundamental operations such as property lookup, assignment, and function invocation at runtime. However, because TypeScript operates entirely at compile time, its static type checker cann" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-proxy-type-inference-limitations">TypeScript Proxy
+Type Inference Limitations</h1>
+<p>JavaScript <code>Proxy</code> objects allow developers to intercept
+and redefine fundamental operations such as property lookup, assignment,
+and function invocation at runtime. However, because TypeScript operates
+entirely at compile time, its static type checker cannot infer dynamic
+runtime behavior automatically. This article examines the core
+limitations of TypeScript type inference when working with Proxies,
+detailing why the compiler fails to detect trap modifications, virtual
+properties, and dynamic transformations without explicit manual
+typing.</p>
+<h3 id="1-default-mirroring-of-the-target-type">1. Default Mirroring of
+the Target Type</h3>
+<p>When instantiating a proxy using
+<code>new Proxy(target, handler)</code>, TypeScript’s standard library
+types infer the return type to be identical to the <code>target</code>
+parameter (<code>T</code>).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> target <span class="op">=</span> { a<span class="op">:</span> <span class="dv">1</span> }<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> proxy <span class="op">=</span> <span class="kw">new</span> <span class="bu">Proxy</span>(target<span class="op">,</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span>(obj<span class="op">,</span> prop) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (prop <span class="op">===</span> <span class="st">&quot;b&quot;</span>) <span class="cf">return</span> <span class="st">&quot;dynamic&quot;</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">Reflect</span><span class="op">.</span><span class="fu">get</span>(obj<span class="op">,</span> prop)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>proxy<span class="op">.</span><span class="at">a</span><span class="op">;</span> <span class="co">// Type: number</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>proxy<span class="op">.</span><span class="at">b</span><span class="op">;</span> <span class="co">// Compile error: Property &#39;b&#39; does not exist on type &#39;{ a: number; }&#39;</span></span></code></pre></div>
+<p>Even though the <code>get</code> trap explicitly provides a value for
+property <code>b</code>, TypeScript ignores the logic within the
+<code>handler</code> object. The type system assumes the proxy
+represents an exact pass-through of the original target.</p>
+<h3 id="2-lack-of-handler-to-target-type-propagation">2. Lack of
+Handler-to-Target Type Propagation</h3>
+<p>TypeScript's <code>ProxyHandler&lt;T&gt;</code> interface does not
+contain mechanisms to map dynamic handler outputs back to the proxy
+instance. A handler can implement complex <code>get</code>,
+<code>set</code>, <code>apply</code>, or <code>construct</code> traps
+that fundamentally change property types, return values, or method
+signatures. Because <code>ProxyHandler</code> traps are defined using
+general reflection types—often accepting <code>string | symbol</code>
+for property keys and returning <code>any</code>—the compiler has no
+mechanism to calculate a differentiated type signature based on trap
+execution branches.</p>
+<h3 id="3-inability-to-track-virtual-properties">3. Inability to Track
+Virtual Properties</h3>
+<p>A common use case for Proxies is creating "virtual" properties that
+do not exist on the target object, such as dynamic database query
+builders or remote procedure call (RPC) clients. Because these keys are
+resolved dynamically at runtime:</p>
+<ul>
+<li>TypeScript cannot automatically infer virtual keys created via a
+<code>get</code> trap.</li>
+<li>The <code>has</code> trap, which intercepts the <code>in</code>
+operator, does not narrow or expand the known keys of the object during
+type narrowing.</li>
+<li>The <code>deleteProperty</code> trap does not update union types or
+convert required properties to optional properties.</li>
+</ul>
+<p>To make virtual properties accessible without type errors, developers
+are forced to manually assert types using intersections (e.g.,
+<code>target as TargetType &amp; VirtualProps</code>) or write custom
+generic wrapper functions.</p>
+<h3 id="4-method-context-and-private-identifier-disconnects">4. Method
+Context and Private Identifier Disconnects</h3>
+<p>Proxies do not preserve native private fields (e.g.,
+<code>#privateField</code>) when methods accessing those fields are
+invoked through the proxy. When intercepting methods, the proxy becomes
+the <code>this</code> context, which throws runtime
+<code>TypeError</code> exceptions on native private state access.</p>
+<p>TypeScript does not reflect this risk. The type system continues to
+infer that all private methods and properties remain safely accessible,
+concealing a runtime failure behind successful static compilation.</p>
+<h3 id="5-untracked-revocation-states">5. Untracked Revocation
+States</h3>
+<p>When using <code>Proxy.revocable(target, handler)</code>, the
+returned object includes a <code>revoke</code> function alongside the
+proxy. Calling <code>revoke()</code> renders the proxy immediately
+unusable, causing any subsequent operation to throw a runtime
+<code>TypeError</code>.</p>
+<p>TypeScript types the proxy inside the revocable pair as
+<code>T</code> indefinitely. The type checker cannot track whether
+<code>revoke()</code> has been called, meaning it cannot warn developers
+when an operation is executed on a revoked proxy instance.</p>
+<h3 id="6-static-analysis-vs-metaprogramming-workarounds">6. Static
+Analysis vs. Metaprogramming Workarounds</h3>
+<p>To overcome these inference limitations, developers must rely on
+manual type engineering:</p>
+<ul>
+<li><strong>Type Assertions:</strong> Explicitly casting with
+<code>as</code> to overwrite default target inference.</li>
+<li><strong>Mappable Type Definitions:</strong> Creating recursive
+mapped types or generic builder interfaces that describe what the proxy
+will produce before the proxy is instantiated.</li>
+<li><strong>Custom Factory Functions:</strong> Wrapping proxy
+instantiation in strongly typed functions that accept type arguments
+specifying input and output schemas.</li>
+</ul>
+<p>While these workarounds allow developers to maintain type safety,
+TypeScript itself remains blind to the proxy's internal runtime
+mechanics, leaving the responsibility of type accuracy entirely on the
+developer.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

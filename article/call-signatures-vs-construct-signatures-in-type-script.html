@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Signatures vs Construct Signatures in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, interfaces can describe not only object properties but also how functions and classes behave. The core difference between a call signature and a construct signature lies in how the underlying entity is invoked: call signatures describe thin">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/call-signatures-vs-construct-signatures-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Call Signatures vs Construct Signatures in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/call-signatures-vs-construct-signatures-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, interfaces can describe not only object properties but also how functions and classes behave. The core difference between a call signature and a construct signature lies in how the underlying entity is invoked: call signatures describe thin" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="call-signatures-vs-construct-signatures-in-typescript">Call
+Signatures vs Construct Signatures in TypeScript</h1>
+<p>In TypeScript, interfaces can describe not only object properties but
+also how functions and classes behave. The core difference between a
+call signature and a construct signature lies in how the underlying
+entity is invoked: call signatures describe things that can be invoked
+like standard functions using parentheses, while construct signatures
+define entities that must be instantiated using the <code>new</code>
+operator. This article breaks down their syntax, practical use cases,
+behavioral differences, and how they can be combined to model complex
+JavaScript objects.</p>
+<h3 id="understanding-call-signatures">Understanding Call
+Signatures</h3>
+<p>A call signature in an interface defines the parameters and return
+type of a callable function. When an object implements or satisfies an
+interface with a call signature, it can be executed directly.</p>
+<p>The syntax resembles a standard function signature without a method
+name:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Formatter {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (input<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> toUpperCase<span class="op">:</span> Formatter <span class="op">=</span> (input<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> input<span class="op">.</span><span class="fu">toUpperCase</span>()<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Calling the interface-typed object</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">toUpperCase</span>(<span class="st">&quot;hello&quot;</span>))<span class="op">;</span> <span class="co">// &quot;HELLO&quot;</span></span></code></pre></div>
+<p>Call signatures are commonly used for callback functions,
+higher-order functions, or objects that act as functions while also
+storing additional properties.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> GreeterWithState {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (name<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  defaultGreeting<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> greet<span class="op">:</span> GreeterWithState <span class="op">=</span> (name<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> <span class="vs">`</span><span class="sc">${</span>greet<span class="op">.</span><span class="at">defaultGreeting</span><span class="sc">}</span><span class="vs">, </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">!`</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>greet<span class="op">.</span><span class="at">defaultGreeting</span> <span class="op">=</span> <span class="st">&quot;Welcome&quot;</span><span class="op">;</span></span></code></pre></div>
+<h3 id="understanding-construct-signatures">Understanding Construct
+Signatures</h3>
+<p>A construct signature dictates that an entity can be invoked with the
+<code>new</code> keyword to produce an instance of a specified type.
+These signatures represent class constructors or factory functions.</p>
+<p>The syntax is identical to a call signature, with the addition of the
+<code>new</code> prefix:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="bu">Point</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  x<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  y<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> PointConstructor {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> (x<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Point</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConcretePoint <span class="kw">implements</span> <span class="bu">Point</span> {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">public</span> x<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> <span class="kw">public</span> y<span class="op">:</span> <span class="dt">number</span>) {}</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Function that expects a constructor</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createPoint</span>(ctor<span class="op">:</span> PointConstructor<span class="op">,</span> x<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Point</span> {</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="fu">ctor</span>(x<span class="op">,</span> y)<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> point <span class="op">=</span> <span class="fu">createPoint</span>(ConcretePoint<span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>)<span class="op">;</span></span></code></pre></div>
+<p>TypeScript separates class static types from class instance types.
+While an <code>implements</code> clause checks the instance side of a
+class, construct signatures are required to type-check the constructor
+(static) side.</p>
+<h3 id="key-differences">Key Differences</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Call Signature</th>
+<th style="text-align: left;">Construct Signature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Syntax</strong></td>
+<td style="text-align: left;"><code>(args): ReturnType;</code></td>
+<td
+style="text-align: left;"><code>new (args): InstanceType;</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Invocation</strong></td>
+<td style="text-align: left;"><code>fn(...)</code></td>
+<td style="text-align: left;"><code>new fn(...)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Target Type</strong></td>
+<td style="text-align: left;">Standard functions, callbacks</td>
+<td style="text-align: left;">Classes, constructor functions</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runtime Failure</strong></td>
+<td style="text-align: left;">Attempting <code>new fn()</code> may fail
+or produce unintended prototypes</td>
+<td style="text-align: left;">Invoking without <code>new</code> causes a
+compile-time TypeScript error</td>
+</tr>
+</tbody>
+</table>
+<h3 id="combining-call-and-construct-signatures">Combining Call and
+Construct Signatures</h3>
+<p>JavaScript provides built-in objects that can be both called directly
+and instantiated with <code>new</code>. Standard examples include
+<code>Date</code>, <code>Number</code>, and <code>RegExp</code>:</p>
+<ul>
+<li>Calling <code>Date()</code> returns a string representation of the
+current time.</li>
+<li>Calling <code>new Date()</code> returns a <code>Date</code> object
+instance.</li>
+</ul>
+<p>TypeScript supports this dual behavior by allowing both signatures
+within the same interface:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> DateOrDateString {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Call signature: returns string</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  ()<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Construct signature: returns Date instance</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> ()<span class="op">:</span> <span class="bu">Date</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">new</span> (value<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Date</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">const</span> CustomDate<span class="op">:</span> DateOrDateString<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dateStr <span class="op">=</span> <span class="fu">CustomDate</span>()<span class="op">;</span>        <span class="co">// Type: string</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dateObj <span class="op">=</span> <span class="kw">new</span> <span class="fu">CustomDate</span>()<span class="op">;</span>   <span class="co">// Type: Date</span></span></code></pre></div>
+<p>Call signatures handle standard functional execution, whereas
+construct signatures guarantee that an object represents an instantiable
+constructor requiring the <code>new</code> keyword.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

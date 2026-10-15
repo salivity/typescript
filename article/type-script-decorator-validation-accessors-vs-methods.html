@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Decorator Validation: Accessors vs Methods - typescript</title>
+    <meta name="description" content="TypeScript validates decorators applied to class accessors and class methods by enforcing distinct type signatures, execution contexts, and compilation constraints. While both target member definitions, TypeScript differentiates between them to ensure typ">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-decorator-validation-accessors-vs-methods">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Decorator Validation: Accessors vs Methods - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-decorator-validation-accessors-vs-methods" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript validates decorators applied to class accessors and class methods by enforcing distinct type signatures, execution contexts, and compilation constraints. While both target member definitions, TypeScript differentiates between them to ensure typ" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-decorator-validation-accessors-vs-methods">TypeScript
+Decorator Validation: Accessors vs Methods</h1>
+<p>TypeScript validates decorators applied to class accessors and class
+methods by enforcing distinct type signatures, execution contexts, and
+compilation constraints. While both target member definitions,
+TypeScript differentiates between them to ensure type safety over
+functions versus property accessors. This guide explains how TypeScript
+checks these decorators under modern ECMAScript standards (TypeScript
+5.0+) as well as legacy experimental flags, contrasting how property
+descriptors, contextual metadata, and return types are validated for
+methods versus accessors.</p>
+<h3 id="standard-ecmascript-decorators-typescript-50">Standard
+ECMAScript Decorators (TypeScript 5.0+)</h3>
+<p>Modern TypeScript enforces type constraints using built-in generic
+types defined in the standard library:
+<code>ClassMethodDecoratorContext</code>,
+<code>ClassGetterDecoratorContext</code>,
+<code>ClassSetterDecoratorContext</code>, and
+<code>ClassAccessorDecoratorContext</code>.</p>
+<h4 id="method-decorator-validation">Method Decorator Validation</h4>
+<p>A method decorator is validated against a function value. Its
+signature generally corresponds to:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ClassMethodDecorator <span class="op">=</span> <span class="op">&lt;</span>This<span class="op">,</span> Args <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> Return<span class="op">&gt;</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> (this<span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassMethodDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> (this<span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return<span class="op">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>) <span class="kw">=&gt;</span> ((this<span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return) <span class="op">|</span> <span class="kw">void</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript checks:</p>
+<ol type="1">
+<li><strong>Target Compatibility:</strong> The decorated member must be
+a function.</li>
+<li><strong>Context Kind:</strong> The <code>context.kind</code>
+property is statically typed as the literal <code>"method"</code>.</li>
+<li><strong>Replacement Value:</strong> If the decorator returns a
+value, TypeScript ensures the returned function matches the parameter
+types and return type of the original method.</li>
+</ol>
+<h4 id="accessor-decorator-validation">Accessor Decorator
+Validation</h4>
+<p>TypeScript distinguishes between standard accessors
+(<code>get</code>/<code>set</code>) and auto-accessors (declared with
+the <code>accessor</code> keyword).</p>
+<p>For getters and setters:</p>
+<ul>
+<li><strong>Getters:</strong> The target is a function taking zero
+arguments and returning a value (<code>() =&gt; Value</code>). The
+context is <code>ClassGetterDecoratorContext</code>, where
+<code>context.kind</code> is <code>"getter"</code>.</li>
+<li><strong>Setters:</strong> The target is a function accepting a
+single argument and returning <code>void</code>
+(<code>(value: Value) =&gt; void</code>). The context is
+<code>ClassSetterDecoratorContext</code>, where
+<code>context.kind</code> is <code>"setter"</code>.</li>
+</ul>
+<p>For auto-accessors (<code>accessor myProp: string</code>):</p>
+<ul>
+<li>The target is an object containing both accessors:
+<code>{ get(): Value; set(value: Value): void }</code>.</li>
+<li>The context is <code>ClassAccessorDecoratorContext</code>, with
+<code>context.kind</code> typed as <code>"accessor"</code>.</li>
+<li>TypeScript permits the decorator to return a wrapper object
+containing new <code>get</code>, <code>set</code>, or <code>init</code>
+functions, validating each against the underlying property type.</li>
+</ul>
+<h3 id="legacy-decorators---experimentaldecorators">Legacy Decorators
+(<code>--experimentalDecorators</code>)</h3>
+<p>Under the legacy implementation, both method and accessor decorators
+share the runtime signature
+<code>(target: any, propertyKey: string, descriptor: PropertyDescriptor)</code>,
+but TypeScript applies divergent compiler rules.</p>
+<h4 id="single-accessor-rule">Single-Accessor Rule</h4>
+<p>TypeScript strictly forbids decorating both the <code>get</code> and
+<code>set</code> accessors for the same member name. Because decorators
+modify a combined <code>PropertyDescriptor</code> for the property,
+decorating both generates a compile-time error
+(<code>TS1207: Decorators cannot be applied to multiple get/set accessors of the same name</code>).</p>
+<p>Instead, the decorator must be placed on the first accessor that
+appears in the source order. Methods have no such constraint, as each
+method has its own distinct declaration.</p>
+<h4 id="propertydescriptor-validation">PropertyDescriptor
+Validation</h4>
+<ul>
+<li><strong>Method Decorators:</strong> TypeScript expects the
+descriptor to contain a <code>value</code> field typed as a function. If
+the decorator returns a descriptor, TypeScript verifies that
+<code>descriptor.value</code> retains a compatible function
+signature.</li>
+<li><strong>Accessor Decorators:</strong> TypeScript expects the
+descriptor to define <code>get</code> and/or <code>set</code> functions
+instead of a <code>value</code> property. A returned descriptor is
+validated to ensure that <code>get</code> takes no parameters and
+returns the expected type, and <code>set</code> accepts exactly one
+parameter.</li>
+</ul>
+<h3 id="summary-of-differences">Summary of Differences</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Class Method Decorator</th>
+<th style="text-align: left;">Class Accessor Decorator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Context Kind (TS
+5.0+)</strong></td>
+<td style="text-align: left;"><code>"method"</code></td>
+<td style="text-align: left;"><code>"getter"</code>,
+<code>"setter"</code>, or <code>"accessor"</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Target
+Representation</strong></td>
+<td style="text-align: left;">The function definition directly.</td>
+<td style="text-align: left;">The specific getter/setter function, or a
+<code>{ get, set }</code> pair for auto-accessors.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Paired Declarations</strong></td>
+<td style="text-align: left;">N/A (single declaration).</td>
+<td style="text-align: left;">Under legacy mode, only the first accessor
+in the source code can be decorated.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Return Value
+Constraints</strong></td>
+<td style="text-align: left;">A substitute function matching the
+original call signature.</td>
+<td style="text-align: left;">A substitute getter/setter function or an
+object updating <code>get</code>, <code>set</code>, and
+initializers.</td>
+</tr>
+</tbody>
+</table></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

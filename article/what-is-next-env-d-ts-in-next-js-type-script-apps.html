@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is next-env.d.ts in Next.js TypeScript Apps? - typescript</title>
+    <meta name="description" content="The next-env.d.ts file is an automatically generated TypeScript declaration file created in the root of a Next.js project whenever TypeScript is enabled. Its primary purpose is to ensure that the TypeScript compiler properly recognizes Next.js-specific gl">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-next-env-d-ts-in-next-js-type-script-apps">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is next-env.d.ts in Next.js TypeScript Apps? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-next-env-d-ts-in-next-js-type-script-apps" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The next-env.d.ts file is an automatically generated TypeScript declaration file created in the root of a Next.js project whenever TypeScript is enabled. Its primary purpose is to ensure that the TypeScript compiler properly recognizes Next.js-specific gl" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-next-envdts-in-nextjs-typescript-apps">What Is
+next-env.d.ts in Next.js TypeScript Apps?</h1>
+<p>The <code>next-env.d.ts</code> file is an automatically generated
+TypeScript declaration file created in the root of a Next.js project
+whenever TypeScript is enabled. Its primary purpose is to ensure that
+the TypeScript compiler properly recognizes Next.js-specific global
+types, framework features, and static asset imports. This article
+explains the exact role of <code>next-env.d.ts</code>, the declarations
+it injects, how Next.js manages it, and how developers should handle it
+in version control.</p>
+<h2 id="the-role-of-next-envdts">The Role of next-env.d.ts</h2>
+<p>When building an application with TypeScript, the compiler must
+understand the structure of the environment, including framework-level
+globals and non-standard imports (such as importing <code>.png</code> or
+<code>.css</code> files into JavaScript or TypeScript modules).</p>
+<p>Standard TypeScript does not understand these by default. The
+<code>next-env.d.ts</code> file bridges this gap by acting as an ambient
+declaration reference. It tells TypeScript where to find the type
+definitions that ship with the <code>next</code> package.</p>
+<h2 id="what-is-inside-the-file">What Is Inside the File?</h2>
+<p>A typical <code>next-env.d.ts</code> file contains triple-slash
+reference directives rather than standard code:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> types=</span><span class="dt">&quot;next&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="kw">&lt;reference</span><span class="ot"> types=</span><span class="dt">&quot;next/image-types/global&quot;</span><span class="ot"> </span><span class="kw">/&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">NOTE</span><span class="co">: This file should not be edited</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.</span></span></code></pre></div>
+<p>Depending on the Next.js version and configuration, it may also
+include references to routing or navigation types. These directives
+perform two main jobs:</p>
+<ol type="1">
+<li><strong><code>/// &lt;reference types="next" /&gt;</code></strong>:
+Imports the core Next.js type definitions. This gives TypeScript
+knowledge about built-in components, API route handlers, data fetching
+methods, and environment variables configured via
+<code>next.config.js</code>.</li>
+<li><strong><code>/// &lt;reference types="next/image-types/global" /&gt;</code></strong>:
+Provides module declarations for static asset imports. This allows you
+to import images (such as <code>.png</code>, <code>.jpg</code>,
+<code>.svg</code>, and <code>.webp</code>) directly into your components
+without TypeScript throwing an error that the module cannot be
+found.</li>
+</ol>
+<h2 id="automatic-generation-and-management">Automatic Generation and
+Management</h2>
+<p>Next.js automatically creates or updates <code>next-env.d.ts</code>
+whenever you run <code>next dev</code> or <code>next build</code>.</p>
+<p>If the file is deleted, Next.js detects its absence and regenerates
+it automatically. If you upgrade Next.js to a version that requires
+updated global type references, Next.js automatically rewrites the file
+to match the new version's requirements.</p>
+<p>Because Next.js actively manages the contents of this file, any
+custom changes or manual type additions you write into
+<code>next-env.d.ts</code> will be overwritten.</p>
+<h2 id="best-practices-editing-and-version-control">Best Practices:
+Editing and Version Control</h2>
+<ul>
+<li><strong>Do not edit manually</strong>: If you need to declare your
+own custom global types, ambient modules, or extend Next.js interfaces,
+create a separate declaration file (such as
+<code>types/global.d.ts</code> or <code>additional.d.ts</code>) and
+include it in the <code>include</code> array of your
+<code>tsconfig.json</code>.</li>
+<li><strong>Commit to version control</strong>: The Next.js team
+recommends committing <code>next-env.d.ts</code> to Git. Keeping it in
+your repository ensures that continuous integration (CI) pipelines and
+other developers on your team have access to the exact environment types
+without requiring Next.js to regenerate them before running type checks
+(such as <code>tsc --noEmit</code>).</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

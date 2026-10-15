@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enum Merging with Namespaces in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, an enum can successfully merge with a namespace of the same name. This article explores how TypeScript&#39;s declaration merging rules allow enums to combine with namespaces, the syntax required to achieve this, practical use cases such as atta">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/enum-merging-with-namespaces-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Enum Merging with Namespaces in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/enum-merging-with-namespaces-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, an enum can successfully merge with a namespace of the same name. This article explores how TypeScript&#39;s declaration merging rules allow enums to combine with namespaces, the syntax required to achieve this, practical use cases such as atta" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="enum-merging-with-namespaces-in-typescript">Enum Merging with
+Namespaces in TypeScript</h1>
+<p>In TypeScript, an enum can successfully merge with a namespace of the
+same name. This article explores how TypeScript's declaration merging
+rules allow enums to combine with namespaces, the syntax required to
+achieve this, practical use cases such as attaching static helper
+methods to an enum, and the limitations to keep in mind when
+implementing this pattern.</p>
+<h2 id="how-enum-and-namespace-merging-works">How Enum and Namespace
+Merging Works</h2>
+<p>TypeScript features declaration merging, which means the compiler
+combines two or more separate declarations declared with the same name
+into a single definition. When you declare an <code>enum</code> and a
+<code>namespace</code> with identical names within the same scope,
+TypeScript merges them. The enum provides the runtime object containing
+the keys and values, while the namespace allows you to attach static
+properties, functions, or sub-types to that same object.</p>
+<h3 id="basic-syntax-and-example">Basic Syntax and Example</h3>
+<p>By default, TypeScript enums can only hold constant values (numeric
+or string) and cannot contain methods. Merging a namespace allows you to
+augment the enum with utility functions:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Declare the enum</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> OrderStatus {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Pending <span class="op">=</span> <span class="st">&quot;PENDING&quot;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  Shipped <span class="op">=</span> <span class="st">&quot;SHIPPED&quot;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  Delivered <span class="op">=</span> <span class="st">&quot;DELIVERED&quot;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  Cancelled <span class="op">=</span> <span class="st">&quot;CANCELLED&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Declare the namespace with the identical name</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">namespace</span> <span class="dt">OrderStatus</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">function</span> <span class="fu">isFinal</span>(status<span class="op">:</span> OrderStatus)<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> status <span class="op">===</span> OrderStatus<span class="op">.</span><span class="at">Delivered</span> <span class="op">||</span> status <span class="op">===</span> OrderStatus<span class="op">.</span><span class="at">Cancelled</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">function</span> <span class="fu">parse</span>(value<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> OrderStatus <span class="op">|</span> <span class="dt">undefined</span> {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">values</span>(OrderStatus)<span class="op">.</span><span class="fu">includes</span>(value <span class="im">as</span> OrderStatus)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="op">?</span> (value <span class="im">as</span> OrderStatus)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      <span class="op">:</span> <span class="dt">undefined</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Usage</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> currentStatus <span class="op">=</span> OrderStatus<span class="op">.</span><span class="at">Shipped</span><span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(OrderStatus<span class="op">.</span><span class="fu">isFinal</span>(currentStatus))<span class="op">;</span> <span class="co">// false</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(OrderStatus<span class="op">.</span><span class="fu">isFinal</span>(OrderStatus<span class="op">.</span><span class="at">Delivered</span>))<span class="op">;</span> <span class="co">// true</span></span></code></pre></div>
+<p>In the compiled JavaScript, the <code>OrderStatus</code> namespace
+simply adds the <code>isFinal</code> and <code>parse</code> functions as
+properties on the already-existing <code>OrderStatus</code> object.</p>
+<h2 id="common-use-cases">Common Use Cases</h2>
+<ol type="1">
+<li><strong>Static Helper Functions</strong>: Encapsulating validation,
+serialization, or formatting logic directly on the enum object avoids
+polluting the global or module scope with freestanding functions like
+<code>isFinalOrderStatus()</code>.</li>
+<li><strong>Type Augmentation</strong>: You can export types or
+interfaces from within the namespace to group closely related types
+together (for example, <code>OrderStatus.TransitionRule</code>).</li>
+<li><strong>Lookup Maps</strong>: You can place static lookup tables or
+display labels inside the namespace, keeping configuration data
+co-located with the enumeration.</li>
+</ol>
+<h2 id="key-considerations-and-limitations">Key Considerations and
+Limitations</h2>
+<ul>
+<li><strong>Order of Declaration</strong>: While TypeScript often hoists
+declarations, standard practice requires declaring the enum before the
+namespace to ensure the runtime object is initialized before properties
+are assigned to it.</li>
+<li><strong><code>const enum</code> Restriction</strong>: You cannot
+merge a namespace with a <code>const enum</code>. Because
+<code>const enum</code> members are completely inlined at compile time
+and generate no runtime JavaScript object, there is no object available
+for the namespace to extend.</li>
+<li><strong>Property Overwrites</strong>: Names declared inside the
+namespace must not collide with the keys of the enum itself; otherwise,
+a compile-time collision error will occur.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

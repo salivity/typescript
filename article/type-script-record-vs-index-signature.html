@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Record vs Index Signature - typescript</title>
+    <meta name="description" content="In TypeScript, both the Record&lt;Keys, Type&gt; utility type and explicit index signatures ({ [key: KeyType]: ValueType }) allow developers to model dynamic, dictionary-like object structures. While both approaches often achieve identical runtime results, they">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-record-vs-index-signature">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Record vs Index Signature - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-record-vs-index-signature" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, both the Record&lt;Keys, Type&gt; utility type and explicit index signatures ({ [key: KeyType]: ValueType }) allow developers to model dynamic, dictionary-like object structures. While both approaches often achieve identical runtime results, they" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-record-vs-index-signature">TypeScript Record vs Index
+Signature</h1>
+<p>In TypeScript, both the <code>Record&lt;Keys, Type&gt;</code> utility
+type and explicit index signatures
+(<code>{ [key: KeyType]: ValueType }</code>) allow developers to model
+dynamic, dictionary-like object structures. While both approaches often
+achieve identical runtime results, they differ fundamentally in how they
+handle key types, interfaces, code readability, and integration with
+union types. This guide examines the key differences, capabilities, and
+best use cases for each approach.</p>
+<h3 id="syntax-comparison">Syntax Comparison</h3>
+<p>An explicit index signature defines the type of keys and values using
+bracket syntax:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserScores <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [username<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserAges {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  [username<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The <code>Record</code> utility type is a built-in generic mapped
+type that abstracts this pattern:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserScores <span class="op">=</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">number</span><span class="op">&gt;;</span></span></code></pre></div>
+<p>Under the hood, TypeScript defines <code>Record</code> using a mapped
+type:
+<code>type Record&lt;K extends keyof any, T&gt; = { [P in K]: T; }</code>.</p>
+<h3 id="handling-union-types">Handling Union Types</h3>
+<p>The most significant functional difference between the two is how
+they handle literal union types.</p>
+<p>An explicit index signature cannot directly accept a union of string
+literals as its key type:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This will throw a syntax error:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;An index signature parameter type cannot be a literal type or a union type.&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PageNav <span class="op">=</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  [key<span class="op">:</span> <span class="st">&#39;home&#39;</span> <span class="op">|</span> <span class="st">&#39;about&#39;</span> <span class="op">|</span> <span class="st">&#39;contact&#39;</span>]<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>To use a union with explicit syntax, you must convert it into a
+mapped type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PageNav <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  [key <span class="kw">in</span> <span class="st">&#39;home&#39;</span> <span class="op">|</span> <span class="st">&#39;about&#39;</span> <span class="op">|</span> <span class="st">&#39;contact&#39;</span>]<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>In contrast, <code>Record</code> natively handles union types without
+modifying syntax:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Pages <span class="op">=</span> <span class="st">&#39;home&#39;</span> <span class="op">|</span> <span class="st">&#39;about&#39;</span> <span class="op">|</span> <span class="st">&#39;contact&#39;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PageNav <span class="op">=</span> <span class="bu">Record</span><span class="op">&lt;</span>Pages<span class="op">,</span> <span class="dt">string</span><span class="op">&gt;;</span></span></code></pre></div>
+<p>When you use <code>Record</code> with a union of keys, TypeScript
+ensures that <em>every</em> key in the union is present in the object,
+providing compile-time exhaustiveness checks.</p>
+<h3 id="interface-integration">Interface Integration</h3>
+<p>Index signatures can be declared directly inside an
+<code>interface</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> CacheStorage {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="bu">ArrayBuffer</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clear</span>()<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><code>Record</code> is a type alias. It cannot be used directly as an
+interface declaration, though an interface can extend a
+<code>Record</code> instance if the keys are broad types
+(<code>string</code>, <code>number</code>, or <code>symbol</code>):</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> CacheStorage <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="bu">ArrayBuffer</span><span class="op">&gt;</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clear</span>()<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>However, an interface cannot extend a <code>Record</code> that uses a
+union of literals (e.g., <code>Record&lt;'a' | 'b', number&gt;</code>),
+because interfaces must describe fixed object shapes rather than mapped
+types.</p>
+<h3 id="self-documenting-key-names">Self-Documenting Key Names</h3>
+<p>Index signatures allow you to name the key parameter, which provides
+semantic context to developers reading the code:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserDirectory <span class="op">=</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [userId<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> UserProfile<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Here, <code>userId</code> clarifies what the string represents. The
+<code>Record</code> type does not support semantic naming for generic
+keys:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserDirectory <span class="op">=</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> UserProfile<span class="op">&gt;;</span></span></code></pre></div>
+<p>In this case, the key is simply <code>string</code>, which does not
+provide descriptive context.</p>
+<h3 id="permitted-key-types">Permitted Key Types</h3>
+<p>Index signatures restrict key types to primitive primitives:
+<code>string</code>, <code>number</code>, <code>symbol</code>, or
+template literal types (<code>${string}-${string}</code>).</p>
+<p>The <code>Record</code> type accepts any type that extends
+<code>keyof any</code> (i.e., <code>string | number | symbol</code>).
+Because it leverages mapped types, it easily accepts complex conditional
+types, key sets derived via <code>keyof</code>, and template literal
+unions.</p>
+<h3 id="summary-when-to-use-which">Summary: When to Use Which</h3>
+<p>Use <code>Record&lt;Keys, Type&gt;</code> when:</p>
+<ul>
+<li>Mapping specific string, number, or symbol unions to a value
+type.</li>
+<li>Requiring compile-time exhaustiveness to ensure all union keys are
+defined.</li>
+<li>Writing generic utility types or functions where concise, functional
+syntax is preferred.</li>
+</ul>
+<p>Use an explicit index signature when:</p>
+<ul>
+<li>Defining types inside an <code>interface</code>.</li>
+<li>Mixing fixed properties with dynamic properties within the same
+structure.</li>
+<li>Providing descriptive names for the key parameter (such as
+<code>[productId: string]</code>) to enhance code readability.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

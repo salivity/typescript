@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Svelte Props and Events with TypeScript - typescript</title>
+    <meta name="description" content="Svelte integrates directly with TypeScript to provide end-to-end type safety for component interfaces, reducing runtime bugs and improving developer experience. This article explains how to type component props and events in Svelte, covering both modern S">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-svelte-props-and-events-with-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing Svelte Props and Events with TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-svelte-props-and-events-with-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Svelte integrates directly with TypeScript to provide end-to-end type safety for component interfaces, reducing runtime bugs and improving developer experience. This article explains how to type component props and events in Svelte, covering both modern S" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-svelte-props-and-events-with-typescript">Typing Svelte
+Props and Events with TypeScript</h1>
+<p>Svelte integrates directly with TypeScript to provide end-to-end type
+safety for component interfaces, reducing runtime bugs and improving
+developer experience. This article explains how to type component props
+and events in Svelte, covering both modern Svelte 5 syntax using runes
+and the traditional Svelte 3/4 approach.</p>
+<h2 id="typing-component-props">Typing Component Props</h2>
+<p>To enable TypeScript in a Svelte component, declare
+<code>&lt;script lang="ts"&gt;</code> in the component file.</p>
+<h3 id="svelte-5-runes">Svelte 5 (Runes)</h3>
+<p>In Svelte 5, component props are declared using the
+<code>$props()</code> rune. You define an <code>interface</code> or
+<code>type</code> and apply it directly to the destructured
+<code>$props()</code> declaration.</p>
+<pre class="svelte"><code>&lt;script lang=&quot;ts&quot;&gt;
+  interface Props {
+    title: string;
+    count?: number;
+    disabled?: boolean;
+  }
+
+  let { title, count = 0, disabled = false }: Props = $props();
+&lt;/script&gt;
+
+&lt;h1&gt;{title}&lt;/h1&gt;
+&lt;p&gt;Count: {count}&lt;/p&gt;</code></pre>
+<h3 id="svelte-3-and-4-export-syntax">Svelte 3 and 4 (Export
+Syntax)</h3>
+<p>In earlier versions, props are defined using the
+<code>export let</code> keyword, with TypeScript type annotations
+appended to each variable.</p>
+<pre class="svelte"><code>&lt;script lang=&quot;ts&quot;&gt;
+  export let title: string;
+  export let count: number = 0;
+  export let disabled: boolean = false;
+&lt;/script&gt;
+
+&lt;h1&gt;{title}&lt;/h1&gt;
+&lt;p&gt;Count: {count}&lt;/p&gt;</code></pre>
+<hr />
+<h2 id="typing-component-events">Typing Component Events</h2>
+<p>Typing events ensures that callers provide the correct event handlers
+and payload shapes.</p>
+<h3 id="svelte-5-callback-props">Svelte 5 (Callback Props)</h3>
+<p>Svelte 5 shifts away from custom event dispatching in favor of
+standard callback functions passed as props.</p>
+<pre class="svelte"><code>&lt;script lang=&quot;ts&quot;&gt;
+  interface Props {
+    onSave: (payload: { id: number; text: string }) =&gt; void;
+    onCancel?: () =&gt; void;
+  }
+
+  let { onSave, onCancel }: Props = $props();
+
+  function handleSave() {
+    onSave({ id: 1, text: &quot;Updated&quot; });
+  }
+&lt;/script&gt;
+
+&lt;button onclick={handleSave}&gt;Save&lt;/button&gt;
+&lt;button onclick={onCancel}&gt;Cancel&lt;/button&gt;</code></pre>
+<h3 id="svelte-3-and-4-createeventdispatcher">Svelte 3 and 4
+(<code>createEventDispatcher</code>)</h3>
+<p>In Svelte 3 and 4, custom events are emitted using
+<code>createEventDispatcher</code>. You provide a type map specifying
+the event name and the payload type as a generic parameter.</p>
+<pre class="svelte"><code>&lt;script lang=&quot;ts&quot;&gt;
+  import { createEventDispatcher } from &#39;svelte&#39;;
+
+  const dispatch = createEventDispatcher&lt;{
+    save: { id: number; text: string };
+    cancel: null;
+  }&gt;();
+
+  function handleSave() {
+    dispatch(&#39;save&#39;, { id: 1, text: &quot;Updated&quot; });
+  }
+
+  function handleCancel() {
+    dispatch(&#39;cancel&#39;);
+  }
+&lt;/script&gt;
+
+&lt;button on:click={handleSave}&gt;Save&lt;/button&gt;
+&lt;button on:click={handleCancel}&gt;Cancel&lt;/button&gt;</code></pre>
+<hr />
+<h2 id="typing-generic-components">Typing Generic Components</h2>
+<p>When a component needs to handle dynamic data types—such as a generic
+list or dropdown—you can declare generic types using the
+<code>generics</code> attribute on the script tag.</p>
+<pre class="svelte"><code>&lt;script lang=&quot;ts&quot; generics=&quot;T extends { id: string | number }&quot;&gt;
+  interface Props {
+    items: T[];
+    onSelect: (item: T) =&gt; void;
+  }
+
+  let { items, onSelect }: Props = $props();
+&lt;/script&gt;
+
+&lt;ul&gt;
+  {#each items as item}
+    &lt;li onclick={() =&gt; onSelect(item)}&gt;
+      {item.id}
+    &lt;/li&gt;
+  {/each}
+&lt;/ul&gt;</code></pre>
+<p>Using these patterns guarantees accurate autocompletion, compile-time
+validation, and reliable refactoring when consuming Svelte components
+across your application.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Incremental Builds Work - typescript</title>
+    <meta name="description" content="TypeScript&#39;s incremental compiler flag significantly reduces build times by persisting information about the project graph from the last compilation to disk. When enabled, TypeScript analyzes file modifications since the previous build and only recompiles">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-incremental-builds-work">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Incremental Builds Work - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-incremental-builds-work" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript&#39;s incremental compiler flag significantly reduces build times by persisting information about the project graph from the last compilation to disk. When enabled, TypeScript analyzes file modifications since the previous build and only recompiles" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-incremental-builds-work">How TypeScript
+Incremental Builds Work</h1>
+<p>TypeScript's <code>incremental</code> compiler flag significantly
+reduces build times by persisting information about the project graph
+from the last compilation to disk. When enabled, TypeScript analyzes
+file modifications since the previous build and only recompiles the
+files that have changed, along with their direct and indirect
+dependents. This article explains how the <code>incremental</code> flag
+functions under the hood, the role of the generated build information
+file, and how the compiler uses this metadata to optimize subsequent
+builds.</p>
+<h2 id="the-role-of-the-tsbuildinfo-file">The Role of the
+<code>.tsbuildinfo</code> File</h2>
+<p>When you enable <code>"incremental": true</code> in your
+<code>tsconfig.json</code>, the TypeScript compiler (<code>tsc</code>)
+generates a cache file with the extension <code>.tsbuildinfo</code>. By
+default, this file is placed in your output directory alongside your
+compiled code, but you can customize its location using the
+<code>tsBuildInfoFile</code> configuration option.</p>
+<p>The <code>.tsbuildinfo</code> file contains serialized metadata about
+the build, including:</p>
+<ul>
+<li><strong>File Hashes:</strong> Cryptographic hashes or timestamps of
+every source file, declaration file, and external module included in the
+compilation.</li>
+<li><strong>The Dependency Graph:</strong> A directed graph mapping
+which modules import, export, or depend on other modules.</li>
+<li><strong>Compiler Options:</strong> The configuration settings used
+during the compilation.</li>
+<li><strong>Emit Signatures:</strong> Checksums and signature
+information for generated outputs (such as <code>.d.ts</code>
+declaration files) to determine whether a change impacts downstream
+consumers.</li>
+</ul>
+<h2 id="the-rebuild-process-step-by-step">The Rebuild Process
+Step-by-Step</h2>
+<p>When you run a compilation with the <code>incremental</code> flag
+enabled, TypeScript executes the following process to determine what
+needs to be compiled:</p>
+<h3 id="1-reading-the-cache">1. Reading the Cache</h3>
+<p>The compiler searches for the <code>.tsbuildinfo</code> file. If the
+file does not exist, TypeScript performs a full compilation from scratch
+and writes the <code>.tsbuildinfo</code> file upon completion. If the
+file exists, TypeScript reads the stored state into memory.</p>
+<h3 id="2-change-detection">2. Change Detection</h3>
+<p>TypeScript computes the current hashes of all source files in the
+project and compares them against the stored hashes in the
+<code>.tsbuildinfo</code> file. If a file's hash is identical, the
+compiler knows the file has not changed.</p>
+<h3 id="3-graph-invalidation">3. Graph Invalidation</h3>
+<p>If the compiler detects changed files, it traverses the stored
+dependency graph. It marks the modified files as "dirty" and inspects
+their dependents:</p>
+<ul>
+<li><strong>Private Changes:</strong> If a change inside a file does not
+alter its public API (its exported types or shape), only that specific
+file needs to be re-emitted.</li>
+<li><strong>Shape Changes:</strong> If a change alters exported types,
+functions, or interfaces, TypeScript marks all modules importing that
+file as dirty, propagating the check up the dependency chain.</li>
+</ul>
+<h3 id="4-type-checking-and-emitting">4. Type Checking and Emitting</h3>
+<p>TypeScript skips type-checking and code generation for files that are
+clean and unaffected by any changes. It only runs the full type-checking
+pipeline and writes output files (<code>.js</code>, <code>.d.ts</code>,
+and source maps) for the dirty files.</p>
+<h3 id="5-updating-the-cache">5. Updating the Cache</h3>
+<p>Once compilation finishes, the compiler updates the
+<code>.tsbuildinfo</code> file with the new file hashes, updated graph
+nodes, and emit signatures, preparing the project for the next
+incremental cycle.</p>
+<h2 id="incremental-builds-vs-watch-mode">Incremental Builds vs. Watch
+Mode</h2>
+<p>While both <code>--watch</code> and <code>--incremental</code>
+optimize compilation time, they serve distinct purposes:</p>
+<ul>
+<li><strong>Watch Mode (<code>--watch</code>):</strong> Keeps the
+compiler process alive in memory. It tracks file system events and
+maintains the project graph in RAM. However, once the process exits, all
+state is lost.</li>
+<li><strong>Incremental Flag (<code>--incremental</code>):</strong>
+Persists the compiler state to a file on disk. This allows non-watch
+invocations (such as standard build scripts, CI/CD pipelines, or editor
+restarts) to benefit from the work done in earlier compilations.</li>
+</ul>
+<p>Combining both flags (<code>tsc --incremental --watch</code>)
+provides the fastest local development experience, as the compiler can
+bootstrap instantly using the on-disk cache instead of performing a cold
+start.</p>
+<h2 id="using-incremental-builds-in-cicd">Using Incremental Builds in
+CI/CD</h2>
+<p>To leverage incremental compilation in automated environments:</p>
+<ol type="1">
+<li><strong>Persist the Cache:</strong> Configure your CI system to
+cache the <code>.tsbuildinfo</code> file across runs.</li>
+<li><strong>Preserve Output Artifacts:</strong> Ensure that the
+generated build outputs (<code>dist</code> or <code>build</code>
+folders) are also cached, as TypeScript will avoid re-emitting files
+only if the existing outputs are present on disk.</li>
+<li><strong>Invalidate on Config Changes:</strong> If you modify
+<code>tsconfig.json</code> or update dependencies in
+<code>package.json</code>, ensure the cache is purged to prevent stale
+resolution artifacts.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

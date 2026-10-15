@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Null vs Undefined in TypeScript Strict Mode - typescript</title>
+    <meta name="description" content="In TypeScript&#39;s strict mode—specifically when the strictNullChecks flag is enabled—null and undefined become distinct, separate types that are no longer automatically assignable to other domain types. Semantically, undefined represents the default absence">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/null-vs-undefined-in-type-script-strict-mode">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Null vs Undefined in TypeScript Strict Mode - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/null-vs-undefined-in-type-script-strict-mode" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript&#39;s strict mode—specifically when the strictNullChecks flag is enabled—null and undefined become distinct, separate types that are no longer automatically assignable to other domain types. Semantically, undefined represents the default absence" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="null-vs-undefined-in-typescript-strict-mode">Null vs Undefined
+in TypeScript Strict Mode</h1>
+<p>In TypeScript's strict mode—specifically when the
+<code>strictNullChecks</code> flag is enabled—<code>null</code> and
+<code>undefined</code> become distinct, separate types that are no
+longer automatically assignable to other domain types. Semantically,
+<code>undefined</code> represents the default absence of a value (such
+as an uninitialized variable or missing argument), while
+<code>null</code> represents the deliberate, intentional absence of an
+object value. Enforcing strict mode prevents unexpected runtime crashes,
+such as the infamous "cannot read properties of undefined," by forcing
+developers to explicitly declare and narrow nullable types.</p>
+<h2 id="the-core-semantic-difference">The Core Semantic Difference</h2>
+<ul>
+<li><strong><code>undefined</code></strong>: Indicates that a variable
+has been declared but has not yet been assigned a value, an object
+property is missing, or a function does not explicitly return a value.
+It is the JavaScript runtime default for uninitialized states.</li>
+<li><strong><code>null</code></strong>: Indicates an intentional,
+programmatic absence of any object value. It is assigned purposefully by
+developers or APIs to signal "no value" or an empty reference.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> unassigned<span class="op">:</span> <span class="dt">undefined</span><span class="op">;</span> <span class="co">// implicitly or explicitly undefined</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> empty<span class="op">:</span> <span class="dt">null</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>    <span class="co">// intentionally cleared or empty</span></span></code></pre></div>
+<h2 id="behavior-without-strict-mode-vs-with-strict-mode">Behavior
+Without Strict Mode vs. With Strict Mode</h2>
+<p>In standard TypeScript (with <code>strictNullChecks: false</code>),
+<code>null</code> and <code>undefined</code> are treated as subtypes of
+all other types. A variable typed as <code>string</code> or
+<code>number</code> can accept <code>null</code> or
+<code>undefined</code> without the compiler raising an error:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// strictNullChecks: false</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> username<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;Alice&quot;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>username <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>      <span class="co">// Allowed</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>username <span class="op">=</span> <span class="kw">undefined</span><span class="op">;</span> <span class="co">// Allowed</span></span></code></pre></div>
+<p>When strict mode is enabled (<code>strict: true</code> or
+<code>strictNullChecks: true</code>), <code>null</code> and
+<code>undefined</code> become their own isolated types. Assigning them
+to primitive or object types results in a compile-time error:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// strictNullChecks: true</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> username<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;Alice&quot;</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>username <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>      <span class="co">// Error: Type &#39;null&#39; is not assignable to type &#39;string&#39;.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>username <span class="op">=</span> <span class="kw">undefined</span><span class="op">;</span> <span class="co">// Error: Type &#39;undefined&#39; is not assignable to type &#39;string&#39;.</span></span></code></pre></div>
+<h2 id="explicit-union-types">Explicit Union Types</h2>
+<p>To allow a variable to hold <code>null</code> or
+<code>undefined</code> under strict mode, you must explicitly declare a
+union type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nullableUser<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> optionalUser<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">undefined</span> <span class="op">=</span> <span class="kw">undefined</span><span class="op">;</span></span></code></pre></div>
+<p>This enforces explicit design decisions. If an API returns
+<code>string | null</code>, you are forced by the compiler to check for
+<code>null</code> before accessing string methods.</p>
+<h2 id="optional-properties-and-parameters">Optional Properties and
+Parameters</h2>
+<p>TypeScript treats optional properties and parameters with special
+affinity toward <code>undefined</code>, not <code>null</code>. Using the
+<code>?</code> modifier automatically appends <code>| undefined</code>
+to the type:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  bio<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span> <span class="co">// Type is string | undefined</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userA<span class="op">:</span> UserProfile <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> bio<span class="op">:</span> <span class="dt">undefined</span> }<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userB<span class="op">:</span> UserProfile <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> }<span class="op">;</span>                  <span class="co">// Valid</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userC<span class="op">:</span> UserProfile <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> bio<span class="op">:</span> <span class="dt">null</span> }<span class="op">;</span>       <span class="co">// Error: Type &#39;null&#39; is not assignable to type &#39;string | undefined&#39;.</span></span></code></pre></div>
+<h2 id="equality-and-type-narrowing">Equality and Type Narrowing</h2>
+<p>Because JavaScript treats <code>null</code> and
+<code>undefined</code> differently depending on the operator used,
+strict TypeScript adheres to the same logic:</p>
+<ul>
+<li><strong>Loose Equality (<code>==</code>)</strong>:
+<code>null == undefined</code> evaluates to <code>true</code>. Using
+<code>value == null</code> checks for both <code>null</code> and
+<code>undefined</code> at once.</li>
+<li><strong>Strict Equality (<code>===</code>)</strong>:
+<code>null === undefined</code> evaluates to <code>false</code>.</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processValue</span>(text<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">|</span> <span class="dt">undefined</span>) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Loose check eliminates both null and undefined</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (text <span class="op">==</span> <span class="kw">null</span>) {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript narrows &#39;text&#39; to &#39;string&#39; here</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(text<span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Modern TypeScript code typically handles both values cleanly
+using:</p>
+<ul>
+<li><strong>Optional Chaining (<code>?.</code>)</strong>: Short-circuits
+and returns <code>undefined</code> if the operand is either
+<code>null</code> or <code>undefined</code>.</li>
+<li><strong>Nullish Coalescing (<code>??</code>)</strong>: Falls back to
+an alternative expression only if the left-hand side is
+<code>null</code> or <code>undefined</code>.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

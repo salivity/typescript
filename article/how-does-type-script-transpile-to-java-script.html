@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Does TypeScript Transpile to JavaScript? - typescript</title>
+    <meta name="description" content="This article breaks down how the TypeScript compiler transforms statically typed code into vanilla JavaScript, focusing on the syntax analysis, semantic type checking, and the complete erasure of static types during the emit phase. TypeScript is designed">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-does-type-script-transpile-to-java-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Does TypeScript Transpile to JavaScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-does-type-script-transpile-to-java-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article breaks down how the TypeScript compiler transforms statically typed code into vanilla JavaScript, focusing on the syntax analysis, semantic type checking, and the complete erasure of static types during the emit phase. TypeScript is designed" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-does-typescript-transpile-to-javascript">How Does TypeScript
+Transpile to JavaScript?</h1>
+<p>This article breaks down how the TypeScript compiler transforms
+statically typed code into vanilla JavaScript, focusing on the syntax
+analysis, semantic type checking, and the complete erasure of static
+types during the emit phase.</p>
+<h2 id="the-role-of-type-erasure">The Role of Type Erasure</h2>
+<p>TypeScript is designed around the principle of structural type
+erasure. During compilation, the TypeScript compiler (<code>tsc</code>)
+processes and checks every type annotation against its type rules, but
+it does not emit runtime equivalents of those types. The types exist
+solely at build time to catch bugs, ensure contracts, and power
+developer tooling. Once the validation succeeds, the compiler strips out
+interfaces, type aliases, generic signatures, and explicit type
+declarations entirely.</p>
+<p>For example, a function written in TypeScript:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> tax<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> price <span class="op">+</span> (price <span class="op">*</span> tax)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Transpiles directly into standard JavaScript with the annotations
+removed:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">,</span> tax) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> price <span class="op">+</span> (price <span class="op">*</span> tax)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The resulting JavaScript engine sees only raw JavaScript values with
+dynamic runtime semantics.</p>
+<h2 id="the-compilation-pipeline">The Compilation Pipeline</h2>
+<p>The process of converting a <code>.ts</code> file into executable
+<code>.js</code> follows a multi-stage compilation pipeline managed by
+internal compiler modules:</p>
+<ol type="1">
+<li><strong>Parsing and AST Creation:</strong> The Scanner reads source
+code into tokens, and the Parser organizes these tokens into an Abstract
+Syntax Tree (AST), representing both structural code constructs and type
+nodes.</li>
+<li><strong>Binding:</strong> The Binder links symbols across scopes,
+creating a map of variable declarations, interfaces, and function
+references.</li>
+<li><strong>Type Checking:</strong> The Checker traverses the bound AST.
+It verifies assignability, checks interfaces, runs type inference, and
+catches compiler errors. This step produces diagnostics but does not
+emit code.</li>
+<li><strong>Transformation and Emit:</strong> The Emitter visits the AST
+nodes, executes downlevel transformations (such as converting modern ES
+features into ES5 or CommonJS, if configured), drops all type nodes, and
+writes pure <code>.js</code> and optional source map files to disk.</li>
+</ol>
+<h2 id="runtime-exceptions-enums-and-namespaces">Runtime Exceptions:
+Enums and Namespaces</h2>
+<p>While most TypeScript constructs vanish, a few legacy TypeScript
+features generate executable JavaScript code:</p>
+<ul>
+<li><strong>Enums:</strong> Standard numeric and string enums do not
+simply disappear; the compiler outputs a bidirectional or mapped
+JavaScript object closure so enum values can be read at runtime.</li>
+<li><strong>Namespaces:</strong> TypeScript namespaces transpile to
+immediately invoked function expressions (IIFEs) attached to a global or
+scoped object.</li>
+<li><strong>Class Parameter Properties:</strong> Adding access modifiers
+directly to constructor parameters (such as
+<code>constructor(public id: string)</code>) triggers the compiler to
+inject assignment statements (<code>this.id = id;</code>) inside the
+constructor body.</li>
+</ul>
+<p>Tools like Babel or <code>swc</code> skip semantic type checking
+entirely and solely transpile by running regular expressions or AST
+transforms to strip types. In contrast, <code>tsc</code> can validate,
+transform modern syntax down to older ECMAScript targets, and erase
+static typing in one coherent pass.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

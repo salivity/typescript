@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Checks Exhaustive Returns - typescript</title>
+    <meta name="description" content="This article explains how TypeScript verifies that all execution branches within a function return an expected value. It covers TypeScript&#39;s built-in control flow analysis, the role of compiler options like noImplicitReturns, how explicit return types enf">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-checks-exhaustive-returns">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Checks Exhaustive Returns - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-checks-exhaustive-returns" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how TypeScript verifies that all execution branches within a function return an expected value. It covers TypeScript&#39;s built-in control flow analysis, the role of compiler options like noImplicitReturns, how explicit return types enf" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-checks-exhaustive-returns">How TypeScript Checks
+Exhaustive Returns</h1>
+<p>This article explains how TypeScript verifies that all execution
+branches within a function return an expected value. It covers
+TypeScript's built-in control flow analysis, the role of compiler
+options like <code>noImplicitReturns</code>, how explicit return types
+enforce completeness, and how developers can utilize the
+<code>never</code> type to achieve compile-time exhaustive checks over
+complex data structures like discriminated unions.</p>
+<h2 id="control-flow-analysis">Control Flow Analysis</h2>
+<p>TypeScript relies on Control Flow Analysis (CFA) to track the
+execution paths of your code. When a function executes, the compiler
+constructs a control flow graph evaluating every conditional statement
+(<code>if/else</code>), loop (<code>for</code>, <code>while</code>),
+switch statement, and error-handling block
+(<code>try/catch/finally</code>).</p>
+<p>Through this graph, TypeScript determines whether every reachable
+path terminates with a <code>return</code> statement, throws an error,
+or calls a function that returns the <code>never</code> type (such as an
+infinite loop or a process exit). If any reachable path falls through to
+the end of the function without an explicit return, TypeScript flags it
+based on your type annotations and compiler settings.</p>
+<h2 id="explicit-return-types">Explicit Return Types</h2>
+<p>The most direct way TypeScript checks for exhaustive returns is
+through explicit return type annotations. When you explicitly declare a
+return type on a function, TypeScript validates that every potential
+branch returns a value assignable to that type:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getStatus</span>(code<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (code <span class="op">===</span> <span class="dv">200</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;OK&quot;</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (code <span class="op">===</span> <span class="dv">404</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;Not Found&quot;</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Error: Function lacks ending return statement and return type does not include &#39;undefined&#39;.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If an execution path fails to return a value, the implicit result of
+that branch in JavaScript is <code>undefined</code>. Because
+<code>undefined</code> is not assignable to <code>string</code>, the
+compiler raises a type error.</p>
+<h2 id="the-noimplicitreturns-compiler-option">The
+<code>noImplicitReturns</code> Compiler Option</h2>
+<p>By default, if a function lacks an explicit return type and does not
+return on all paths, TypeScript infers a union type that includes
+<code>undefined</code> (or infers <code>void</code> if there are no
+returns). To prevent functions from silently dropping off without
+returning, enable the <code>noImplicitReturns</code> flag in
+<code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;noImplicitReturns&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>With <code>noImplicitReturns</code> enabled, TypeScript ensures that
+if any branch returns a value, all branches must explicitly return a
+value, even if no explicit return type was provided on the function
+signature:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateDiscount</span>(isMember<span class="op">:</span> <span class="dt">boolean</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (isMember) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.2</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Error: Not all code paths return a value.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2
+id="exhaustive-checks-with-discriminated-unions-and-never">Exhaustive
+Checks with Discriminated Unions and <code>never</code></h2>
+<p>When dealing with discriminated unions, control flow analysis narrows
+the types based on discriminant properties (such as a <code>kind</code>
+or <code>type</code> field). TypeScript allows you to enforce exhaustive
+handling using the <code>never</code> type, which represents a state
+that should never occur.</p>
+<p>By assigning the unhandled state to a variable typed as
+<code>never</code> in a <code>default</code> case or fallback branch,
+TypeScript checks if any variant was missed:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Shape <span class="op">=</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;circle&quot;</span><span class="op">;</span> radius<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;square&quot;</span><span class="op">;</span> size<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;triangle&quot;</span><span class="op">;</span> base<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> height<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getArea</span>(shape<span class="op">:</span> Shape)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (shape<span class="op">.</span><span class="at">kind</span>) {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;circle&quot;</span><span class="op">:</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">radius</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;square&quot;</span><span class="op">:</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> shape<span class="op">.</span><span class="at">size</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="co">// If &quot;triangle&quot; is not handled, shape is narrowed to { kind: &quot;triangle&quot;, ... }</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Error: Type &#39;Shape&#39; is not assignable to type &#39;never&#39;.</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> _exhaustiveCheck<span class="op">:</span> <span class="dt">never</span> <span class="op">=</span> shape<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="vs">`Unhandled shape: </span><span class="sc">${</span>_exhaustiveCheck<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If a new variant is added to the <code>Shape</code> union in the
+future, TypeScript's control flow analysis will detect that the
+<code>default</code> block is reachable with the new type, triggering a
+compile-time error until a corresponding <code>case</code> and
+<code>return</code> are implemented.</p>
+<h2 id="terminal-branches-errors-and-infinite-loops">Terminal Branches:
+Errors and Infinite Loops</h2>
+<p>TypeScript recognizes operations that prevent a function from
+finishing normally. A branch is considered exhaustively terminated if it
+ends with:</p>
+<ul>
+<li>A <code>throw</code> statement.</li>
+<li>A call to a function with an explicit return type of
+<code>never</code>.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fail</span>(message<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">never</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(message)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">parseInput</span>(input<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (input <span class="op">!==</span> <span class="kw">null</span>) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> input<span class="op">.</span><span class="fu">trim</span>()<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This branch is considered terminated because fail() returns never</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fail</span>(<span class="st">&quot;Input cannot be null&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because TypeScript understands that execution cannot continue past
+<code>fail()</code>, it does not require an additional
+<code>return</code> statement after the function call.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

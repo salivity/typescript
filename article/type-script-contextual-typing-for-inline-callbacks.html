@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Contextual Typing for Inline Callbacks - typescript</title>
+    <meta name="description" content="In TypeScript, contextual typing is a form of type inference where the type of an expression is determined by its location or context within the code, rather than from the expression alone. When passing an inline callback to a higher-order function, TypeS">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-contextual-typing-for-inline-callbacks">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Contextual Typing for Inline Callbacks - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-contextual-typing-for-inline-callbacks" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, contextual typing is a form of type inference where the type of an expression is determined by its location or context within the code, rather than from the expression alone. When passing an inline callback to a higher-order function, TypeS" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-contextual-typing-for-inline-callbacks">TypeScript
+Contextual Typing for Inline Callbacks</h1>
+<p>In TypeScript, contextual typing is a form of type inference where
+the type of an expression is determined by its location or context
+within the code, rather than from the expression alone. When passing an
+inline callback to a higher-order function, TypeScript looks at the
+expected signature of the target parameter and automatically assigns
+those types to the callback's arguments. This article breaks down how
+this top-down inference mechanism works, how it pairs with generics, and
+why inline declarations behave differently from standalone function
+variables.</p>
+<h2 id="how-contextual-typing-operates">How Contextual Typing
+Operates</h2>
+<p>Standard type inference in TypeScript works from the inside out: the
+compiler inspects an expression, calculates its type, and assigns that
+type to the variable holding it.</p>
+<p>Contextual typing inverts this process, working from the outside in.
+When the compiler evaluates an argument passed to a function call, it
+checks the declaration of the function being invoked. If the parameter
+expects a function type (such as
+<code>(item: string, index: number) =&gt; void</code>), that expected
+signature becomes the "contextual type."</p>
+<p>When an inline callback is supplied, TypeScript compares the
+callback's parameter list to the contextual type position by
+position:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> names <span class="op">=</span> [<span class="st">&quot;Alice&quot;</span><span class="op">,</span> <span class="st">&quot;Bob&quot;</span><span class="op">,</span> <span class="st">&quot;Charlie&quot;</span>]<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// &#39;name&#39; is contextually typed as string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// &#39;index&#39; is contextually typed as number</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>names<span class="op">.</span><span class="fu">forEach</span>((name<span class="op">,</span> index) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`</span><span class="sc">${</span>index<span class="sc">}</span><span class="vs">: </span><span class="sc">${</span>name<span class="op">.</span><span class="fu">toUpperCase</span>()<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because <code>Array.prototype.forEach</code> defines its callback
+parameter as
+<code>(value: T, index: number, array: T[]) =&gt; void</code>, and
+<code>names</code> is <code>string[]</code>, TypeScript fixes
+<code>T</code> to <code>string</code>. The inline arrow function
+receives <code>string</code> for its first parameter and
+<code>number</code> for its second, without requiring explicit type
+annotations.</p>
+<h2 id="the-role-of-position-over-name">The Role of Position over
+Name</h2>
+<p>Contextual inference matches arguments strictly by their ordinal
+position, not by their identifier names.</p>
+<p>If a callback signature expects
+<code>(event: MouseEvent, target: HTMLElement) =&gt; void</code>, an
+inline callback written as <code>(e, el) =&gt; ...</code> will map
+<code>e</code> to <code>MouseEvent</code> and <code>el</code> to
+<code>HTMLElement</code>.</p>
+<p>TypeScript also permits the callback to declare fewer parameters than
+the contextual type provides. For example:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Only the first parameter is used; TypeScript ignores the rest safely</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>names<span class="op">.</span><span class="fu">map</span>((item) <span class="kw">=&gt;</span> item<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span></code></pre></div>
+<p>The unused parameters defined by the host method (like
+<code>index</code> and <code>array</code>) are simply discarded during
+contextual matching, which matches standard JavaScript runtime
+behavior.</p>
+<h2 id="interaction-with-generic-functions">Interaction with Generic
+Functions</h2>
+<p>Contextual typing plays a critical role in inferring generic type
+arguments. When a function has type parameters, TypeScript often uses
+the context of the caller to resolve them:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">transform</span><span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span>(items<span class="op">:</span> T[]<span class="op">,</span> fn<span class="op">:</span> (item<span class="op">:</span> T) <span class="kw">=&gt;</span> U)<span class="op">:</span> U[] {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> items<span class="op">.</span><span class="fu">map</span>(fn)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">transform</span>(numbers<span class="op">,</span> (n) <span class="kw">=&gt;</span> n<span class="op">.</span><span class="fu">toString</span>())<span class="op">;</span></span></code></pre></div>
+<p>In this scenario:</p>
+<ol type="1">
+<li>TypeScript inspects the first argument, <code>numbers</code>, and
+infers that <code>T</code> is <code>number</code>.</li>
+<li>With <code>T</code> established, the contextual type for
+<code>fn</code> becomes <code>(item: number) =&gt; U</code>.</li>
+<li>The compiler examines the inline callback
+<code>(n) =&gt; n.toString()</code>. Because <code>n</code> is
+contextually typed as <code>number</code>, calling
+<code>n.toString()</code> returns a <code>string</code>.</li>
+<li>The return value of the callback contextually satisfies
+<code>U</code>, inferring <code>U</code> as <code>string</code>.</li>
+<li>The return type of <code>transform</code> is finalized as
+<code>string[]</code>.</li>
+</ol>
+<h2 id="why-inlining-matters">Why Inlining Matters</h2>
+<p>Contextual typing requires an immediate structural context. If an
+identical function is extracted into a standalone variable without
+explicit annotations, contextual typing cannot occur at the point of
+declaration:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ERROR: Parameter &#39;item&#39; implicitly has an &#39;any&#39; type.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> logItem <span class="op">=</span> (item) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(item)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>names<span class="op">.</span><span class="fu">forEach</span>(logItem)<span class="op">;</span></span></code></pre></div>
+<p>When <code>logItem</code> is declared separately, TypeScript must
+evaluate it in isolation (inside-out). Because there is no contextual
+type to inform the parameter <code>item</code>, it falls back to
+<code>any</code> (triggering an error under <code>noImplicitAny</code>).
+Keeping the callback inline maintains the link between the host
+function's signature and the callback's parameters, allowing
+TypeScript's bidirectional type inference to resolve types
+seamlessly.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

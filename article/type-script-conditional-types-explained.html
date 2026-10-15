@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Conditional Types Explained - typescript</title>
+    <meta name="description" content="Conditional types in TypeScript enable developers to create dynamic, flexible types that change based on relationships between other types. This article breaks down the syntax of conditional types, explains the exact mechanisms the TypeScript compiler use">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-conditional-types-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Conditional Types Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-conditional-types-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Conditional types in TypeScript enable developers to create dynamic, flexible types that change based on relationships between other types. This article breaks down the syntax of conditional types, explains the exact mechanisms the TypeScript compiler use" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-conditional-types-explained">TypeScript Conditional
+Types Explained</h1>
+<p>Conditional types in TypeScript enable developers to create dynamic,
+flexible types that change based on relationships between other types.
+This article breaks down the syntax of conditional types, explains the
+exact mechanisms the TypeScript compiler uses to evaluate conditional
+expressions, and covers practical features including distributive
+evaluation and the <code>infer</code> keyword.</p>
+<h2 id="what-are-conditional-types">What Are Conditional Types?</h2>
+<p>At their core, conditional types introduce logic branching to
+TypeScript's type system using a syntax modeled after JavaScript's
+ternary operator:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>T <span class="kw">extends</span> U <span class="op">?</span> TrueType <span class="op">:</span> FalseType</span></code></pre></div>
+<p>In this expression, <code>T</code> is the type being tested, and
+<code>U</code> is the target type. If <code>T</code> is assignable to
+(or satisfies the constraint of) <code>U</code>, the type resolves to
+<code>TrueType</code>. Otherwise, it resolves to
+<code>FalseType</code>.</p>
+<p>Consider a simple example:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IsString<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="dt">string</span> <span class="op">?</span> true <span class="op">:</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> A <span class="op">=</span> IsString<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;;</span> <span class="co">// true</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> B <span class="op">=</span> IsString<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;;</span> <span class="co">// false</span></span></code></pre></div>
+<h2 id="how-the-compiler-evaluates-conditional-types">How the Compiler
+Evaluates Conditional Types</h2>
+<p>TypeScript evaluates conditional types during static type-checking
+using a multi-step resolution process depending on whether the input
+types are fully known or generic.</p>
+<h3 id="1-direct-evaluation-with-concrete-types">1. Direct Evaluation
+with Concrete Types</h3>
+<p>When the operands are concrete (non-generic) types, the compiler
+evaluates the expression immediately. It performs an assignability check
+to determine whether <code>T</code> is a subtype of <code>U</code>. If
+the check succeeds, it assigns <code>TrueType</code>; if it fails, it
+assigns <code>FalseType</code>.</p>
+<h3 id="2-deferred-evaluation-with-unresolved-generics">2. Deferred
+Evaluation with Unresolved Generics</h3>
+<p>When <code>T</code> or <code>U</code> involves an unresolved type
+parameter (such as inside a generic function or generic interface before
+it is called), TypeScript cannot determine assignability right away. In
+this case:</p>
+<ul>
+<li>The compiler defers evaluation and keeps the conditional type intact
+as an expression.</li>
+<li>If subsequent code narrows <code>T</code> (via type guards or
+control flow), TypeScript re-evaluates the condition using the narrowed
+type.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processValue</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(input<span class="op">:</span> T)<span class="op">:</span> T <span class="kw">extends</span> <span class="dt">string</span> <span class="op">?</span> <span class="dt">string</span>[] <span class="op">:</span> <span class="dt">null</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript defers evaluation of the return type until T is concrete</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;Implementation details omitted&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-distributive-evaluation-over-union-types">3. Distributive
+Evaluation over Union Types</h3>
+<p>When the type being checked is a naked generic parameter (a type
+parameter not wrapped inside a tuple, array, or promise) and a union
+type is passed to it, the conditional type becomes
+<strong>distributive</strong>.</p>
+<p>TypeScript automatically distributes the condition across each member
+of the union:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ToArray<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="dt">any</span> <span class="op">?</span> T[] <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Given a union:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="op">=</span> ToArray<span class="op">&lt;</span><span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span><span class="op">&gt;;</span></span></code></pre></div>
+<p>The compiler evaluates this expression by expanding the union into
+individual conditional checks:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="op">=</span> (<span class="dt">string</span> <span class="kw">extends</span> <span class="dt">any</span> <span class="op">?</span> <span class="dt">string</span>[] <span class="op">:</span> <span class="dt">never</span>) <span class="op">|</span> (<span class="dt">number</span> <span class="kw">extends</span> <span class="dt">any</span> <span class="op">?</span> <span class="dt">number</span>[] <span class="op">:</span> <span class="dt">never</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Result evaluates to: string[] | number[]</span></span></code></pre></div>
+<p>To prevent this distributive behavior, wrap both sides of the
+<code>extends</code> keyword in square brackets:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ToArrayNonDistributive<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> [T] <span class="kw">extends</span> [<span class="dt">any</span>] <span class="op">?</span> T[] <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="op">=</span> ToArrayNonDistributive<span class="op">&lt;</span><span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span><span class="op">&gt;;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Result evaluates to: (string | number)[]</span></span></code></pre></div>
+<h2 id="type-inference-with-the-infer-keyword">Type Inference with the
+<code>infer</code> Keyword</h2>
+<p>Conditional types also allow you to declare and extract type
+variables directly from the checked type using the <code>infer</code>
+keyword inside the <code>extends</code> clause.</p>
+<p>When TypeScript evaluates an <code>infer</code> declaration:</p>
+<ol type="1">
+<li>It attempts to match the structural shape of <code>T</code> against
+the pattern specified in <code>U</code>.</li>
+<li>If the pattern matches, TypeScript binds the corresponding sub-part
+to the declared variable and makes it available in the
+<code>TrueType</code> branch.</li>
+<li>If the pattern does not match, evaluation falls through to the
+<code>FalseType</code> branch.</li>
+</ol>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UnpackPromise<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="kw">infer</span> U<span class="op">&gt;</span> <span class="op">?</span> U <span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ResolvedString <span class="op">=</span> UnpackPromise<span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;&gt;;</span> <span class="co">// string</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NonPromise <span class="op">=</span> UnpackPromise<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;;</span>              <span class="co">// number</span></span></code></pre></div>
+<p>Through concrete evaluation, deferred resolution, union distribution,
+and pattern matching with <code>infer</code>, conditional types give
+TypeScript a declarative mechanism to express complex type
+transformations.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

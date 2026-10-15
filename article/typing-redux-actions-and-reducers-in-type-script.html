@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Redux Actions and Reducers in TypeScript - typescript</title>
+    <meta name="description" content="Typing Redux state management in TypeScript can range from verbose boilerplate to elegant, fully inferred architectures. This article covers the primary strategies for cleanly typing Redux actions and reducers, contrasting the modern standard—Redux Toolki">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-redux-actions-and-reducers-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing Redux Actions and Reducers in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-redux-actions-and-reducers-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Typing Redux state management in TypeScript can range from verbose boilerplate to elegant, fully inferred architectures. This article covers the primary strategies for cleanly typing Redux actions and reducers, contrasting the modern standard—Redux Toolki" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-redux-actions-and-reducers-in-typescript">Typing Redux
+Actions and Reducers in TypeScript</h1>
+<p>Typing Redux state management in TypeScript can range from verbose
+boilerplate to elegant, fully inferred architectures. This article
+covers the primary strategies for cleanly typing Redux actions and
+reducers, contrasting the modern standard—Redux Toolkit—with traditional
+vanilla Redux patterns, such as discriminated unions and action creator
+inference, ensuring strong type safety with minimal manual
+maintenance.</p>
+<h3 id="1-the-modern-standard-redux-toolkit-rtk">1. The Modern Standard:
+Redux Toolkit (RTK)</h3>
+<p>The cleanest and officially recommended strategy for typing Redux
+code is Redux Toolkit. RTK's <code>createSlice</code> API automatically
+generates action creators and action types based on the reducers you
+provide, drastically reducing redundant type declarations.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { createSlice<span class="op">,</span> PayloadAction } <span class="im">from</span> <span class="st">&#39;@reduxjs/toolkit&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserState {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> initialState<span class="op">:</span> UserState <span class="op">=</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&#39;&#39;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userSlice <span class="op">=</span> <span class="fu">createSlice</span>({</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&#39;user&#39;</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  initialState<span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  reducers<span class="op">:</span> {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    setName<span class="op">:</span> (state<span class="op">,</span> action<span class="op">:</span> PayloadAction<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      state<span class="op">.</span><span class="at">name</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    setAge<span class="op">:</span> (state<span class="op">,</span> action<span class="op">:</span> PayloadAction<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      state<span class="op">.</span><span class="at">age</span> <span class="op">=</span> action<span class="op">.</span><span class="at">payload</span><span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    reset<span class="op">:</span> () <span class="kw">=&gt;</span> initialState<span class="op">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> { setName<span class="op">,</span> setAge<span class="op">,</span> reset } <span class="op">=</span> userSlice<span class="op">.</span><span class="at">actions</span><span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> userSlice<span class="op">.</span><span class="at">reducer</span><span class="op">;</span></span></code></pre></div>
+<p>With <code>createSlice</code>, the state type is defined once in
+<code>initialState</code>, and individual payloads are typed directly
+using <code>PayloadAction&lt;T&gt;</code>. Redux Toolkit then
+automatically infers the correct types for all generated action
+creators.</p>
+<h3 id="2-discriminated-unions-for-vanilla-redux">2. Discriminated
+Unions for Vanilla Redux</h3>
+<p>If you are working with legacy or vanilla Redux without RTK, the
+cleanest approach is to use discriminated unions. By typing the
+<code>type</code> property of an action with string literal types,
+TypeScript narrows the specific action type inside a reducer's
+<code>switch</code> statement.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Action constants</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SET_NAME <span class="op">=</span> <span class="st">&#39;user/SET_NAME&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SET_AGE <span class="op">=</span> <span class="st">&#39;user/SET_AGE&#39;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Action interfaces</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> SetNameAction {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="kw">typeof</span> SET_NAME<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  payload<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> SetAgeAction {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="kw">typeof</span> SET_AGE<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  payload<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Discriminated union</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserActionTypes <span class="op">=</span> SetNameAction <span class="op">|</span> SetAgeAction<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Reducer with type narrowing</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">userReducer</span>(state <span class="op">=</span> initialState<span class="op">,</span> action<span class="op">:</span> UserActionTypes)<span class="op">:</span> UserState {</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (action<span class="op">.</span><span class="at">type</span>) {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SET_NAME<span class="op">:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="co">// action.payload is typed as string</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> { <span class="op">...</span>state<span class="op">,</span> name<span class="op">:</span> action<span class="op">.</span><span class="at">payload</span> }<span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SET_AGE<span class="op">:</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>      <span class="co">// action.payload is typed as number</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> { <span class="op">...</span>state<span class="op">,</span> age<span class="op">:</span> action<span class="op">.</span><span class="at">payload</span> }<span class="op">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> state<span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-action-creator-type-inference-returntype">3. Action Creator
+Type Inference (<code>ReturnType</code>)</h3>
+<p>Writing explicit action interfaces alongside action creator functions
+can lead to duplicate type declarations. You can streamline vanilla
+Redux by writing action creators with <code>as const</code> assertions
+and inferring the action types using TypeScript's
+<code>ReturnType</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> setName <span class="op">=</span> (name<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> ({</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&#39;user/SET_NAME&#39;</span> <span class="im">as</span> <span class="kw">const</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  payload<span class="op">:</span> name<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> setAge <span class="op">=</span> (age<span class="op">:</span> <span class="dt">number</span>) <span class="kw">=&gt;</span> ({</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&#39;user/SET_AGE&#39;</span> <span class="im">as</span> <span class="kw">const</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  payload<span class="op">:</span> age<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Infer action types automatically</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserActions <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> setName<span class="op">&gt;</span> <span class="op">|</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> setAge<span class="op">&gt;;</span></span></code></pre></div>
+<p>Using <code>as const</code> preserves the literal string types,
+allowing TypeScript to construct the discriminated union automatically
+without manually writing separate action interfaces.</p>
+<h3 id="4-deriving-rootstate-and-appdispatch">4. Deriving RootState and
+AppDispatch</h3>
+<p>Regardless of the action strategy you use, typing your store's root
+state and dispatch function should always rely on inference rather than
+manual declaration. This ensures your types automatically stay up to
+date as your store grows.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { configureStore } <span class="im">from</span> <span class="st">&#39;@reduxjs/toolkit&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rootReducer <span class="im">from</span> <span class="st">&#39;./rootReducer&#39;</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> store <span class="op">=</span> <span class="fu">configureStore</span>({</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  reducer<span class="op">:</span> rootReducer<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Clean type derivation</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> RootState <span class="op">=</span> <span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> store<span class="op">.</span><span class="at">getState</span><span class="op">&gt;;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> AppDispatch <span class="op">=</span> <span class="kw">typeof</span> store<span class="op">.</span><span class="at">dispatch</span><span class="op">;</span></span></code></pre></div>
+<p>By pairing these inferred store types with custom typed hooks
+(<code>useAppDispatch</code> and <code>useAppSelector</code>), you
+eliminate the need to import <code>RootState</code> across your
+component tree, completing a clean, end-to-end typed Redux workflow.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Is Object.freeze() Deeply Immutable in TypeScript? - typescript</title>
+    <meta name="description" content="Object.freeze() does not provide deep immutability by default in either JavaScript or TypeScript. While it prevents modifications to an object&#39;s direct top-level properties, any nested objects or arrays remain mutable at runtime. Furthermore, TypeScript&#39;s">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/is-object-freeze-deeply-immutable-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Is Object.freeze() Deeply Immutable in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/is-object-freeze-deeply-immutable-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Object.freeze() does not provide deep immutability by default in either JavaScript or TypeScript. While it prevents modifications to an object&#39;s direct top-level properties, any nested objects or arrays remain mutable at runtime. Furthermore, TypeScript&#39;s" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="is-objectfreeze-deeply-immutable-in-typescript">Is
+Object.freeze() Deeply Immutable in TypeScript?</h1>
+<p><code>Object.freeze()</code> does not provide deep immutability by
+default in either JavaScript or TypeScript. While it prevents
+modifications to an object's direct top-level properties, any nested
+objects or arrays remain mutable at runtime. Furthermore, TypeScript's
+type system mirrors this shallow behavior by only wrapping the top-level
+object in a shallow <code>Readonly&lt;T&gt;</code> type. This article
+breaks down how <code>Object.freeze()</code> operates, why nested
+properties remain vulnerable, and how to achieve true deep
+immutability.</p>
+<h2 id="the-shallow-nature-of-objectfreeze">The Shallow Nature of
+Object.freeze()</h2>
+<p>At runtime, JavaScript's built-in <code>Object.freeze()</code>
+function operates strictly on the immediate object passed to it. It
+prevents adding new properties, removing existing properties, and
+modifying the values of top-level properties. However, if a property
+holds a reference to another object, only the reference itself is
+frozen, not the target object.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">freeze</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  preferences<span class="op">:</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    theme<span class="op">:</span> <span class="st">&quot;dark&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Runtime Error: Cannot assign to read only property &#39;name&#39; in strict mode</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// user.name = &quot;Bob&quot;; </span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed: Modifies the nested object</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>user<span class="op">.</span><span class="at">preferences</span><span class="op">.</span><span class="at">theme</span> <span class="op">=</span> <span class="st">&quot;light&quot;</span><span class="op">;</span> </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">preferences</span><span class="op">.</span><span class="at">theme</span>)<span class="op">;</span> <span class="co">// &quot;light&quot;</span></span></code></pre></div>
+<h2 id="how-typescript-handles-objectfreeze">How TypeScript Handles
+Object.freeze()</h2>
+<p>TypeScript's standard library defines <code>Object.freeze()</code>
+using the <code>Readonly&lt;T&gt;</code> utility type:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">freeze</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(o<span class="op">:</span> T)<span class="op">:</span> <span class="bu">Readonly</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div>
+<p>Because <code>Readonly&lt;T&gt;</code> is a shallow mapped type, it
+marks only the immediate keys of <code>T</code> as
+<code>readonly</code>. It does not recurse into nested objects. As a
+result, the TypeScript compiler will raise a type error if you try to
+mutate a top-level key, but it will allow mutations to nested keys
+without any compiler warnings:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">freeze</span>({</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  endpoint<span class="op">:</span> <span class="st">&quot;https://api.example.com&quot;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  headers<span class="op">:</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    authorization<span class="op">:</span> <span class="st">&quot;Bearer token&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile error: Cannot assign to &#39;endpoint&#39; because it is a read-only property.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// config.endpoint = &quot;https://new.example.com&quot;;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiles and executes without error:</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span><span class="at">headers</span><span class="op">.</span><span class="at">authorization</span> <span class="op">=</span> <span class="st">&quot;Bearer updated&quot;</span><span class="op">;</span></span></code></pre></div>
+<h2 id="achieving-deep-immutability">Achieving Deep Immutability</h2>
+<p>To ensure an object cannot be mutated at any level, you must enforce
+immutability at both compile time and runtime.</p>
+<h3 id="1-compile-time-deepreadonly-type">1. Compile-Time: DeepReadonly
+Type</h3>
+<p>You can define a recursive type that marks all properties, including
+nested ones, as <code>readonly</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeepReadonly<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="bu">Function</span> <span class="op">|</span> <span class="dt">boolean</span> <span class="op">|</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">symbol</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">|</span> <span class="dt">undefined</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> T</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> { <span class="kw">readonly</span> [P <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> DeepReadonly<span class="op">&lt;</span>T[P]<span class="op">&gt;</span> }<span class="op">;</span></span></code></pre></div>
+<h3 id="2-runtime-recursive-deep-freeze-function">2. Runtime: Recursive
+Deep Freeze Function</h3>
+<p>To protect the data at runtime, combine the
+<code>DeepReadonly&lt;T&gt;</code> type with a recursive freezing
+function:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">deepFreeze</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(obj<span class="op">:</span> T)<span class="op">:</span> DeepReadonly<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(obj <span class="im">as</span> <span class="dt">object</span>)<span class="op">.</span><span class="fu">forEach</span>((prop) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> value <span class="op">=</span> (obj <span class="im">as</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span>)[prop]<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (value <span class="op">!==</span> <span class="kw">null</span> <span class="op">&amp;&amp;</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;object&quot;</span> <span class="op">||</span> <span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;function&quot;</span>)) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">deepFreeze</span>(value)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">freeze</span>(obj) <span class="im">as</span> DeepReadonly<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Now, modifying a nested property will trigger both a TypeScript
+compiler error and a runtime error:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> immutableSettings <span class="op">=</span> <span class="fu">deepFreeze</span>({</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  display<span class="op">:</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    resolution<span class="op">:</span> <span class="st">&quot;1080p&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript Error: Cannot assign to &#39;resolution&#39; because it is a read-only property.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Runtime TypeError: Cannot assign to read only property &#39;resolution&#39;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>immutableSettings<span class="op">.</span><span class="at">display</span><span class="op">.</span><span class="at">resolution</span> <span class="op">=</span> <span class="st">&quot;4k&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>Alternatively, if you require full structural immutability across an
+application, consider using libraries like Immer or Immutable.js, which
+handle recursive immutability without the performance overhead of
+traversing and freezing deep object trees.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript outDir Structures Output Files - typescript</title>
+    <meta name="description" content="The outDir compiler option in TypeScript dictates where the compiler places emitted JavaScript and declaration files while attempting to preserve the directory structure of the source files. This article explains how TypeScript calculates the output folde">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-out-dir-structures-output-files">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript outDir Structures Output Files - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-out-dir-structures-output-files" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The outDir compiler option in TypeScript dictates where the compiler places emitted JavaScript and declaration files while attempting to preserve the directory structure of the source files. This article explains how TypeScript calculates the output folde" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-outdir-structures-output-files">How TypeScript
+outDir Structures Output Files</h1>
+<p>The <code>outDir</code> compiler option in TypeScript dictates where
+the compiler places emitted JavaScript and declaration files while
+attempting to preserve the directory structure of the source files. This
+article explains how TypeScript calculates the output folder hierarchy,
+the critical role the <code>rootDir</code> option plays in that process,
+and how to avoid common nesting pitfalls when organizing compiled
+files.</p>
+<h3 id="the-role-of-outdir">The Role of outDir</h3>
+<p>When you specify <code>outDir</code> in <code>tsconfig.json</code>,
+the TypeScript compiler (<code>tsc</code>) routes all generated output
+files—such as <code>.js</code>, <code>.jsx</code>, <code>.d.ts</code>,
+and <code>.js.map</code> files—into that target folder instead of
+placing them alongside the original <code>.ts</code> source files. By
+default, the compiler does not flatten your project structure into a
+single directory; instead, it replicates the folder hierarchy of your
+inputs within the specified output path.</p>
+<h3 id="how-directory-structure-is-determined">How Directory Structure
+Is Determined</h3>
+<p>To determine how to mirror files into <code>outDir</code>, the
+compiler looks for the longest common path among all non-declaration
+input files. This common path becomes the base directory from which the
+output hierarchy is mirrored.</p>
+<p>For example, consider a project with the following structure:</p>
+<pre class="text"><code>my-project/
+├── tsconfig.json
+└── src/
+    ├── index.ts
+    └── utils/
+        └── helpers.ts</code></pre>
+<p>If your <code>tsconfig.json</code> contains:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Because all input files reside under <code>src/</code>, TypeScript
+recognizes <code>src</code> as the common root directory. The compiled
+files will be mirrored directly under <code>dist/</code> without an
+extra <code>src</code> folder:</p>
+<pre class="text"><code>dist/
+├── index.js
+└── utils/
+    └── helpers.js</code></pre>
+<h3 id="the-common-ancestor-problem">The Common Ancestor Problem</h3>
+<p>The output structure can change unexpectedly if a source file outside
+your intended source folder is included in the build. For example, if
+you add a file at <code>scripts/build.ts</code> or
+<code>tests/index.test.ts</code> and it is included in the
+compilation:</p>
+<pre class="text"><code>my-project/
+├── tsconfig.json
+├── scripts/
+│   └── build.ts
+└── src/
+    └── index.ts</code></pre>
+<p>Because <code>src/</code> is no longer the common ancestor of all
+source files, the longest common path shifts upward to the project root
+(<code>my-project/</code>). Consequently, TypeScript restructures
+<code>dist</code> to mirror both folders:</p>
+<pre class="text"><code>dist/
+├── scripts/
+│   └── build.js
+└── src/
+    └── index.js</code></pre>
+<p>This sudden nesting of <code>dist/src/</code> often breaks deployment
+scripts and import paths that expect <code>index.js</code> to reside
+directly at <code>dist/index.js</code>.</p>
+<h3 id="controlling-output-structure-with-rootdir">Controlling Output
+Structure with rootDir</h3>
+<p>To prevent unexpected nesting, you can explicitly configure the
+<code>rootDir</code> option alongside <code>outDir</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rootDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./src&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>By defining <code>rootDir</code>, you tell the compiler exactly which
+directory represents the root of your source code. The folder structure
+inside <code>rootDir</code> is then mapped 1:1 into
+<code>outDir</code>.</p>
+<p>Furthermore, defining <code>rootDir</code> adds a safeguard: if any
+included TypeScript file lives outside the specified
+<code>rootDir</code>, the compiler will throw an error
+(<code>TS6059: File is not under 'rootDir'</code>) rather than silently
+altering the output folder layout. To resolve this, exclude the external
+files using the <code>exclude</code> array or move them to a separate
+project managed by TypeScript project references.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

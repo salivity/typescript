@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How ConstructorParameters Works in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript provides built-in utility types that inspect and transform types at compile time without executing any runtime code. Among these, ConstructorParameters&lt;T&gt; allows developers to inspect class definitions and extract the parameter types of a const">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-constructor-parameters-works-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How ConstructorParameters Works in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-constructor-parameters-works-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides built-in utility types that inspect and transform types at compile time without executing any runtime code. Among these, ConstructorParameters&lt;T&gt; allows developers to inspect class definitions and extract the parameter types of a const" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-constructorparameters-works-in-typescript">How
+ConstructorParameters Works in TypeScript</h1>
+<p>TypeScript provides built-in utility types that inspect and transform
+types at compile time without executing any runtime code. Among these,
+<code>ConstructorParameters&lt;T&gt;</code> allows developers to inspect
+class definitions and extract the parameter types of a constructor as a
+tuple type. This article explores the mechanics behind
+<code>ConstructorParameters</code>, examining how TypeScript leverages
+construct signatures, conditional types, and the <code>infer</code>
+keyword to pull constructor metadata directly from class
+declarations.</p>
+<h3 id="the-underlying-definition">The Underlying Definition</h3>
+<p>In the TypeScript standard library,
+<code>ConstructorParameters&lt;T&gt;</code> is declared as follows:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConstructorParameters<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="kw">abstract</span> <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>) <span class="kw">=&gt;</span> <span class="dt">any</span><span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  T <span class="kw">extends</span> <span class="kw">abstract</span> <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="kw">infer</span> P) <span class="kw">=&gt;</span> <span class="dt">any</span> <span class="op">?</span> P <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span></code></pre></div>
+<p>This compact definition combines three core TypeScript type-system
+features: generic constraints, construct signatures, and conditional
+type inference.</p>
+<h3 id="1-construct-signatures-and-generic-constraints">1. Construct
+Signatures and Generic Constraints</h3>
+<p>The type constraint
+<code>T extends abstract new (...args: any) =&gt; any</code> ensures
+that the utility type only accepts valid constructors.</p>
+<p>In TypeScript, a function or class that can be invoked with the
+<code>new</code> operator possesses a construct signature, denoted by
+the <code>new</code> prefix. By prefixing the construct signature with
+<code>abstract</code>, the constraint allows both concrete classes
+(instantiable via <code>new ClassName()</code>) and
+<code>abstract</code> classes (which cannot be instantiated directly,
+but still define constructor signatures for subclasses).</p>
+<p>If a type passed to <code>ConstructorParameters&lt;T&gt;</code> does
+not match this constructor pattern, the TypeScript compiler raises an
+error at the call site.</p>
+<h3 id="2-pattern-matching-via-conditional-types">2. Pattern Matching
+via Conditional Types</h3>
+<p>The second part of the utility type,
+<code>T extends abstract new (...args: infer P) =&gt; any ? P : never</code>,
+uses a conditional type
+(<code>A extends B ? TruePath : FalsePath</code>).</p>
+<p>Here, <code>T</code> is pattern-matched against the structural
+representation of a constructor function. Instead of checking a basic
+primitive, TypeScript evaluates the shape of <code>T</code> to see if it
+matches an object with a construct signature receiving an arbitrary list
+of arguments (<code>...args</code>) and returning any instance
+(<code>any</code>).</p>
+<h3 id="3-argument-extraction-with-the-infer-keyword">3. Argument
+Extraction with the <code>infer</code> Keyword</h3>
+<p>The actual metadata extraction is driven by the <code>infer</code>
+keyword inside <code>(...args: infer P)</code>.</p>
+<p>When TypeScript evaluates the conditional type and confirms that
+<code>T</code> matches the constructor shape, it stops treating
+<code>P</code> as a static type constraint. Instead, it instructs the
+compiler's type engine to deduce the exact types of the parameters
+passed to <code>...args</code> and assign them to the type variable
+<code>P</code>.</p>
+<p>Because rest parameters (<code>...args</code>) represent function
+arguments as an ordered list, <code>P</code> resolves to a tuple type
+containing the types of those arguments in order.</p>
+<h3 id="practical-example">Practical Example</h3>
+<p>Consider a class with multiple constructor parameters:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DatabaseConnection {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(host<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> port<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> secure<span class="op">:</span> <span class="dt">boolean</span>) {}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ConnectionParams <span class="op">=</span> ConstructorParameters<span class="op">&lt;</span><span class="kw">typeof</span> DatabaseConnection<span class="op">&gt;;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: [host: string, port: number, secure: boolean]</span></span></code></pre></div>
+<p>Note the use of <code>typeof DatabaseConnection</code>. Passing
+<code>DatabaseConnection</code> directly passes the instance type of the
+class, which has no construct signature. Passing
+<code>typeof DatabaseConnection</code> passes the constructor function
+itself (the static side of the class), which matches
+<code>abstract new (...args: any) =&gt; any</code>.</p>
+<h3 id="handling-overloads">Handling Overloads</h3>
+<p>When a class constructor defines multiple function overloads,
+TypeScript's conditional type resolution pattern-matches against the
+<strong>last</strong> declared implementation signature. Because
+TypeScript evaluates conditional types sequentially, the inferred tuple
+in <code>ConstructorParameters</code> will reflect only the parameters
+of the final overload definition rather than a union of all possible
+overloads.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Capitalize for Event Handler Names - typescript</title>
+    <meta name="description" content="The Capitalize&lt;StringType&gt; utility type in TypeScript converts the first character of a string literal type to uppercase while leaving the remainder unchanged. When generating event handler names, this utility works in tandem with template literal types t">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-capitalize-for-event-handler-names">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Capitalize for Event Handler Names - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-capitalize-for-event-handler-names" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Capitalize&lt;StringType&gt; utility type in TypeScript converts the first character of a string literal type to uppercase while leaving the remainder unchanged. When generating event handler names, this utility works in tandem with template literal types t" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-capitalize-for-event-handler-names">TypeScript
+Capitalize for Event Handler Names</h1>
+<p>The <code>Capitalize&lt;StringType&gt;</code> utility type in
+TypeScript converts the first character of a string literal type to
+uppercase while leaving the remainder unchanged. When generating event
+handler names, this utility works in tandem with template literal types
+to dynamically map base event triggers—such as <code>"click"</code>,
+<code>"focus"</code>, or <code>"submit"</code>—into conventional
+camelCase handler signatures like <code>"onClick"</code>,
+<code>"onFocus"</code>, and <code>"onSubmit"</code>. This article
+explains how the utility functions, why it is essential for scalable
+type architecture, and how to apply it in dynamic component typing.</p>
+<h3 id="understanding-capitalizestringtype">Understanding
+<code>Capitalize&lt;StringType&gt;</code></h3>
+<p>Introduced in TypeScript 4.1,
+<code>Capitalize&lt;StringType&gt;</code> is a built-in intrinsic
+utility type designed for string manipulation at the type level. Under
+the hood, TypeScript uses the compiler's internal JavaScript engine to
+evaluate string literals and uppercase their first character.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ClickEvent <span class="op">=</span> <span class="st">&quot;click&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CapitalizedClick <span class="op">=</span> Capitalize<span class="op">&lt;</span>ClickEvent<span class="op">&gt;;</span> <span class="co">// &quot;Click&quot;</span></span></code></pre></div>
+<p>When provided with a union of string literals,
+<code>Capitalize</code> distributes automatically across every
+member:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Events <span class="op">=</span> <span class="st">&quot;click&quot;</span> <span class="op">|</span> <span class="st">&quot;change&quot;</span> <span class="op">|</span> <span class="st">&quot;reset&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CapitalizedEvents <span class="op">=</span> Capitalize<span class="op">&lt;</span>Events<span class="op">&gt;;</span> <span class="co">// &quot;Click&quot; | &quot;Change&quot; | &quot;Reset&quot;</span></span></code></pre></div>
+<h3 id="dynamic-event-handler-generation">Dynamic Event Handler
+Generation</h3>
+<p>Idiomatic TypeScript and JavaScript conventions dictate that event
+handlers are prefixed with <code>on</code> followed by the capitalized
+event name (e.g., <code>onClick</code>). Writing these manually for
+every event is repetitive and error-prone. Combining
+<code>Capitalize</code> with template literal types allows handler names
+to be generated programmatically:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventName <span class="op">=</span> <span class="st">&quot;click&quot;</span> <span class="op">|</span> <span class="st">&quot;hover&quot;</span> <span class="op">|</span> <span class="st">&quot;focus&quot;</span> <span class="op">|</span> <span class="st">&quot;blur&quot;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventHandlerName<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> <span class="vs">`on</span><span class="sc">${</span>Capitalize<span class="op">&lt;</span>T<span class="op">&gt;</span><span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Handlers <span class="op">=</span> EventHandlerName<span class="op">&lt;</span>EventName<span class="op">&gt;;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;onClick&quot; | &quot;onHover&quot; | &quot;onFocus&quot; | &quot;onBlur&quot;</span></span></code></pre></div>
+<h3 id="practical-application-mapped-event-prop-types">Practical
+Application: Mapped Event Prop Types</h3>
+<p>The primary function of <code>Capitalize</code> in event handler
+generation is to bridge domain events with prop interfaces. Using mapped
+types and key remapping via the <code>as</code> clause, you can
+automatically convert an object of event payloads into a strictly typed
+interface of callback props:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Base event definitions with their respective event payload types</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AppEvents {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  open<span class="op">:</span> { timestamp<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  close<span class="op">:</span> { reason<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  select<span class="op">:</span> { id<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate the corresponding event handler props</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventHandlerProps<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T <span class="im">as</span> <span class="vs">`on</span><span class="sc">${</span>Capitalize<span class="op">&lt;</span><span class="dt">string</span> <span class="op">&amp;</span> K<span class="op">&gt;</span><span class="sc">}</span><span class="vs">`</span>]<span class="op">?:</span> (event<span class="op">:</span> T[K]) <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Props <span class="op">=</span> EventHandlerProps<span class="op">&lt;</span>AppEvents<span class="op">&gt;;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">Equivalent to:</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">type Props = {</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">  onOpen?: (event: { timestamp: number }) =&gt; void;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">  onClose?: (event: { reason: string }) =&gt; void;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">  onSelect?: (event: { id: string }) =&gt; void;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">}</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">*/</span></span></code></pre></div>
+<h3 id="key-benefits">Key Benefits</h3>
+<ol type="1">
+<li><strong>Elimination of Duplication:</strong> Handler signatures stay
+in sync with the canonical list of base event names without manual
+intervention.</li>
+<li><strong>Strict Enforcement of Conventions:</strong> Naming patterns
+are enforced across large codebases, preventing typos like
+<code>onchange</code> instead of <code>onChange</code>.</li>
+<li><strong>Distribution Over Unions:</strong> Adding a new event to a
+union immediately produces the correct handler type across all derived
+components and interfaces.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

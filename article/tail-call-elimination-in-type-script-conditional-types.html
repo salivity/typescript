@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tail Call Elimination in TypeScript Conditional Types - typescript</title>
+    <meta name="description" content="Recursive conditional types allow you to model complex data transformations at the type level, but deeply nested operations often trigger compiler recursion limits. This article explains how TypeScript applies tail call elimination (TCE) to conditional ty">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/tail-call-elimination-in-type-script-conditional-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tail Call Elimination in TypeScript Conditional Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/tail-call-elimination-in-type-script-conditional-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Recursive conditional types allow you to model complex data transformations at the type level, but deeply nested operations often trigger compiler recursion limits. This article explains how TypeScript applies tail call elimination (TCE) to conditional ty" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="tail-call-elimination-in-typescript-conditional-types">Tail Call
+Elimination in TypeScript Conditional Types</h1>
+<p>Recursive conditional types allow you to model complex data
+transformations at the type level, but deeply nested operations often
+trigger compiler recursion limits. This article explains how TypeScript
+applies tail call elimination (TCE) to conditional types, why standard
+recursive types fail, and how to refactor your types using accumulator
+patterns to safely increase recursion depth limits from roughly 50 to
+nearly 1,000 iterations.</p>
+<h2 id="the-recursion-limit-problem">The Recursion Limit Problem</h2>
+<p>By default, TypeScript imposes a conservative recursion limit
+(typically around 50 iterations) on conditional types to prevent
+compiler crashes and infinite loops:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type instantiation is excessively deep and possibly infinite.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Reverse<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> [<span class="kw">infer</span> Head<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Tail]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> [<span class="op">...</span>Reverse<span class="op">&lt;</span>Tail<span class="op">&gt;,</span> Head]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> []<span class="op">;</span></span></code></pre></div>
+<p>In this non-tail-recursive pattern, <code>Reverse&lt;Tail&gt;</code>
+must resolve before the outer tuple <code>[..., Head]</code> can be
+constructed. The TypeScript compiler must retain the intermediate
+context on its internal evaluation stack for each element, hitting the
+recursion ceiling quickly.</p>
+<h2 id="how-typescript-evaluates-tail-calls">How TypeScript Evaluates
+Tail Calls</h2>
+<p>Introduced in TypeScript 4.5, tail call elimination detects when the
+result of a conditional branch is <em>directly</em> another type
+instantiation, with no deferred work.</p>
+<p>When a type branch returns an unresolved invocation directly,
+TypeScript unwinds the stack frame and loops internally instead of
+adding a new frame to the type checker's call stack. This raises the
+recursion limit up to 1,000 steps.</p>
+<p>To trigger tail call optimization, the recursive call must sit in the
+<strong>tail position</strong>. It cannot be wrapped inside:</p>
+<ul>
+<li>Tuples (e.g., <code>[Recurse&lt;T&gt;]</code>)</li>
+<li>Template literal types (e.g., <code>${Recurse&lt;T&gt;}</code>)</li>
+<li>Unions or intersections (e.g.,
+<code>Recurse&lt;T&gt; | null</code>)</li>
+<li>Indexed access types (e.g.,
+<code>Recurse&lt;T&gt;[number]</code>)</li>
+</ul>
+<h2 id="the-accumulator-pattern">The Accumulator Pattern</h2>
+<p>To place the recursive call in the tail position, you must push the
+intermediate state forward through an accumulator generic parameter
+instead of evaluating operations on the return path.</p>
+<h3 id="example-array-reversal">Example: Array Reversal</h3>
+<p>Refactoring the previous <code>Reverse</code> type using an
+accumulator:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Reverse<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> Acc <span class="kw">extends</span> <span class="dt">any</span>[] <span class="op">=</span> []<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  T <span class="kw">extends</span> [<span class="kw">infer</span> Head<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Tail]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> Reverse<span class="op">&lt;</span>Tail<span class="op">,</span> [Head<span class="op">,</span> <span class="op">...</span>Acc]<span class="op">&gt;</span> <span class="co">// Direct recursive call in tail position</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> Acc<span class="op">;</span></span></code></pre></div>
+<p>In this version, <code>[Head, ...Acc]</code> is computed as an
+argument to the next iteration rather than being constructed around the
+result of <code>Reverse&lt;Tail&gt;</code>. Because the true branch
+evaluates directly to <code>Reverse&lt;...&gt;</code>, TypeScript
+eliminates the call stack frame.</p>
+<h3 id="example-string-splitting">Example: String Splitting</h3>
+<p>The same pattern applies to string manipulation:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Non-tail-recursive (Fails on long strings)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SplitNonTail<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">,</span> Delimiter <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  S <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Head<span class="sc">}${</span>Delimiter<span class="sc">}${</span><span class="kw">infer</span> Tail<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> [Head<span class="op">,</span> <span class="op">...</span>SplitNonTail<span class="op">&lt;</span>Tail<span class="op">,</span> Delimiter<span class="op">&gt;</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> [S]<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Tail-recursive (Optimized)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Split<span class="op">&lt;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  S <span class="kw">extends</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  Delimiter <span class="kw">extends</span> string<span class="op">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  Acc <span class="kw">extends</span> string[] <span class="op">=</span> []</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="op">=</span> S <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Head<span class="sc">}${</span>Delimiter<span class="sc">}${</span><span class="kw">infer</span> Tail<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> Split<span class="op">&lt;</span>Tail<span class="op">,</span> Delimiter<span class="op">,</span> [<span class="op">...</span>Acc<span class="op">,</span> Head]<span class="op">&gt;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> [<span class="op">...</span>Acc<span class="op">,</span> S]<span class="op">;</span></span></code></pre></div>
+<h2 id="rules-for-writing-tail-recursive-types">Rules for Writing
+Tail-Recursive Types</h2>
+<ol type="1">
+<li><strong>Supply Default Accumulators:</strong> Provide a default
+value for your accumulator (e.g., <code>Acc = []</code> or
+<code>Acc = ""</code>) so consumer code does not need to pass an initial
+empty state.</li>
+<li><strong>Compute Inputs, Not Outputs:</strong> Modify the inputs
+passed to the next recursive invocation instead of modifying the output
+returned by it.</li>
+<li><strong>Avoid Intermediate Branching on Recursion:</strong> Ensure
+that conditional logic determines <em>whether</em> to recurse, not what
+to do with the <em>result</em> of the recursion.</li>
+</ol></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

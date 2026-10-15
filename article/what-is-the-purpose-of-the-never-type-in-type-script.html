@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the Purpose of the never Type in TypeScript? - typescript</title>
+    <meta name="description" content="The never type in TypeScript represents values that can never occur, serving as the foundational building block for advanced type safety, unreachable code elimination, and exhaustive checks. Unlike void, which indicates that a function finishes executing">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-the-purpose-of-the-never-type-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the Purpose of the never Type in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-the-purpose-of-the-never-type-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The never type in TypeScript represents values that can never occur, serving as the foundational building block for advanced type safety, unreachable code elimination, and exhaustive checks. Unlike void, which indicates that a function finishes executing" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-purpose-of-the-never-type-in-typescript">What Is the
+Purpose of the never Type in TypeScript?</h1>
+<p>The <code>never</code> type in TypeScript represents values that can
+never occur, serving as the foundational building block for advanced
+type safety, unreachable code elimination, and exhaustive checks. Unlike
+<code>void</code>, which indicates that a function finishes executing
+without returning a meaningful value, <code>never</code> explicitly
+signals that execution will either throw an unhandled exception or fail
+to terminate entirely. Understanding when and how to leverage
+<code>never</code> enables developers to write resilient, future-proof
+code that allows the TypeScript compiler to catch logical omissions
+before they reach production.</p>
+<h2
+id="representing-impossible-values-and-non-terminating-functions">Representing
+Impossible Values and Non-Terminating Functions</h2>
+<p>At its core, <code>never</code> acts as an indicator of absolute
+non-existence. When a function's return type is inferred or declared as
+<code>never</code>, it informs the compiler that the function will never
+return normally to its caller.</p>
+<p>This occurs in two primary execution scenarios:</p>
+<ol type="1">
+<li><strong>Uncaught exceptions:</strong> Functions that unconditionally
+throw an error halt the normal flow of execution, meaning they never
+yield a return value.</li>
+<li><strong>Infinite loops:</strong> Background workers, event-driven
+loops, or processes designed never to break their cycle will never
+produce a termination value.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">throwFatalError</span>(message<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">never</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="vs">`Fatal: </span><span class="sc">${</span>message<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">runInfiniteEventLoop</span>()<span class="op">:</span> <span class="dt">never</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (<span class="kw">true</span>) {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Process continuous events</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In these cases, assigning <code>void</code> would be technically
+imprecise. While <code>void</code> allows a caller to receive an
+implicit <code>undefined</code>, <code>never</code> makes it clear to
+both developers and the compiler that any subsequent statements
+following the function call are logically unreachable.</p>
+<h2 id="exhaustive-pattern-matching-and-union-discrimination">Exhaustive
+Pattern Matching and Union Discrimination</h2>
+<p>The most widespread practical pattern involving <code>never</code> is
+ensuring exhaustive checks across discriminated unions. When handling
+domain models with strict variants, such as state machines, API
+payloads, or UI actions, every possible case must be accounted for.</p>
+<p>If you handle each variant inside a <code>switch</code> statement,
+narrowing eliminates each member from the union. The
+<code>default</code> branch should theoretically contain an impossible
+state. By assigning that remaining state to a variable typed as
+<code>never</code>, the compiler raises an error if an unhandled member
+remains:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Shape <span class="op">=</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;circle&quot;</span><span class="op">;</span> radius<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;square&quot;</span><span class="op">;</span> sideLength<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;triangle&quot;</span><span class="op">;</span> base<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> height<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateArea</span>(shape<span class="op">:</span> Shape)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (shape<span class="op">.</span><span class="at">kind</span>) {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;circle&quot;</span><span class="op">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">radius</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;square&quot;</span><span class="op">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> shape<span class="op">.</span><span class="at">sideLength</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;triangle&quot;</span><span class="op">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="fl">0.5</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">base</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">height</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span> {</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="co">// If a new shape is added to the union and omitted here,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="co">// TypeScript triggers a type error at compile time.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> _exhaustiveCheck<span class="op">:</span> <span class="dt">never</span> <span class="op">=</span> shape<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> _exhaustiveCheck<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If an engineer introduces a
+<code>{ kind: "rectangle"; width: number; height: number }</code>
+variant to the <code>Shape</code> union in the future, the code fails to
+compile immediately until the corresponding
+<code>case "rectangle"</code> is handled.</p>
+<h2 id="bottom-type-mechanics-in-the-type-system">Bottom Type Mechanics
+in the Type System</h2>
+<p>In type theory, <code>never</code> functions as the <strong>bottom
+type</strong>, occupying the lowest position in the subtype hierarchy.
+This positioning gives it unique mathematical properties:</p>
+<ul>
+<li><strong>Subtype of everything:</strong> <code>never</code> is
+assignable to any other type, including <code>string</code>,
+<code>number</code>, or custom interfaces.</li>
+<li><strong>Nothing is assignable to it:</strong> No value or type can
+be assigned to <code>never</code>, except for <code>never</code> itself.
+Even <code>any</code> cannot be assigned to <code>never</code>.</li>
+<li><strong>Zero in unions:</strong> When merged into a union type,
+<code>never</code> is eliminated automatically. For example,
+<code>string | never</code> simplifies directly to
+<code>string</code>.</li>
+<li><strong>Absorptive in intersections:</strong> When intersected with
+another type, <code>never</code> dominates the evaluation. For example,
+<code>string &amp; never</code> simplifies directly to
+<code>never</code>.</li>
+</ul>
+<p>These algebraic characteristics make <code>never</code> an
+indispensable utility when designing conditional types to prune, filter,
+or validate properties.</p>
+<h2 id="filtering-unwanted-types-with-conditional-types">Filtering
+Unwanted Types with Conditional Types</h2>
+<p>TypeScript's distributive conditional types leverage
+<code>never</code> to filter members out of unions. Because
+<code>never</code> collapses out of unions, mapping an unwanted branch
+to <code>never</code> removes it cleanly from the resulting type.</p>
+<p>This mechanism powers standard TypeScript utility types like
+<code>Exclude</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Exclude <span class="op">=</span> T <span class="kw">extends</span> U <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Evaluating the exclusion:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AvailableRoles <span class="op">=</span> <span class="st">&quot;admin&quot;</span> <span class="op">|</span> <span class="st">&quot;editor&quot;</span> <span class="op">|</span> <span class="st">&quot;guest&quot;</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ElevatedRoles <span class="op">=</span> Exclude<span class="op">;</span> </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: &quot;admin&quot; | &quot;editor&quot;</span></span></code></pre></div>
+<p>The evaluation evaluates each branch of the union individually:</p>
+<ul>
+<li><code>"admin" extends "guest"</code> evaluates to
+<code>"admin"</code></li>
+<li><code>"editor" extends "guest"</code> evaluates to
+<code>"editor"</code></li>
+<li><code>"guest" extends "guest"</code> evaluates to
+<code>never</code></li>
+</ul>
+<p>When reconstituted into a union,
+<code>"admin" | "editor" | never</code> resolves cleanly to
+<code>"admin" | "editor"</code>.</p>
+<p>Developers also use this technique to strip methods or
+non-serializable properties from data transfer objects:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NonFunctionPropertyNames <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K] <span class="kw">extends</span> <span class="bu">Function</span> <span class="op">?</span> <span class="dt">never</span> <span class="op">:</span> K<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}[<span class="kw">keyof</span> T]<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">save</span>()<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserDataKeys <span class="op">=</span> NonFunctionPropertyNames<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolves to: &quot;id&quot; | &quot;name&quot;</span></span></code></pre></div>
+<h2 id="distinguishing-never-from-void-null-and-unknown">Distinguishing
+never from void, null, and unknown</h2>
+<p>Confusion often arises between <code>never</code> and other non-value
+or universal types in TypeScript:</p>
+<ul>
+<li><strong><code>void</code> vs <code>never</code>:</strong> A function
+returning <code>void</code> completes its execution block and returns
+<code>undefined</code>. A function returning <code>never</code> never
+reaches the end of its execution block.</li>
+<li><strong><code>null</code> and <code>undefined</code> vs
+<code>never</code>:</strong> Both <code>null</code> and
+<code>undefined</code> are distinct runtime values that can be assigned,
+inspected, and held in memory. <code>never</code> is an abstract type
+that possesses no runtime representation or possible value.</li>
+<li><strong><code>unknown</code> vs <code>never</code>:</strong>
+<code>unknown</code> is the top type, meaning everything is assignable
+to it, while <code>never</code> is the bottom type, meaning nothing can
+be assigned to it. They represent opposite extremes of TypeScript's type
+hierarchy.</li>
+</ul>
+<p>By using <code>never</code> deliberately, developers transition from
+defensive runtime validations to structural, compile-time invariants
+across applications.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

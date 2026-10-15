@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Mixins and Structural Typing Explained - typescript</title>
+    <meta name="description" content="Mixins in TypeScript provide a powerful pattern for composing reusable class behaviors without relying on traditional single-inheritance hierarchies. This article explains the mechanics of the mixin pattern, demonstrates how to construct them using factor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-mixins-and-structural-typing-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Mixins and Structural Typing Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-mixins-and-structural-typing-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Mixins in TypeScript provide a powerful pattern for composing reusable class behaviors without relying on traditional single-inheritance hierarchies. This article explains the mechanics of the mixin pattern, demonstrates how to construct them using factor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-mixins-and-structural-typing-explained">TypeScript
+Mixins and Structural Typing Explained</h1>
+<p>Mixins in TypeScript provide a powerful pattern for composing
+reusable class behaviors without relying on traditional
+single-inheritance hierarchies. This article explains the mechanics of
+the mixin pattern, demonstrates how to construct them using factory
+functions, and details how TypeScript’s structural type system
+evaluates, intersects, and enforces constraints on these dynamically
+composed types at compile time.</p>
+<h2 id="what-are-mixins">What Are Mixins?</h2>
+<p>In object-oriented programming, a mixin is a class containing methods
+that can be used by other classes without needing to be the parent class
+of those other classes. Because JavaScript and TypeScript enforce single
+inheritance (a class can only extend from one parent via
+<code>extends</code>), mixins offer a way to bypass this restriction by
+using functional composition.</p>
+<p>Instead of defining a static hierarchy, a mixin is implemented as a
+factory function that accepts a base class as an argument, extends it
+with new properties or methods, and returns the newly augmented
+subclass.</p>
+<h2 id="implementing-mixins-in-typescript">Implementing Mixins in
+TypeScript</h2>
+<p>To create a type-safe mixin in TypeScript, you must first define a
+generic constructor type that represents any constructible class.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// A type representing a class constructor</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Constructor<span class="op">&lt;</span>T <span class="op">=</span> {}<span class="op">&gt;</span> <span class="op">=</span> <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> T<span class="op">;</span></span></code></pre></div>
+<p>With the constructor type defined, you can write mixin functions that
+accept a generic parameter constrained to <code>Constructor</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Mixin 1: Adds a timestamp capability</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Timestamped</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(Base<span class="op">:</span> TBase) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> Base {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    timestamp <span class="op">=</span> <span class="kw">new</span> <span class="bu">Date</span>()<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Mixin 2: Adds an activation state</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Activatable</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(Base<span class="op">:</span> TBase) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> Base {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    isActive <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">activate</span>() {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">isActive</span> <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">deactivate</span>() {</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">isActive</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>These mixins can then be composed onto a base class:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">public</span> name<span class="op">:</span> <span class="dt">string</span>) {}</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Compose User with Timestamped and Activatable</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> AdvancedUser <span class="op">=</span> <span class="fu">Activatable</span>(<span class="fu">Timestamped</span>(User))<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="kw">new</span> <span class="fu">AdvancedUser</span>(<span class="st">&quot;Alice&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">name</span>)<span class="op">;</span>       <span class="co">// &quot;Alice&quot; (from User)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">timestamp</span>)<span class="op">;</span>  <span class="co">// Current date (from Timestamped)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>user<span class="op">.</span><span class="fu">activate</span>()<span class="op">;</span>              <span class="co">// (from Activatable)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">isActive</span>)<span class="op">;</span>   <span class="co">// true</span></span></code></pre></div>
+<h2 id="how-mixins-are-structurally-typed">How Mixins Are Structurally
+Typed</h2>
+<p>TypeScript uses a structural type system (also known as duck typing),
+meaning that type compatibility is determined by the members and shape
+of an object rather than its explicit declaration or nominal lineage.
+This property makes structural typing the foundational engine that makes
+mixins fully type-safe.</p>
+<h3 id="1-shape-intersection">1. Shape Intersection</h3>
+<p>When a mixin wraps a base class, TypeScript synthesizes a new
+anonymous class. The type of the resulting instance is treated as an
+intersection of the base class instance type and the mixin class
+instance type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">InstanceType</span><span class="op">&lt;</span><span class="bu">ReturnType</span><span class="op">&lt;</span><span class="kw">typeof</span> Activatable<span class="op">&lt;</span><span class="kw">typeof</span> Timestamped<span class="op">&lt;</span><span class="kw">typeof</span> User<span class="op">&gt;&gt;&gt;&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Effectively treated structurally as: User &amp; { timestamp: Date } &amp; { isActive: boolean; activate(): void; deactivate(): void; }</span></span></code></pre></div>
+<p>Because TypeScript inspects shapes rather than named interfaces, any
+code expecting an object with an <code>activate()</code> method or a
+<code>timestamp</code> property will accept instances of
+<code>AdvancedUser</code>.</p>
+<h3 id="2-constraining-base-classes">2. Constraining Base Classes</h3>
+<p>Mixins often rely on properties or methods that must already exist on
+the base class. In a nominal type system, this would require strict
+interface inheritance. In TypeScript's structural system, you enforce
+this by placing structural constraints on the <code>TBase</code> generic
+parameter.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Positionable <span class="op">=</span> Constructor<span class="op">&lt;</span>{ x<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> y<span class="op">:</span> <span class="dt">number</span> }<span class="op">&gt;;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Movable</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Positionable<span class="op">&gt;</span>(Base<span class="op">:</span> TBase) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> Base {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">move</span>(dx<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> dy<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">x</span> <span class="op">+=</span> dx<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">y</span> <span class="op">+=</span> dy<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If a class passed into <code>Movable</code> does not structurally
+contain both <code>x: number</code> and <code>y: number</code>,
+TypeScript will emit a compile-time error. The base class does not need
+to implement an explicit <code>Positionable</code> interface; it only
+needs to satisfy the required shape.</p>
+<h2 id="benefits-and-trade-offs">Benefits and Trade-offs</h2>
+<p>Using mixins with structural typing offers distinct architectural
+advantages:</p>
+<ul>
+<li><strong>Modularity:</strong> Functionality is broken down into
+small, isolated units that can be reused across unrelated class
+hierarchies.</li>
+<li><strong>Flexibility:</strong> Structural typing eliminates rigid
+inheritance trees, allowing types to be combined dynamically.</li>
+<li><strong>Type Safety:</strong> TypeScript tracks all added properties
+and methods through inference, eliminating the need for manual type
+assertions.</li>
+</ul>
+<p>However, mixins can increase the complexity of TypeScript's compiler
+inference, generate deep stack traces during debugging, and complicate
+constructor argument propagation when different mixins require distinct
+initialization parameters.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

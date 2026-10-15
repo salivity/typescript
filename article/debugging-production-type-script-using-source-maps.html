@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debugging Production TypeScript Using Source Maps - typescript</title>
+    <meta name="description" content="TypeScript enables developers to debug production code through source maps, which act as a bidirectional bridge connecting compiled, minified JavaScript back to the original TypeScript source files. By configuring specific compiler flags, developers can g">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/debugging-production-type-script-using-source-maps">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Debugging Production TypeScript Using Source Maps - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/debugging-production-type-script-using-source-maps" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript enables developers to debug production code through source maps, which act as a bidirectional bridge connecting compiled, minified JavaScript back to the original TypeScript source files. By configuring specific compiler flags, developers can g" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="debugging-production-typescript-using-source-maps">Debugging
+Production TypeScript Using Source Maps</h1>
+<p>TypeScript enables developers to debug production code through source
+maps, which act as a bidirectional bridge connecting compiled, minified
+JavaScript back to the original TypeScript source files. By configuring
+specific compiler flags, developers can generate mapping files that
+translate runtime errors, stack traces, and active debugging sessions
+directly into readable TypeScript. This article explains how the
+TypeScript compiler creates these maps, how to configure them securely
+for production, and how error tracking tools consume them without
+exposing proprietary code to the public.</p>
+<h3 id="generating-source-maps-via-tsconfigjson">Generating Source Maps
+via <code>tsconfig.json</code></h3>
+<p>The TypeScript compiler (<code>tsc</code>) handles source map
+creation natively via configuration options in the
+<code>tsconfig.json</code> file. To enable source mapping for production
+builds, configure the following compiler options:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES2022&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="st">&quot;NodeNext&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sourceMap&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;inlineSources&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sourceRoot&quot;</span><span class="fu">:</span> <span class="st">&quot;/&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><code>"sourceMap": true</code>: Emits a separate
+<code>.js.map</code> file alongside every generated <code>.js</code>
+file.</li>
+<li><code>"inlineSources": true</code>: Embeds the original TypeScript
+source text directly inside the <code>.map</code> file. This ensures the
+runtime or error-monitoring service can display the exact code context,
+even if the original <code>.ts</code> files are not deployed to the
+production environment.</li>
+<li><code>"sourceRoot"</code>: Specifies the logical location where
+debuggers should locate the original TypeScript source files.</li>
+</ul>
+<h3 id="how-source-maps-link-compiled-code-to-source-code">How Source
+Maps Link Compiled Code to Source Code</h3>
+<p>When <code>sourceMap</code> is enabled, the compiler appends a
+comment to the end of each compiled JavaScript file:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">//# sourceMappingURL=index.js.map</span></span></code></pre></div>
+<p>The resulting <code>.map</code> file is a JSON payload containing
+metadata, including:</p>
+<ul>
+<li><code>version</code>: The source map standard version (usually
+version 3).</li>
+<li><code>sources</code>: An array of paths to the original TypeScript
+files.</li>
+<li><code>names</code>: An array of original variable and identifier
+names modified during compilation or minification.</li>
+<li><code>mappings</code>: A string of Base64 Variable-Length Quantity
+(VLQ) values that map line and column positions in the compiled
+JavaScript directly to line and column positions in the source
+TypeScript.</li>
+</ul>
+<p>When a browser or debugger encounters an exception, it parses this
+mapping string to resolve the runtime position to the exact line and
+file in the TypeScript source.</p>
+<h3 id="production-strategies-security-and-performance">Production
+Strategies: Security and Performance</h3>
+<p>Publishing <code>.map</code> files publicly reveals original source
+code and increases server bandwidth usage. TypeScript supports several
+patterns to enable debugging while maintaining security:</p>
+<h4 id="1-hidden-source-maps-for-error-tracking-services">1. Hidden
+Source Maps for Error Tracking Services</h4>
+<p>Most production applications integrate error monitoring services such
+as Sentry, Datadog, or Bugsnag. The standard workflow involves:</p>
+<ul>
+<li>Compiling the application with <code>"sourceMap": true</code>.</li>
+<li>Uploading the generated <code>.js.map</code> files directly to the
+error-tracking platform during the CI/CD pipeline using their respective
+CLI tools.</li>
+<li>Deleting the <code>.map</code> files and stripping the
+<code>//# sourceMappingURL=</code> comments from the JavaScript files
+before deploying to the public web server.</li>
+</ul>
+<p>When a runtime error occurs, the server transmits the minified stack
+trace to the tracking platform, which uses the previously uploaded
+source maps to de-minify the trace into clear TypeScript code for
+developers.</p>
+<h4 id="2-authenticated-or-local-debugging">2. Authenticated or Local
+Debugging</h4>
+<p>For manual debugging in a live production environment:</p>
+<ul>
+<li>Host <code>.map</code> files on an internal, VPN-restricted server
+and point the compiler to them using the <code>"mapRoot"</code> option
+in <code>tsconfig.json</code>.</li>
+<li>Alternatively, keep the source maps on a local machine and manually
+load them in browser developer tools (such as Chrome DevTools) by
+right-clicking a compiled file and selecting <strong>Add source
+map...</strong>.</li>
+</ul>
+<h3 id="nodejs-production-support">Node.js Production Support</h3>
+<p>For server-side TypeScript running on Node.js, source maps are
+natively supported without third-party libraries. By launching the
+application with the native flag:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> <span class="at">--enable-source-maps</span> dist/index.js</span></code></pre></div>
+<p>Node.js will automatically intercept unhandled exceptions and format
+the console stack traces using the original TypeScript file names and
+line numbers derived from the <code>.map</code> files.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How fork-ts-checker-webpack-plugin Runs Type Checking - typescript</title>
+    <meta name="description" content="The fork-ts-checker-webpack-plugin improves build performance by offloading TypeScript type checking from Webpack’s primary compilation thread to an independent child process. Instead of forcing Webpack to wait for the TypeScript compiler to validate type">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-fork-ts-checker-webpack-plugin-runs-type-checking">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How fork-ts-checker-webpack-plugin Runs Type Checking - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-fork-ts-checker-webpack-plugin-runs-type-checking" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The fork-ts-checker-webpack-plugin improves build performance by offloading TypeScript type checking from Webpack’s primary compilation thread to an independent child process. Instead of forcing Webpack to wait for the TypeScript compiler to validate type" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-fork-ts-checker-webpack-plugin-runs-type-checking">How
+fork-ts-checker-webpack-plugin Runs Type Checking</h1>
+<p>The <code>fork-ts-checker-webpack-plugin</code> improves build
+performance by offloading TypeScript type checking from Webpack’s
+primary compilation thread to an independent child process. Instead of
+forcing Webpack to wait for the TypeScript compiler to validate types
+during asset bundling, the plugin enables parallel execution, allowing
+Webpack to focus strictly on transpilation and module resolution while
+type analysis occurs simultaneously in the background.</p>
+<h3 id="decoupling-transpilation-from-type-checking">Decoupling
+Transpilation from Type Checking</h3>
+<p>In a standard Webpack setup with <code>ts-loader</code>, the
+TypeScript compiler performs both code transformation (emitting
+JavaScript) and semantic type analysis on the main thread. Because
+comprehensive type checking traverses the entire Abstract Syntax Tree
+(AST) and resolves module dependencies, it creates a severe performance
+bottleneck.</p>
+<p>To bypass this, developers typically configure loaders like
+<code>ts-loader</code> with <code>transpileOnly: true</code>, or use
+Babel/SWC to strip TypeScript types instantly without validating them.
+<code>fork-ts-checker-webpack-plugin</code> steps in as a companion
+plugin to handle the missing type-validation phase independently.</p>
+<h3 id="process-forking-via-nodejs-ipc">Process Forking via Node.js
+IPC</h3>
+<p>When Webpack initializes, the plugin spawns a dedicated child process
+using Node.js’s <code>child_process.fork()</code> API. This separates
+the memory space and event loops of the Webpack build pipeline and the
+TypeScript compiler:</p>
+<ol type="1">
+<li><strong>Main Process:</strong> Runs Webpack, manages loaders,
+resolves dependencies, and bundles assets.</li>
+<li><strong>Child Process:</strong> Boots a isolated Node.js
+environment, loads the TypeScript library, and constructs an independent
+TypeScript Program instance (<code>ts.createProgram</code> or
+<code>ts.createWatchProgram</code>).</li>
+</ol>
+<p>Because Node.js processes run on separate OS threads, the
+CPU-intensive work of resolving types does not compete for the event
+loop running the asset pipeline.</p>
+<h3 id="communication-via-webpack-compiler-hooks">Communication via
+Webpack Compiler Hooks</h3>
+<p>The plugin integrates with Webpack's build lifecycle by tapping into
+compiler hooks such as <code>compiler.hooks.make</code> and
+<code>compiler.hooks.emit</code>.</p>
+<ul>
+<li><strong>Change Notification:</strong> When Webpack detects a file
+change during development or starts a build, it serializes a payload of
+changed or invalidated file paths and sends it to the child process via
+Node's built-in Inter-Process Communication (IPC) channel
+(<code>childProcess.send()</code>).</li>
+<li><strong>Diagnostic Execution:</strong> The child process receives
+the file list, updates its internal representation of the source files,
+and queries the TypeScript Program for semantic and syntactic
+diagnostics.</li>
+</ul>
+<h3 id="incremental-compilation-in-the-worker">Incremental Compilation
+in the Worker</h3>
+<p>Recreating an entire TypeScript Program on every build would negate
+the performance advantages of process isolation. To prevent this
+overhead, the child process remains alive across builds in watch
+mode.</p>
+<p>The worker process acts as a long-lived daemon that caches parsed
+ASTs and dependency graphs. Using TypeScript's incremental compiler
+APIs, it re-checks only the modified files and any modules that directly
+or indirectly depend on them. Once analysis finishes, the child process
+sends the formatted diagnostic errors and warnings back to the parent
+process over IPC.</p>
+<h3 id="synchronous-vs-asynchronous-handling">Synchronous vs.
+Asynchronous Handling</h3>
+<p>The plugin can handle diagnostics in two modes:</p>
+<ul>
+<li><strong>Asynchronous (<code>async: true</code>):</strong> The
+default in watch mode. Webpack emits the bundled JavaScript files
+immediately without waiting for the type checking process to finish. The
+child process reports errors directly to the terminal console as soon as
+it completes, ensuring Hot Module Replacement (HMR) remains
+instantaneous.</li>
+<li><strong>Synchronous (<code>async: false</code>):</strong> Typically
+used in production builds. Webpack delays the final <code>emit</code>
+stage until the child process sends back an IPC message indicating that
+type checking has concluded. If errors are present, the plugin pushes
+them into Webpack's <code>compilation.errors</code> array, halting the
+build and preventing invalid code from being deployed.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Route Parameters and Union Distribution - typescript</title>
+    <meta name="description" content="TypeScript template literal types provide powerful string manipulation at compile time, commonly used to parse dynamic route parameters in type-safe routing libraries. When these types encounter union types, TypeScript automatically applies distributive b">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-route-parameters-and-union-distribution">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Route Parameters and Union Distribution - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-route-parameters-and-union-distribution" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript template literal types provide powerful string manipulation at compile time, commonly used to parse dynamic route parameters in type-safe routing libraries. When these types encounter union types, TypeScript automatically applies distributive b" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-route-parameters-and-union-distribution">TypeScript
+Route Parameters and Union Distribution</h1>
+<p>TypeScript template literal types provide powerful string
+manipulation at compile time, commonly used to parse dynamic route
+parameters in type-safe routing libraries. When these types encounter
+union types, TypeScript automatically applies distributive behavior,
+splitting the union across conditional type branches. This article
+examines how union distribution works within template literal types, how
+it affects route parameter extraction, and how to harness or suppress
+this behavior to construct precise parameter types.</p>
+<h2
+id="understanding-union-distribution-in-template-literals">Understanding
+Union Distribution in Template Literals</h2>
+<p>In TypeScript, template literal types naturally distribute over
+unions. When a union is embedded directly inside a template literal,
+TypeScript generates a cartesian product of all possible
+combinations:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Entity <span class="op">=</span> <span class="st">&#39;user&#39;</span> <span class="op">|</span> <span class="st">&#39;post&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Action <span class="op">=</span> <span class="st">&#39;create&#39;</span> <span class="op">|</span> <span class="st">&#39;delete&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Endpoint <span class="op">=</span> <span class="vs">`/</span><span class="sc">${</span>Entity<span class="sc">}</span><span class="vs">/</span><span class="sc">${</span>Action<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;/user/create&quot; | &quot;/user/delete&quot; | &quot;/post/create&quot; | &quot;/post/delete&quot;</span></span></code></pre></div>
+<p>When building route parsers, template literals are typically combined
+with conditional types and the <code>infer</code> keyword. When a
+generic conditional type encounters an unconstrained, naked type
+parameter that resolves to a union, it distributes evaluation over each
+member of that union independently.</p>
+<h2 id="parsing-dynamic-route-parameters">Parsing Dynamic Route
+Parameters</h2>
+<p>A standard route parser searches for path segments prefixed with a
+colon (<code>:</code>) and recursively extracts the parameter names.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ExtractRouteParams<span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  Path <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span>string<span class="sc">}</span><span class="vs">:</span><span class="sc">${</span><span class="kw">infer</span> Param<span class="sc">}</span><span class="vs">/</span><span class="sc">${</span><span class="kw">infer</span> Rest<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> Param <span class="op">|</span> ExtractRouteParams<span class="op">&lt;</span><span class="vs">`/</span><span class="sc">${</span>Rest<span class="sc">}</span><span class="vs">`</span><span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> Path <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span>string<span class="sc">}</span><span class="vs">:</span><span class="sc">${</span><span class="kw">infer</span> Param<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">?</span> Param</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span></code></pre></div>
+<p>When provided with a single path, this utility extracts all route
+variables:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserPost <span class="op">=</span> ExtractRouteParams<span class="op">&lt;</span><span class="st">&#39;/users/:userId/posts/:postId&#39;</span><span class="op">&gt;;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;userId&quot; | &quot;postId&quot;</span></span></code></pre></div>
+<h2 id="how-unions-distribute-during-parsing">How Unions Distribute
+During Parsing</h2>
+<p>When a union of different route strings is passed to
+<code>ExtractRouteParams</code>, the conditional type distributes across
+each route candidate individually:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Routes <span class="op">=</span> <span class="st">&#39;/users/:userId&#39;</span> <span class="op">|</span> <span class="st">&#39;/teams/:teamId/projects/:projectId&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AllParams <span class="op">=</span> ExtractRouteParams<span class="op">&lt;</span>Routes<span class="op">&gt;;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Evaluates to:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   ExtractRouteParams&lt;&#39;/users/:userId&#39;&gt; </span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   | ExtractRouteParams&lt;&#39;/teams/:teamId/projects/:projectId&#39;&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;userId&quot; | &quot;teamId&quot; | &quot;projectId&quot;</span></span></code></pre></div>
+<p>While returning a union of parameter names is often intended,
+creating strongly typed parameter dictionaries requires careful handling
+of this distribution.</p>
+<h3 id="generating-route-parameter-objects">Generating Route Parameter
+Objects</h3>
+<p>If you map extracted keys directly into an object type without
+distribution, parameter requirements from different routes can merge
+into a single invalid shape. Instead, leveraging distribution allows
+each route to produce its own distinct parameter object:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RouteParams<span class="op">&lt;</span>Path <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> Path <span class="kw">extends</span> <span class="dt">string</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> [ExtractRouteParams<span class="op">&lt;</span>Path<span class="op">&gt;</span>] <span class="kw">extends</span> [<span class="dt">never</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> {}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> { [K <span class="kw">in</span> ExtractRouteParams<span class="op">&lt;</span>Path<span class="op">&gt;</span>]<span class="op">:</span> <span class="dt">string</span> }</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ParamsUnion <span class="op">=</span> RouteParams<span class="op">&lt;</span><span class="st">&#39;/users/:userId&#39;</span> <span class="op">|</span> <span class="st">&#39;/files/:fileId&#39;</span><span class="op">&gt;;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: { userId: string } | { fileId: string }</span></span></code></pre></div>
+<p>In this implementation, <code>Path extends string</code> forces
+distributive evaluation. For each route in the union, TypeScript
+resolves the specific parameters and constructs a dedicated object
+shape, yielding a discriminated or overloaded set of parameter
+dictionaries.</p>
+<h2 id="preventing-union-distribution">Preventing Union
+Distribution</h2>
+<p>In certain route-matching scenarios, you may need to evaluate routes
+as an aggregate rather than distributing over each member. You can
+disable distributive conditional types by wrapping the type parameter in
+a tuple:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NonDistributiveRouteCheck<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> [T] <span class="kw">extends</span> [<span class="st">&#39;/admin&#39;</span> <span class="op">|</span> <span class="st">&#39;/dashboard&#39;</span>]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> <span class="st">&#39;Strict route match&#39;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> <span class="st">&#39;Flexible route match&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>Wrapping both the checked type and the comparison target prevents
+TypeScript from splitting the union, forcing the type checker to treat
+the union as a single cohesive type.</p>
+<h2 id="summary">Summary</h2>
+<p>Union distribution in TypeScript template literal types ensures that
+route parsing operations scale across multiple endpoints simultaneously.
+By relying on conditional distribution, each route path in a union is
+parsed independently, allowing developers to generate isolated,
+accurately typed parameter maps for dynamic APIs and frameworks.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

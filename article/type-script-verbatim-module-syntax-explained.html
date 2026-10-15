@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript verbatimModuleSyntax Explained - typescript</title>
+    <meta name="description" content="The verbatimModuleSyntax compiler flag in TypeScript governs how import and export statements are emitted into JavaScript by enforcing strict, syntax-based module emission. Instead of analyzing whether an imported symbol resolves to a type or a runtime va">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-verbatim-module-syntax-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript verbatimModuleSyntax Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-verbatim-module-syntax-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The verbatimModuleSyntax compiler flag in TypeScript governs how import and export statements are emitted into JavaScript by enforcing strict, syntax-based module emission. Instead of analyzing whether an imported symbol resolves to a type or a runtime va" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-verbatimmodulesyntax-explained">TypeScript
+verbatimModuleSyntax Explained</h1>
+<p>The <code>verbatimModuleSyntax</code> compiler flag in TypeScript
+governs how <code>import</code> and <code>export</code> statements are
+emitted into JavaScript by enforcing strict, syntax-based module
+emission. Instead of analyzing whether an imported symbol resolves to a
+type or a runtime value to determine if an import should be dropped,
+TypeScript relies purely on the syntax used in the code. This article
+explains what <code>verbatimModuleSyntax</code> enforces, how it changes
+module emission, and how to write code that complies with it.</p>
+<h2 id="the-core-rule-purely-syntactic-emission">The Core Rule: Purely
+Syntactic Emission</h2>
+<p>Traditionally, TypeScript uses semantic analysis to elide (remove)
+imports. If an imported identifier is only used as a type, TypeScript
+quietly strips it from the emitted JavaScript output.</p>
+<p>When <code>verbatimModuleSyntax</code> is enabled, TypeScript stops
+guessing your intent based on usage. Module emission is governed
+strictly by the written syntax:</p>
+<ol type="1">
+<li><strong>Imports with the <code>type</code> modifier are completely
+removed.</strong> Any statement using <code>import type</code> or
+individual specifiers using <code>{ type X }</code> will never appear in
+the emitted JavaScript.</li>
+<li><strong>Imports without the <code>type</code> modifier are preserved
+verbatim.</strong> Any <code>import</code> statement that does not
+explicitly use the <code>type</code> modifier is emitted directly into
+JavaScript, regardless of whether the imported symbol is actually an
+interface, type alias, or class.</li>
+<li><strong>Using a type in a non-type import causes a compile-time
+error.</strong> If you import an identifier without the
+<code>type</code> keyword and that identifier only exists as a type,
+TypeScript throws a compilation error to prevent emitting broken runtime
+imports.</li>
+</ol>
+<h2 id="impact-on-module-syntax">Impact on Module Syntax</h2>
+<p>Under <code>verbatimModuleSyntax</code>, the code you write maps
+directly to the emitted output:</p>
+<h3 id="type-only-imports">Type-Only Imports</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Source</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { User } <span class="im">from</span> <span class="st">&quot;./models&quot;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { <span class="kw">type</span> Post<span class="op">,</span> renderPost } <span class="im">from</span> <span class="st">&quot;./posts&quot;</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Emitted JavaScript</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { renderPost } <span class="im">from</span> <span class="st">&quot;./posts&quot;</span><span class="op">;</span></span></code></pre></div>
+<p><code>User</code> is dropped entirely because the whole statement is
+marked as a type import. In the second statement, <code>type Post</code>
+is stripped, but <code>renderPost</code> is preserved.</p>
+<h3 id="erroneous-type-imports">Erroneous Type Imports</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Source</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { User } <span class="im">from</span> <span class="st">&quot;./models&quot;</span><span class="op">;</span> <span class="co">// Error if User is only a type!</span></span></code></pre></div>
+<p>Under default TypeScript settings, this statement would be deleted
+from the output if <code>User</code> was an interface. Under
+<code>verbatimModuleSyntax</code>, TypeScript flags this as an error. If
+left uncorrected, it would emit
+<code>import { User } from "./models";</code> into the runtime code,
+potentially causing a runtime reference error.</p>
+<h3 id="side-effect-imports">Side-Effect Imports</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Source &amp; Emitted JavaScript</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&quot;./setup&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>Side-effect imports are always preserved, as they do not bind any
+names.</p>
+<h3 id="commonjs-and-esm-interoperability">CommonJS and ESM
+Interoperability</h3>
+<p>The flag also impacts how CommonJS modules are handled under modern
+module resolution settings. To emit CommonJS interop code correctly:</p>
+<ul>
+<li>Use standard ESM <code>import</code> and <code>export</code> syntax
+for ECMAScript modules.</li>
+<li>Use <code>import foo = require("./foo")</code> and
+<code>export = foo</code> syntax when specifically targeting CommonJS
+semantics.</li>
+</ul>
+<h2 id="why-verbatimmodulesyntax-is-used">Why verbatimModuleSyntax Is
+Used</h2>
+<p>Introduced in TypeScript 5.0, <code>verbatimModuleSyntax</code>
+supersedes the older <code>--importsNotUsedAsValues</code> and
+<code>--preserveValueImports</code> flags. It provides three primary
+benefits:</p>
+<ul>
+<li><strong>Predictable Output:</strong> Developers can tell exactly
+what JavaScript will be emitted simply by looking at the source file,
+without needing to inspect external type definitions.</li>
+<li><strong>Transpiler Compatibility:</strong> External build tools like
+Babel, esbuild, and SWC process single files without type checking.
+Because <code>verbatimModuleSyntax</code> relies entirely on syntax,
+these tools emit the exact same module code as the TypeScript compiler
+(<code>tsc</code>).</li>
+<li><strong>Runtime Safety:</strong> It prevents situations where
+bundlers or Node.js crash because a type was accidentally emitted as a
+runtime import, or vice versa, where an import intended for side effects
+was accidentally removed because its value was never directly
+referenced.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

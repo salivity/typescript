@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Handles the JSDoc @type Tag - typescript</title>
+    <meta name="description" content="TypeScript utilizes JSDoc annotations to bring static type checking to standard JavaScript files without requiring a compilation step to strip types. Among these annotations, the @type tag serves as the primary mechanism for explicitly declaring the type">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-handles-the-js-doc-type-tag">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Handles the JSDoc @type Tag - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-handles-the-js-doc-type-tag" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript utilizes JSDoc annotations to bring static type checking to standard JavaScript files without requiring a compilation step to strip types. Among these annotations, the @type tag serves as the primary mechanism for explicitly declaring the type" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-handles-the-jsdoc-type-tag">How TypeScript
+Handles the JSDoc <span class="citation" data-cites="type">@type</span>
+Tag</h1>
+<p>TypeScript utilizes JSDoc annotations to bring static type checking
+to standard JavaScript files without requiring a compilation step to
+strip types. Among these annotations, the <code>@type</code> tag serves
+as the primary mechanism for explicitly declaring the type of a
+variable, object property, or expression. This article explains how the
+TypeScript compiler parses the <code>@type</code> tag, how it behaves
+across different code structures, and the rules governing its type
+resolution and casting capabilities.</p>
+<h2 id="basic-syntax-and-variable-typing">Basic Syntax and Variable
+Typing</h2>
+<p>When the TypeScript compiler evaluates a JavaScript file with type
+checking enabled (via <code>checkJs: true</code> or a
+<code>// @ts-check</code> comment), it looks for JSDoc comment blocks
+immediately preceding variable declarations. The <code>@type</code> tag
+instructs the compiler to override its default type inference and apply
+the explicitly declared type instead.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@type</span><span class="co"> {string} */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> username<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@type</span><span class="co"> {number[]} */</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> scores <span class="op">=</span> [<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span></code></pre></div>
+<p>The type expression must be enclosed in curly braces <code>{}</code>.
+If a value assigned to the variable conflicts with the defined
+<code>@type</code>, TypeScript issues a diagnostic error, exactly as it
+would for a typed variable in a native <code>.ts</code> file.</p>
+<h2 id="type-assertions-and-expressions">Type Assertions and
+Expressions</h2>
+<p>In standard TypeScript syntax, type assertions are written using the
+<code>as Type</code> syntax or angle bracket notation
+<code>&lt;Type&gt;</code>. In JavaScript files, TypeScript parses
+parenthesized JSDoc comments containing <code>@type</code> as inline
+type assertions.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Equivalent to: const input = document.getElementById(&quot;user-input&quot;) as HTMLInputElement;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> input <span class="op">=</span> <span class="co">/** </span><span class="an">@type</span><span class="co"> {HTMLInputElement} */</span> (<span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&quot;user-input&quot;</span>))<span class="op">;</span></span></code></pre></div>
+<p>For this cast behavior to trigger, the comment block must directly
+precede an expression wrapped in parentheses. If the expression cannot
+be safely converted to the specified type, TypeScript raises a
+type-overlap error, adhering to the same safety guarantees as standard
+TypeScript assertions.</p>
+<h2 id="typescript-specific-type-syntax-support">TypeScript-Specific
+Type Syntax Support</h2>
+<p>TypeScript extends traditional JSDoc syntax by allowing standard
+TypeScript type expressions inside the curly braces of a
+<code>@type</code> tag:</p>
+<ul>
+<li><strong>Union and Intersection Types:</strong>
+<code>{string | number}</code> or
+<code>{Serializable &amp; Loggable}</code>.</li>
+<li><strong>Literal Types:</strong>
+<code>{"ready" | "loading" | "error"}</code>.</li>
+<li><strong>Type Literals / Inline Objects:</strong>
+<code>{{ id: number, label: string }}</code>.</li>
+<li><strong>Array Generics:</strong> <code>{Array&lt;string&gt;}</code>
+or <code>{string[]}</code>.</li>
+<li><strong>Type Imports:</strong>
+<code>{import('./types').UserConfig}</code> allows referencing types
+declared in external modules without introducing runtime JavaScript
+imports.</li>
+</ul>
+<h2 id="applying-type-to-functions-and-objects">Applying
+<code>@type</code> to Functions and Objects</h2>
+<p>While <code>@param</code> and <code>@returns</code> are typically
+preferred for documenting standard function declarations, the
+<code>@type</code> tag can define the entire signature of a function
+expression or arrow function.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@type</span><span class="co"> {(a: number, b: number) =&gt; number} */</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> add <span class="op">=</span> (a<span class="op">,</span> b) <span class="kw">=&gt;</span> a <span class="op">+</span> b<span class="op">;</span></span></code></pre></div>
+<p>When applied this way, TypeScript automatically infers the parameter
+types and the return type of the function implementation, eliminating
+the need to annotate each parameter individually.</p>
+<p>For object properties, a <code>@type</code> tag placed immediately
+before a property declaration in an object literal enforces that
+specific property's type:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> settings <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">/** </span><span class="an">@type</span><span class="co"> {boolean} */</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">darkMode</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h2 id="parsing-nuances-and-edge-cases">Parsing Nuances and Edge
+Cases</h2>
+<ul>
+<li><strong>Optional and Nullable Modifiers:</strong> TypeScript
+supports JSDoc-style modifiers, such as <code>?</code> for nullable
+types (<code>/** @type {?number} */</code> becomes
+<code>number | null</code>) and <code>!</code> for non-nullable types
+(<code>/** @type {!number} */</code>). However, using explicit union
+syntax like <code>{number | null}</code> is generally preferred for
+clarity.</li>
+<li><strong>Placement Sensitivity:</strong> JSDoc comments must be
+placed directly before the AST node they are meant to annotate. Blank
+lines or intervening comments between the JSDoc block and the target
+token can cause the TypeScript parser to detach the comment, resulting
+in ignored annotations.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Semantic vs Syntactic Diagnostics - typescript</title>
+    <meta name="description" content="TypeScript separates code analysis into two distinct phases—syntactic and semantic diagnostics—to balance compiler performance with thorough type safety. Syntactic diagnostics identify low-level grammar and parsing violations within isolated files, wherea">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-semantic-vs-syntactic-diagnostics">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Semantic vs Syntactic Diagnostics - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-semantic-vs-syntactic-diagnostics" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript separates code analysis into two distinct phases—syntactic and semantic diagnostics—to balance compiler performance with thorough type safety. Syntactic diagnostics identify low-level grammar and parsing violations within isolated files, wherea" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-semantic-vs-syntactic-diagnostics">TypeScript
+Semantic vs Syntactic Diagnostics</h1>
+<p>TypeScript separates code analysis into two distinct phases—syntactic
+and semantic diagnostics—to balance compiler performance with thorough
+type safety. Syntactic diagnostics identify low-level grammar and
+parsing violations within isolated files, whereas semantic diagnostics
+evaluate the deeper meaning, relationships, and type rules across the
+entire program. Understanding the distinction between these two
+mechanisms reveals how the TypeScript compiler processes code and powers
+responsive developer tooling.</p>
+<h2 id="syntactic-diagnostics-structure-and-grammar">Syntactic
+Diagnostics: Structure and Grammar</h2>
+<p>Syntactic diagnostics represent the initial phase of TypeScript's
+analysis pipeline. They occur during the lexical analysis and parsing
+stages, driven by the Scanner and the Parser.</p>
+<p>During this phase, the compiler verifies that the source text adheres
+strictly to the ECMAScript and TypeScript grammar rules without
+evaluating what any identifier or type actually represents. The parser
+constructs an Abstract Syntax Tree (AST) from the stream of tokens
+produced by the scanner. If the code contains mismatched braces, missing
+parentheses, malformed keywords, or invalid token sequences, the parser
+emits a syntactic diagnostic.</p>
+<p>Key characteristics of syntactic diagnostics include:</p>
+<ul>
+<li><strong>File Isolation:</strong> Parsing is entirely local. The
+parser inspects only the current file and has no knowledge of external
+modules or imported symbols.</li>
+<li><strong>Speed:</strong> Because it does not resolve symbols or
+compute types, the syntactic check is exceptionally fast.</li>
+<li><strong>Compiler API:</strong> In the TypeScript Compiler API, these
+diagnostics are queried via
+<code>program.getSyntacticDiagnostics(sourceFile)</code>.</li>
+</ul>
+<p>Common examples of syntactic errors include:</p>
+<ul>
+<li><code>let 123name = "error";</code> (Invalid identifier name)</li>
+<li><code>function test( {</code> (Unclosed parameter list)</li>
+<li><code>interface Foo { bar: }</code> (Missing type definition after a
+colon)</li>
+</ul>
+<h2 id="semantic-diagnostics-meaning-and-type-checking">Semantic
+Diagnostics: Meaning and Type Checking</h2>
+<p>Semantic diagnostics occur later in the pipeline, primarily executed
+by the Binder and the Type Checker (<code>checker.ts</code>). Once the
+AST is built without fatal syntax issues, TypeScript analyzes the
+semantic validity—the logical correctness—of the code.</p>
+<p>The Binder creates symbols and assigns scopes, linking identifiers
+across declarations. Following this, the Type Checker traverses the AST
+and symbol tables to enforce type safety. It checks whether variables
+are assigned compatible types, whether functions are called with the
+correct argument counts and types, and whether accessed properties
+actually exist on target objects.</p>
+<p>Key characteristics of semantic diagnostics include:</p>
+<ul>
+<li><strong>Global Context:</strong> Semantic checks often require
+analyzing imported modules, declaration files (<code>.d.ts</code>), and
+global definitions to verify compatibility.</li>
+<li><strong>Resource Intensive:</strong> Type inference, generic
+resolution, and structural assignability calculations make semantic
+analysis the most computationally expensive phase of compilation.</li>
+<li><strong>Compiler API:</strong> These errors are retrieved using
+<code>program.getSemanticDiagnostics(sourceFile)</code>.</li>
+</ul>
+<p>Common examples of semantic errors include:</p>
+<ul>
+<li><code>let count: number = "hello";</code> (Type string is not
+assignable to type number)</li>
+<li><code>user.unknownMethod();</code> (Property does not exist on
+type)</li>
+<li><code>const x: MyInterface = {};</code> (Missing required
+properties)</li>
+</ul>
+<h2 id="architectural-implications-for-developer-tooling">Architectural
+Implications for Developer Tooling</h2>
+<p>The division between syntactic and semantic diagnostics allows
+TypeScript and tools like Language Server Protocol (LSP) clients to
+remain responsive.</p>
+<p>When a developer edits a file in an IDE, the editor immediately
+requests syntactic diagnostics on keystroke. Because this check does not
+require reading other project files or computing complex types, syntax
+errors appear instantaneously. Semantic diagnostics, by contrast, are
+computed asynchronously in the background. If a syntactic error breaks
+the AST construction, the compiler can abort or limit subsequent
+semantic analysis on the invalid tree, conserving system resources until
+the grammar is restored.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

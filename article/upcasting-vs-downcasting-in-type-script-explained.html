@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcasting vs Downcasting in TypeScript Explained - typescript</title>
+    <meta name="description" content="Type casting allows developers to convert a value from one type to another. In TypeScript, this concept is divided into upcasting and downcasting, which describe the direction in which a type is converted within a type hierarchy. Upcasting involves conver">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/upcasting-vs-downcasting-in-type-script-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Upcasting vs Downcasting in TypeScript Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/upcasting-vs-downcasting-in-type-script-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Type casting allows developers to convert a value from one type to another. In TypeScript, this concept is divided into upcasting and downcasting, which describe the direction in which a type is converted within a type hierarchy. Upcasting involves conver" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="upcasting-vs-downcasting-in-typescript-explained">Upcasting vs
+Downcasting in TypeScript Explained</h1>
+<p>Type casting allows developers to convert a value from one type to
+another. In TypeScript, this concept is divided into upcasting and
+downcasting, which describe the direction in which a type is converted
+within a type hierarchy. Upcasting involves converting a specific,
+narrower type to a broader, more general type and is handled implicitly
+and safely by TypeScript's compiler. Conversely, downcasting involves
+treating a general type as a more specific subtype, which requires
+explicit syntax such as type assertions or type guards because it
+introduces potential runtime risks.</p>
+<h2 id="what-is-upcasting">What Is Upcasting?</h2>
+<p>Upcasting occurs when you assign a subtype to a supertype. Because
+TypeScript relies on structural typing, an object that fulfills all the
+requirements of a target interface can be assigned to that interface
+without any explicit conversion.</p>
+<p>Upcasting is inherently safe. The broader type expects a certain set
+of properties, and since the narrower subtype is guaranteed to have
+those properties (and potentially more), no runtime errors can result
+from missing data.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Animal {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Dog <span class="kw">extends</span> Animal {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  breed<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> myDog<span class="op">:</span> Dog <span class="op">=</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Buddy&quot;</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  breed<span class="op">:</span> <span class="st">&quot;Golden Retriever&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Upcasting: Dog is assigned to Animal implicitly</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> myAnimal<span class="op">:</span> Animal <span class="op">=</span> myDog<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(myAnimal<span class="op">.</span><span class="at">name</span>)<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">// console.log(myAnimal.breed); // Error: Property &#39;breed&#39; does not exist on type &#39;Animal&#39;</span></span></code></pre></div>
+<p>In this example, <code>myDog</code> is upcast to the
+<code>Animal</code> type. TypeScript allows this implicitly. However,
+once upcast, you can only access the members defined on the
+<code>Animal</code> interface, even though the underlying object in
+memory still retains the <code>breed</code> property.</p>
+<h2 id="what-is-downcasting">What Is Downcasting?</h2>
+<p>Downcasting occurs when you convert a general type to a more specific
+subtype. TypeScript does not perform downcasting implicitly because it
+cannot verify at compile time whether the broader object actually
+contains the additional properties required by the subtype.</p>
+<p>To downcast, you must explicitly instruct TypeScript to treat the
+variable as the narrower type. This is commonly done through type
+assertions or type guards.</p>
+<h3 id="downcasting-using-type-assertions">Downcasting Using Type
+Assertions</h3>
+<p>You can use the <code>as</code> keyword to force a downcast. This
+tells the compiler to bypass its standard checks:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> generalAnimal<span class="op">:</span> Animal <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Charlie&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Downcasting using &#39;as&#39; (potentially unsafe)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> assumedDog <span class="op">=</span> generalAnimal <span class="im">as</span> Dog<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(assumedDog<span class="op">.</span><span class="at">breed</span>)<span class="op">;</span> <span class="co">// Compiles, but prints: undefined</span></span></code></pre></div>
+<p>Forcing a downcast with <code>as</code> can cause runtime bugs if the
+object does not actually conform to the narrower type.</p>
+<h3 id="safe-downcasting-using-type-guards">Safe Downcasting Using Type
+Guards</h3>
+<p>The recommended way to downcast is using runtime type checks, such as
+<code>instanceof</code>, the <code>in</code> operator, or custom type
+predicates. This allows TypeScript to automatically narrow down the type
+safely.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">isDog</span>(animal<span class="op">:</span> Animal)<span class="op">:</span> animal <span class="kw">is</span> Dog {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="st">&quot;breed&quot;</span> <span class="kw">in</span> animal<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleAnimal</span>(animal<span class="op">:</span> Animal) {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">isDog</span>(animal)) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Safely downcast to Dog</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(animal<span class="op">.</span><span class="at">breed</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(animal<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Upcasting</th>
+<th style="text-align: left;">Downcasting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Direction</strong></td>
+<td style="text-align: left;">Specific to general (Subtype <span
+class="math inline">\(\to\)</span> Supertype)</td>
+<td style="text-align: left;">General to specific (Supertype <span
+class="math inline">\(\to\)</span> Subtype)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Type Safety</strong></td>
+<td style="text-align: left;">Completely safe</td>
+<td style="text-align: left;">Potentially unsafe without type
+guards</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Syntax</strong></td>
+<td style="text-align: left;">Implicit (no special syntax needed)</td>
+<td style="text-align: left;">Explicit (<code>as Type</code>,
+<code>instanceof</code>, type predicates)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runtime Impact</strong></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">Risk of <code>undefined</code> property
+access if done incorrectly</td>
+</tr>
+</tbody>
+</table>
+<p>Upcasting is a natural part of writing flexible code that accepts
+abstract types, while downcasting should be used cautiously and
+accompanied by runtime validation whenever possible.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

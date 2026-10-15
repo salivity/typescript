@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix: Exported Variable Has or Is Using Private Name - typescript</title>
+    <meta name="description" content="The TypeScript error &quot;Exported variable has or is using private name&quot; occurs when an exported variable, function, or class exposes a type that is not exported from the same module. This article explains why the TypeScript compiler flags this issue during">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/fix-exported-variable-has-or-is-using-private-name">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix: Exported Variable Has or Is Using Private Name - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/fix-exported-variable-has-or-is-using-private-name" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The TypeScript error &quot;Exported variable has or is using private name&quot; occurs when an exported variable, function, or class exposes a type that is not exported from the same module. This article explains why the TypeScript compiler flags this issue during" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-exported-variable-has-or-is-using-private-name">Fix:
+Exported Variable Has or Is Using Private Name</h1>
+<p>The TypeScript error "Exported variable has or is using private name"
+occurs when an exported variable, function, or class exposes a type that
+is not exported from the same module. This article explains why the
+TypeScript compiler flags this issue during declaration file generation
+and provides direct, actionable solutions to fix it in your
+codebase.</p>
+<hr />
+<h3 id="what-causes-the-error">What Causes the Error?</h3>
+<p>The primary cause of this error is TypeScript's requirement to
+generate declaration files (<code>.d.ts</code>) when the
+<code>declaration</code> compiler option is set to <code>true</code> in
+<code>tsconfig.json</code>.</p>
+<p>When you export a variable, TypeScript needs to define that
+variable's type signature in the generated <code>.d.ts</code> file so
+external consumers know how to interact with it. If the variable's type
+is inferred from or explicitly references a local type, interface, or
+class that lacks an <code>export</code> modifier, the compiler cannot
+generate a valid public declaration. Because the referenced type is
+"private" (local to that file), TypeScript throws the error to prevent
+emitting broken type declarations.</p>
+<h4 id="example-of-the-error">Example of the Error</h4>
+<p>Consider the following scenario:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Not exported (private to this module)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> DatabaseConfig {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> defaultConfig<span class="op">:</span> DatabaseConfig <span class="op">=</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dv">5432</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Exported variable &#39;config&#39; has or is using private name &#39;DatabaseConfig&#39;.</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> config <span class="op">=</span> defaultConfig<span class="op">;</span></span></code></pre></div>
+<p>In this case, <code>config</code> is inferred to have the type
+<code>DatabaseConfig</code>. Because <code>DatabaseConfig</code> is not
+exported, TypeScript cannot write the type definition for
+<code>config</code> into the <code>.d.ts</code> file.</p>
+<hr />
+<h3 id="how-to-fix-the-error">How to Fix the Error</h3>
+<p>There are two primary methods to resolve this issue depending on
+whether the underlying type should be part of your public API.</p>
+<h4 id="solution-1-export-the-underlying-type-recommended">Solution 1:
+Export the Underlying Type (Recommended)</h4>
+<p>The most common and robust solution is to add the <code>export</code>
+keyword to the interface, type alias, or class that the exported
+variable depends on.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Add &#39;export&#39; here</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> DatabaseConfig {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> defaultConfig<span class="op">:</span> DatabaseConfig <span class="op">=</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dv">5432</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> config <span class="op">=</span> defaultConfig<span class="op">;</span> <span class="co">// No error</span></span></code></pre></div>
+<p>Exporting the type allows TypeScript to reference it cleanly in
+generated <code>.d.ts</code> files and lets consumers of your code use
+the type definitions safely.</p>
+<h4
+id="solution-2-explicitly-type-the-variable-with-an-exported-or-inline-type">Solution
+2: Explicitly Type the Variable with an Exported or Inline Type</h4>
+<p>If you do not want to expose the internal type by name, you can
+explicitly type the exported variable using a generic type, an existing
+public interface, or an inline type literal:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> DatabaseConfig {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> defaultConfig<span class="op">:</span> DatabaseConfig <span class="op">=</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  port<span class="op">:</span> <span class="dv">5432</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Explicit inline typing eliminates the reference to &#39;DatabaseConfig&#39;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> config<span class="op">:</span> { host<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> port<span class="op">:</span> <span class="dt">number</span> } <span class="op">=</span> defaultConfig<span class="op">;</span></span></code></pre></div>
+<p>This prevents TypeScript from having to look up and reference the
+unexported <code>DatabaseConfig</code> identifier during declaration
+emission.</p>
+<h4 id="solution-3-disable-declaration-file-generation">Solution 3:
+Disable Declaration File Generation</h4>
+<p>If your project is a standalone application (such as a backend
+service or bundled frontend app) rather than a distributed library, you
+likely do not need <code>.d.ts</code> files. You can disable declaration
+generation in your <code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declaration&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Disabling this setting stops TypeScript from creating
+<code>.d.ts</code> files, which suppresses the error entirely. However,
+if you are building an npm package or shared library, you should keep
+<code>declaration: true</code> and use Solution 1.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

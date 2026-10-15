@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merging Functions with Namespaces in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript allows a function declaration to merge with a namespace declaration to attach strongly typed static properties to that function. This feature, known as declaration merging, enables developers to define a callable entity that also hosts related">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/merging-functions-with-namespaces-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Merging Functions with Namespaces in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/merging-functions-with-namespaces-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript allows a function declaration to merge with a namespace declaration to attach strongly typed static properties to that function. This feature, known as declaration merging, enables developers to define a callable entity that also hosts related" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="merging-functions-with-namespaces-in-typescript">Merging
+Functions with Namespaces in TypeScript</h1>
+<p>TypeScript allows a function declaration to merge with a namespace
+declaration to attach strongly typed static properties to that function.
+This feature, known as declaration merging, enables developers to define
+a callable entity that also hosts related properties, configuration
+values, or utility methods on a single identifier. This article explains
+how this merging behavior works, how to implement it correctly, and key
+considerations when using it in modern TypeScript projects.</p>
+<h2 id="how-function-and-namespace-merging-works">How Function and
+Namespace Merging Works</h2>
+<p>In JavaScript, functions are first-class objects, meaning they can
+have properties assigned directly to them. While traditional JavaScript
+allows ad-hoc property assignments like
+<code>myFunction.property = "value"</code>, TypeScript’s strict type
+system normally flags these assignments as errors because the property
+does not exist on the standard <code>Function</code> interface.</p>
+<p>To solve this without resorting to type assertions or
+<code>any</code>, TypeScript uses declaration merging. When a function
+and a namespace share the exact same identifier in the same scope, the
+compiler merges their definitions. The function provides the callable
+implementation, while the exported members of the namespace become typed
+properties on that function.</p>
+<h2 id="basic-implementation">Basic Implementation</h2>
+<p>To merge a function with a namespace, the function declaration must
+precede the namespace declaration. All properties intended to serve as
+static members on the function must be explicitly marked with the
+<code>export</code> keyword inside the namespace.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Declare the callable function</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatName</span>(name<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="vs">`</span><span class="sc">${</span>formatName<span class="op">.</span><span class="at">prefix</span><span class="sc">}</span><span class="vs"> </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Declare the namespace with matching name to add static properties</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">namespace</span> <span class="dt">formatName</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="im">export</span> <span class="kw">let</span> prefix<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;User:&quot;</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="im">export</span> <span class="kw">function</span> <span class="fu">resetPrefix</span>()<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        prefix <span class="op">=</span> <span class="st">&quot;User:&quot;</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">formatName</span>(<span class="st">&quot;Alice&quot;</span>))<span class="op">;</span> <span class="co">// Output: &quot;User: Alice&quot;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>formatName<span class="op">.</span><span class="at">prefix</span> <span class="op">=</span> <span class="st">&quot;Admin:&quot;</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">formatName</span>(<span class="st">&quot;Bob&quot;</span>))<span class="op">;</span>   <span class="co">// Output: &quot;Admin: Bob&quot;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>formatName<span class="op">.</span><span class="fu">resetPrefix</span>()<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="fu">formatName</span>(<span class="st">&quot;Charlie&quot;</span>))<span class="op">;</span> <span class="co">// Output: &quot;User: Charlie&quot;</span></span></code></pre></div>
+<h2 id="key-rules-for-merging-functions-and-namespaces">Key Rules for
+Merging Functions and Namespaces</h2>
+<p>For the TypeScript compiler to merge declarations successfully,
+certain conditions must be met:</p>
+<ol type="1">
+<li><strong>Declaration Order:</strong> The function declaration must
+come before the namespace declaration in the source code.</li>
+<li><strong>Matching Identifiers:</strong> Both declarations must share
+the exact same name within the same lexical scope.</li>
+<li><strong>Export Requirement:</strong> Only values, types, or
+functions explicitly marked with <code>export</code> inside the
+namespace become accessible as properties on the merged function.</li>
+<li><strong>Standard Declarations Only:</strong> This pattern applies to
+standard <code>function</code> declarations. It does not work directly
+with arrow functions or function expressions assigned to variables
+(<code>const myFunc = () =&gt; {}</code>).</li>
+</ol>
+<h2 id="when-to-use-this-pattern">When to Use This Pattern</h2>
+<p>Merging a function with a namespace is particularly useful in several
+scenarios:</p>
+<ul>
+<li><strong>Factory Functions with Configuration Defaults:</strong> You
+can expose default configuration objects or state on the factory
+function itself.</li>
+<li><strong>Component-Based Architectures:</strong> Libraries like React
+often use callable components that also host sub-components (such as
+<code>Card</code> and <code>Card.Header</code>).</li>
+<li><strong>Typing Legacy JavaScript Libraries:</strong> When writing
+TypeScript definition files (<code>.d.ts</code>) for existing JavaScript
+libraries that assign utilities or constants directly to a main
+function, declaration merging provides an idiomatic and clean type
+definition.</li>
+</ul>
+<h2 id="modern-considerations">Modern Considerations</h2>
+<p>While function-namespace merging is fully supported by the TypeScript
+compiler, modern ECMAScript development relies heavily on ES modules.
+Namespaces were originally designed before ES modules were standardized,
+and some modern build tools (such as certain Babel configurations or SWC
+presets) require specific plugins to compile TypeScript namespaces
+properly.</p>
+<p>If your toolchain discourages namespaces, you can achieve a similar
+result using <code>Object.assign</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatName</span>(name<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="vs">`</span><span class="sc">${</span>formatName<span class="op">.</span><span class="at">prefix</span><span class="sc">}</span><span class="vs"> </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> formatNameWithProps <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">assign</span>(formatName<span class="op">,</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">:</span> <span class="st">&quot;User:&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>However, native function-namespace merging remains the most direct
+way to get full compiler verification, unified documentation, and IDE
+autocompletion for static properties on functions in pure TypeScript
+environments.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 3 Decorators in Modern TypeScript - typescript</title>
+    <meta name="description" content="TypeScript 5.0 officially adopted the ECMAScript Stage 3 decorators standard, marking a major transition away from the decade-old experimental implementation. This article explores how native Stage 3 decorators integrate into modern TypeScript projects, d">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/stage-3-decorators-in-modern-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stage 3 Decorators in Modern TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/stage-3-decorators-in-modern-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript 5.0 officially adopted the ECMAScript Stage 3 decorators standard, marking a major transition away from the decade-old experimental implementation. This article explores how native Stage 3 decorators integrate into modern TypeScript projects, d" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="stage-3-decorators-in-modern-typescript">Stage 3 Decorators in
+Modern TypeScript</h1>
+<p>TypeScript 5.0 officially adopted the ECMAScript Stage 3 decorators
+standard, marking a major transition away from the decade-old
+experimental implementation. This article explores how native Stage 3
+decorators integrate into modern TypeScript projects, detailing the new
+runtime API, structural type checking, the introduction of
+auto-accessors, and how configuration requirements differ from legacy
+decorators.</p>
+<h2 id="the-standardized-decorator-architecture">The Standardized
+Decorator Architecture</h2>
+<p>Unlike legacy decorators, which relied on the non-standard
+<code>experimentalDecorators</code> flag and optional metadata emission,
+Stage 3 decorators conform to the official TC39 specification. Modern
+TypeScript enables these by default when compiling with TypeScript 5.0
+or later, provided <code>experimentalDecorators</code> is set to
+<code>false</code> or omitted in <code>tsconfig.json</code>.</p>
+<p>In the Stage 3 design, a decorator is a function applied to a class
+definition or a class element (methods, getters, setters, fields, or
+auto-accessors). Every decorator function receives two arguments:</p>
+<ol type="1">
+<li><strong><code>target</code></strong>: The entity being decorated
+(e.g., the method function, class constructor, or <code>undefined</code>
+for fields).</li>
+<li><strong><code>context</code></strong>: A context object containing
+structured metadata about the decorated member.</li>
+</ol>
+<p>The <code>context</code> object provides a standardized
+<code>DecoratorContext</code> type in TypeScript with the following
+properties:</p>
+<ul>
+<li><strong><code>kind</code></strong>: Indicates the type of member
+(<code>"class"</code>, <code>"method"</code>, <code>"getter"</code>,
+<code>"setter"</code>, <code>"field"</code>, or
+<code>"accessor"</code>).</li>
+<li><strong><code>name</code></strong>: The name of the member (string
+or symbol).</li>
+<li><strong><code>static</code></strong>: A boolean indicating if the
+member is static.</li>
+<li><strong><code>private</code></strong>: A boolean indicating if the
+member is private (<code>#field</code>).</li>
+<li><strong><code>access</code></strong>: An object containing
+<code>get</code> and <code>set</code> methods to dynamically read or
+write the member's value.</li>
+<li><strong><code>addInitializer</code></strong>: A hook allowing code
+to run during class definition or instance construction.</li>
+</ul>
+<h2 id="method-and-member-decorators">Method and Member Decorators</h2>
+<p>Method decorators receive the original function and can return a
+replacement function that alters execution. TypeScript enforces strict
+type checking between the original method's signature and the returned
+function.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">logged</span><span class="op">&lt;</span>This<span class="op">,</span> Args <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> Return<span class="op">&gt;</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> (this<span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassMethodDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> (this<span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return<span class="op">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">function</span> (<span class="kw">this</span><span class="op">:</span> This<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Args)<span class="op">:</span> Return {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Calling </span><span class="sc">${</span><span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> target<span class="op">.</span><span class="fu">apply</span>(<span class="kw">this</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserService {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  @logged</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fetchUser</span>(id<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="vs">`User: </span><span class="sc">${</span>id<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The <code>ClassMethodDecoratorContext</code> generic parameters
+ensure that <code>this</code> scoping and function parameters remain
+strictly typed.</p>
+<h2 id="auto-accessors">Auto-Accessors</h2>
+<p>Stage 3 introduces a new class member syntax: the
+<code>accessor</code> keyword. Auto-accessors define a private storage
+slot with implicit getter and setter methods. Decorating an
+auto-accessor allows interception of both read and write operations.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">loggedAccessor</span><span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> ClassAccessorDecoratorTarget<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassAccessorDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> ClassAccessorDecoratorResult<span class="op">&lt;</span>This<span class="op">,</span> Value<span class="op">&gt;</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">get</span>(<span class="kw">this</span><span class="op">:</span> This)<span class="op">:</span> Value {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Getting </span><span class="sc">${</span><span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> target<span class="op">.</span><span class="at">get</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span>(<span class="kw">this</span><span class="op">:</span> This<span class="op">,</span> value<span class="op">:</span> Value)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Setting </span><span class="sc">${</span><span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="sc">}</span><span class="vs"> to`</span><span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      target<span class="op">.</span><span class="at">set</span><span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span><span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">init</span>(initialValue<span class="op">:</span> Value)<span class="op">:</span> Value {</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> initialValue<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Account {</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  @loggedAccessor</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  accessor balance <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="field-decorators-and-initializers">Field Decorators and
+Initializers</h2>
+<p>Field decorators do not receive the field's value at runtime because
+field initialization occurs during instantiation. Instead, the
+<code>target</code> parameter is <code>undefined</code>, and the
+decorator can return an initialization function that transforms the
+initial value when the instance is created.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">bound</span><span class="op">&lt;</span>This<span class="op">,</span> Args <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> Return<span class="op">&gt;</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> <span class="dt">undefined</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassFieldDecoratorContext<span class="op">&lt;</span>This<span class="op">,</span> (<span class="op">...</span>args<span class="op">:</span> Args) <span class="kw">=&gt;</span> Return<span class="op">&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  context<span class="op">.</span><span class="fu">addInitializer</span>(<span class="kw">function</span> (<span class="kw">this</span><span class="op">:</span> <span class="dt">any</span>) {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span>[context<span class="op">.</span><span class="at">name</span>] <span class="op">=</span> <span class="kw">this</span>[context<span class="op">.</span><span class="at">name</span>]<span class="op">.</span><span class="fu">bind</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="key-differences-from-legacy-decorators">Key Differences from
+Legacy Decorators</h2>
+<p>Integrating Stage 3 decorators requires addressing several
+divergences from the old experimental model:</p>
+<ul>
+<li><strong>Parameter Decorators</strong>: Stage 3 does not support
+method parameter decorators. Frameworks that relied on parameter
+injection must adapt using method-level configuration or alternative
+patterns.</li>
+<li><strong>Metadata Reflection</strong>: The legacy
+<code>emitDecoratorMetadata</code> option is incompatible with Stage 3
+decorators. Metadata is instead addressed by a companion proposal
+(<code>Decorator Metadata</code>), natively supported in TypeScript 5.2+
+via <code>context.metadata</code>.</li>
+<li><strong>Execution Order</strong>: Decorators execute inside-out for
+expressions, but the application order runs: member decorators first
+(grouped by type and definition order), followed by class decorators.
+Initializers run at construction time.</li>
+</ul>
+<p>By aligning with the ECMAScript standard, TypeScript enables
+portable, type-safe metaprogramming without requiring proprietary
+compilation flags or non-standard runtime dependencies.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

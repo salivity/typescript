@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empty Types Array in tsconfig.json Explained - typescript</title>
+    <meta name="description" content="Setting the &quot;types&quot; array to an empty array (&quot;types&quot;: []) in your tsconfig.json explicitly prevents TypeScript from automatically including any @types packages in the global scope. By default, TypeScript scans your nodemodules/@types directory and include">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/empty-types-array-in-tsconfig-json-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Empty Types Array in tsconfig.json Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/empty-types-array-in-tsconfig-json-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Setting the &quot;types&quot; array to an empty array (&quot;types&quot;: []) in your tsconfig.json explicitly prevents TypeScript from automatically including any @types packages in the global scope. By default, TypeScript scans your nodemodules/@types directory and include" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="empty-types-array-in-tsconfigjson-explained">Empty Types Array
+in tsconfig.json Explained</h1>
+<p>Setting the <code>"types"</code> array to an empty array
+(<code>"types": []</code>) in your <code>tsconfig.json</code> explicitly
+prevents TypeScript from automatically including any <code>@types</code>
+packages in the global scope. By default, TypeScript scans your
+<code>node_modules/@types</code> directory and includes all installed
+declaration files, such as Node.js, Jest, or Mocha globals. Passing an
+empty array disables this automatic discovery, ensuring that no
+third-party global declarations are injected into your project unless
+explicitly imported.</p>
+<h3 id="default-behavior-vs-types-">Default Behavior vs.
+<code>"types": []</code></h3>
+<p>By default, if the <code>types</code> property is omitted from
+<code>compilerOptions</code>, the TypeScript compiler walks up the
+directory tree looking for <code>node_modules/@types</code> folders.
+Every package found within those folders—such as
+<code>@types/node</code>, <code>@types/jest</code>, or
+<code>@types/lodash</code>—is automatically treated as part of the
+global execution environment.</p>
+<p>When you configure <code>"types": []</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>You instruct the compiler to register zero global declaration
+packages. As a result, ambient global definitions from your dependencies
+are completely ignored during compilation.</p>
+<h3 id="what-happens-to-your-code">What Happens to Your Code</h3>
+<ol type="1">
+<li><strong>Global Variables Disappear:</strong> If you have
+<code>@types/node</code> installed but set <code>"types": []</code>,
+references to global Node.js objects like <code>process</code>,
+<code>Buffer</code>, or <code>__dirname</code> will result in compiler
+errors (such as <code>Cannot find name 'process'</code>) unless you
+provide your own ambient declarations or explicitly import them.</li>
+<li><strong>Explicit Module Imports Still Work:</strong> Setting
+<code>"types": []</code> only affects global ambient declarations. It
+does not affect modules imported using standard <code>import</code>
+syntax. For example, <code>import fs from 'fs'</code> will still resolve
+its types properly if the package is installed.</li>
+<li><strong>Built-in Library Types Remain Unaffected:</strong> The core
+JavaScript and DOM types controlled by the <code>"lib"</code> compiler
+option (such as <code>Array</code>, <code>Promise</code>,
+<code>document</code>, or <code>window</code>) remain active. Only
+external packages under <code>node_modules/@types</code> are
+blocked.</li>
+</ol>
+<h3 id="why-use-an-empty-types-array">Why Use an Empty Types Array?</h3>
+<ul>
+<li><strong>Preventing Namespace Pollution:</strong> If your repository
+contains both client-side and server-side code, having
+<code>@types/node</code> installed can cause the compiler to allow
+Node-specific globals inside browser code without raising errors.
+Setting <code>"types": []</code> in the client configuration ensures
+browser code cannot accidentally use server APIs.</li>
+<li><strong>Avoiding Testing Framework Conflicts:</strong> Testing
+libraries like Jest and Mocha define overlapping globals (such as
+<code>describe</code>, <code>it</code>, and <code>expect</code>).
+Disabling automatic type inclusion prevents typing collisions between
+competing test runners.</li>
+<li><strong>Library Authoring:</strong> Library authors frequently use
+<code>"types": []</code> to guarantee their code does not
+unintentionally rely on ambient types present in their development
+environment, ensuring maximum compatibility for end-users.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

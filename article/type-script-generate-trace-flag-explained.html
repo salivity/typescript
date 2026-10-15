@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript generateTrace Flag Explained - typescript</title>
+    <meta name="description" content="The generateTrace flag in TypeScript is an essential diagnostic feature designed to profile compiler performance and resolve slow type-checking times. This article explains what the generateTrace flag is, how it captures compilation telemetry, how to conf">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-generate-trace-flag-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript generateTrace Flag Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-generate-trace-flag-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The generateTrace flag in TypeScript is an essential diagnostic feature designed to profile compiler performance and resolve slow type-checking times. This article explains what the generateTrace flag is, how it captures compilation telemetry, how to conf" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-generatetrace-flag-explained">TypeScript
+generateTrace Flag Explained</h1>
+<p>The <code>generateTrace</code> flag in TypeScript is an essential
+diagnostic feature designed to profile compiler performance and resolve
+slow type-checking times. This article explains what the
+<code>generateTrace</code> flag is, how it captures compilation
+telemetry, how to configure it in your project, and how to interpret the
+resulting trace data to eliminate bottlenecks in your codebase.</p>
+<h2 id="what-is-the-generatetrace-flag">What Is the
+<code>generateTrace</code> Flag?</h2>
+<p>Introduced in TypeScript 4.1, <code>--generateTrace</code> is a
+compiler option that outputs detailed performance and profiling data
+during a build. When projects scale, TypeScript compilation often slows
+down due to complex types, deep recursions, or oversized union
+types.</p>
+<p>Running the compiler with <code>generateTrace</code> instructs
+TypeScript to track every phase of the compilation process—such as
+parsing files, resolving dependencies, and performing type checks—and
+write this information to a designated output directory.</p>
+<h2 id="how-to-enable-generatetrace">How to Enable
+<code>generateTrace</code></h2>
+<p>You can enable performance tracing directly via the TypeScript
+command line or inside your <code>tsconfig.json</code> file.</p>
+<h3 id="via-the-command-line">Via the Command Line</h3>
+<p>To run a one-off trace, pass the <code>--generateTrace</code> flag
+followed by the path to the directory where you want trace files
+stored:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> tsc <span class="at">--generateTrace</span> ./trace-output</span></code></pre></div>
+<h3 id="via-tsconfigjson">Via <code>tsconfig.json</code></h3>
+<p>To include it in your project configuration, add
+<code>generateTrace</code> to the <code>compilerOptions</code>
+block:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;generateTrace&quot;</span><span class="fu">:</span> <span class="st">&quot;./trace-output&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="understanding-the-generated-output">Understanding the Generated
+Output</h2>
+<p>When compilation finishes, the target directory typically contains
+two primary files:</p>
+<ol type="1">
+<li><strong><code>trace.json</code></strong>: Contains a structured
+timeline of events recorded in the Chromium Event Tracing format. It
+includes precise start times, durations, and phase names (e.g.,
+<code>program</code>, <code>checkSourceFile</code>,
+<code>findSourceFile</code>) for every operation performed by
+<code>tsc</code>.</li>
+<li><strong><code>types.json</code></strong>: Acts as a lookup table
+that maps numeric type IDs referenced in <code>trace.json</code> to
+their human-readable type representations. This allows you to identify
+the exact problematic types without bloating the main trace file.</li>
+</ol>
+<h2 id="how-to-view-and-analyze-the-trace">How to View and Analyze the
+Trace</h2>
+<p>Because the output follows the Chromium Event Tracing standard, you
+can visualize the data using standard profiling tools:</p>
+<ol type="1">
+<li><strong>Chromium Visualizers</strong>: Open Google Chrome or
+Microsoft Edge and navigate to <code>chrome://tracing</code>, or visit
+the modern web viewer at <code>ui.perfetto.dev</code>. Drag and drop
+your <code>trace.json</code> file into the interface to see a visual
+timeline of compiler execution.</li>
+<li><strong>Analyze-Trace Tool</strong>: The TypeScript team provides an
+official CLI tool called <code>@typescript/analyze-trace</code> to parse
+the files automatically and highlight performance hotspots:</li>
+</ol>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> @typescript/analyze-trace ./trace-output</span></code></pre></div>
+<p>This utility scans the trace files and directly reports the files,
+functions, and type-checking events that consume the most processing
+time.</p>
+<h2 id="common-issues-identified-by-generatetrace">Common Issues
+Identified by <code>generateTrace</code></h2>
+<p>Using <code>generateTrace</code> helps identify specific code
+patterns that hinder compiler efficiency:</p>
+<ul>
+<li><strong>Massive Union or Intersection Types</strong>: Types that
+trigger combinatorial explosions during type-checking.</li>
+<li><strong>Deeply Recursive Types</strong>: Utility types that recurse
+too deeply, stalling the compiler's inference engine.</li>
+<li><strong>Overly Broad Contextual Typings</strong>: Code locations
+where lack of explicit type annotations forces TypeScript to re-evaluate
+complex expressions across multiple files.</li>
+<li><strong>Heavy Third-Party Definitions</strong>: External packages in
+<code>node_modules</code> that introduce complex type structures
+requiring disproportionate compute cycles.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

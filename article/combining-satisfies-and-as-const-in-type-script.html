@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combining satisfies and as const in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript allows developers to enforce strict type contracts while preserving exact literal types and deep immutability by combining the satisfies operator with the as const assertion. This article explains how these two features interact, the correct sy">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/combining-satisfies-and-as-const-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Combining satisfies and as const in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/combining-satisfies-and-as-const-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript allows developers to enforce strict type contracts while preserving exact literal types and deep immutability by combining the satisfies operator with the as const assertion. This article explains how these two features interact, the correct sy" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="combining-satisfies-and-as-const-in-typescript">Combining
+satisfies and as const in TypeScript</h1>
+<p>TypeScript allows developers to enforce strict type contracts while
+preserving exact literal types and deep immutability by combining the
+<code>satisfies</code> operator with the <code>as const</code>
+assertion. This article explains how these two features interact, the
+correct syntax for chaining them, and why using them together provides
+superior type safety and developer ergonomics compared to using either
+feature on its own.</p>
+<h2 id="can-they-be-combined">Can They Be Combined?</h2>
+<p>Yes, the <code>satisfies</code> operator and the
+<code>as const</code> assertion can be combined directly in a single
+declaration.</p>
+<p>TypeScript evaluates <code>as const</code> first to produce a fully
+<code>readonly</code>, deeply narrowed literal type, and then evaluates
+<code>satisfies</code> to verify that this narrowed type conforms to a
+predefined interface or type definition without widening it.</p>
+<h2 id="the-syntax-and-precedence">The Syntax and Precedence</h2>
+<p>To use them together, place <code>as const</code> before
+<code>satisfies</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Palette <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  primary<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  secondary<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  modes<span class="op">:</span> <span class="kw">readonly</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> theme <span class="op">=</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  primary<span class="op">:</span> <span class="st">&quot;#0070f3&quot;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  secondary<span class="op">:</span> <span class="st">&quot;#111111&quot;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  modes<span class="op">:</span> [<span class="st">&quot;light&quot;</span><span class="op">,</span> <span class="st">&quot;dark&quot;</span>]<span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>} <span class="im">as</span> <span class="kw">const</span> satisfies Palette<span class="op">;</span></span></code></pre></div>
+<p>In this example:</p>
+<ol type="1">
+<li><code>as const</code> converts all properties into
+<code>readonly</code> values and infers literal string types
+(<code>"#0070f3"</code>, <code>"#111111"</code>,
+<code>readonly ["light", "dark"]</code>) rather than generic
+<code>string</code> and <code>string[]</code>.</li>
+<li><code>satisfies Palette</code> ensures that the object matches the
+shape of <code>Palette</code>. If a required key is missing or
+misspelled, TypeScript throws a compile-time error.</li>
+</ol>
+<p>Writing them in reverse (<code>satisfies Palette as const</code>) is
+invalid syntax and will produce a compiler error. The expression must
+first be asserted with <code>as const</code> before the resulting type
+is validated with <code>satisfies</code>.</p>
+<h2 id="why-combine-both-features">Why Combine Both Features?</h2>
+<p>Using either feature in isolation leaves a gap in strictness:</p>
+<h3 id="1-using-satisfies-alone">1. Using <code>satisfies</code>
+alone</h3>
+<p>Using only <code>satisfies</code> validates the object shape and
+retains literal types for primitive values, but it does not make objects
+or arrays deeply immutable (<code>readonly</code>). Arrays, for
+instance, remain mutable tuples or arrays, which can lead to accidental
+mutations later in the codebase.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validated, but arrays are mutable</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> theme <span class="op">=</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  modes<span class="op">:</span> [<span class="st">&quot;light&quot;</span><span class="op">,</span> <span class="st">&quot;dark&quot;</span>]<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>} satisfies { modes<span class="op">:</span> <span class="dt">string</span>[] }<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>theme<span class="op">.</span><span class="at">modes</span><span class="op">.</span><span class="fu">push</span>(<span class="st">&quot;contrast&quot;</span>)<span class="op">;</span> <span class="co">// Allowed</span></span></code></pre></div>
+<h3 id="2-using-as-const-alone">2. Using <code>as const</code>
+alone</h3>
+<p>Using only <code>as const</code> creates full immutability and
+literal types, but it performs no validation against an intended shape
+or interface. If a required property is omitted or a typo is introduced,
+TypeScript will not flag it at the declaration site.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Immutable, but no contract validation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> theme <span class="op">=</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  primry<span class="op">:</span> <span class="st">&quot;#0070f3&quot;</span><span class="op">,</span> <span class="co">// Typo goes unnoticed</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>} <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span></code></pre></div>
+<h3 id="3-combining-both">3. Combining both</h3>
+<p>Combining <code>as const satisfies Type</code> delivers the benefits
+of both:</p>
+<ul>
+<li><strong>Contract Validation:</strong> Guarantees all required fields
+exist and conform to the specified type structure.</li>
+<li><strong>Literal Narrowing:</strong> Keeps the most specific types
+possible instead of widening to primitives like <code>string</code> or
+<code>number</code>.</li>
+<li><strong>Deep Immutability:</strong> Marks every property, nested
+object, and array as <code>readonly</code>, preventing runtime mutation
+bugs.</li>
+<li><strong>Exact Autocomplete:</strong> Enables IDEs to provide exact
+literal string suggestions based on the object's specific values.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

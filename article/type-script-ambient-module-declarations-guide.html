@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Ambient Module Declarations Guide - typescript</title>
+    <meta name="description" content="Ambient module declarations in TypeScript allow developers to define the shape and types of external modules that do not natively provide TypeScript typings. By using the declare module syntax, you inform the TypeScript compiler about the existence, expor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-ambient-module-declarations-guide">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Ambient Module Declarations Guide - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-ambient-module-declarations-guide" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Ambient module declarations in TypeScript allow developers to define the shape and types of external modules that do not natively provide TypeScript typings. By using the declare module syntax, you inform the TypeScript compiler about the existence, expor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-ambient-module-declarations-guide">TypeScript Ambient
+Module Declarations Guide</h1>
+<p>Ambient module declarations in TypeScript allow developers to define
+the shape and types of external modules that do not natively provide
+TypeScript typings. By using the <code>declare module</code> syntax, you
+inform the TypeScript compiler about the existence, exports, and types
+of external libraries, third-party packages, or custom asset imports
+without providing an actual runtime implementation. This guide covers
+the primary purposes of ambient module declarations, how they work, and
+common scenarios where they are essential.</p>
+<h3 id="typing-untyped-third-party-libraries">Typing Untyped Third-Party
+Libraries</h3>
+<p>When importing a JavaScript package from npm that does not include
+its own type definitions and does not have an available package in
+<code>@types/*</code> (DefinitelyTyped), TypeScript will raise a
+compilation error stating that it cannot find the module or its type
+declarations.</p>
+<p>An ambient module declaration resolves this by defining the module
+interface in a declaration file (usually ending in
+<code>.d.ts</code>).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// types/legacy-lib.d.ts</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;legacy-untyped-lib&#39;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">function</span> <span class="fu">performCalculation</span>(x<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">const</span> version<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Once declared, TypeScript treats any import from
+<code>'legacy-untyped-lib'</code> as typed, enabling auto-completion,
+static checking, and error detection without modifying the underlying
+source files.</p>
+<h3 id="importing-non-code-assets">Importing Non-Code Assets</h3>
+<p>Modern bundlers like Webpack, Vite, or Rollup allow developers to
+import non-code assets directly into JavaScript and TypeScript files,
+such as CSS, SVG, PNG, or GraphQL files. By default, TypeScript's
+compiler does not know how to handle these file extensions and treats
+them as missing modules.</p>
+<p>Wildcard ambient module declarations inform TypeScript how to resolve
+these imports:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// types/assets.d.ts</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.svg&#39;</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> content<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> content<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.module.css&#39;</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> classes<span class="op">:</span> { [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> classes<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>With these declarations in place, imports such as
+<code>import logo from './logo.svg'</code> or
+<code>import styles from './App.module.css'</code> will compile cleanly
+and provide typed values.</p>
+<h3 id="shorthand-declarations-for-rapid-prototyping">Shorthand
+Declarations for Rapid Prototyping</h3>
+<p>If you need to use an untyped library quickly without writing
+comprehensive type signatures, ambient declarations support a shorthand
+syntax:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;quick-library&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>This declaration marks all exports from <code>'quick-library'</code>
+as type <code>any</code>. While this bypasses strict type safety, it
+immediately silences compiler errors and allows development to continue
+without blocking on manual type definitions.</p>
+<h3 id="module-augmentation">Module Augmentation</h3>
+<p>Ambient module declarations also allow you to extend or patch the
+interfaces of existing modules—a practice known as module augmentation.
+If a third-party library has types, but you want to attach additional
+properties to its classes, interfaces, or global namespaces, you can
+re-open the module:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&#39;express&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;express-serve-static-core&#39;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">interface</span> Request {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    user<span class="op">?:</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      role<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="summary-of-core-purposes">Summary of Core Purposes</h3>
+<ul>
+<li><strong>Compatibility:</strong> Integrates plain JavaScript packages
+seamlessly into a strict TypeScript project.</li>
+<li><strong>Asset Integration:</strong> Teaches the compiler to
+recognize imports of assets such as stylesheets, images, and raw text
+files.</li>
+<li><strong>Extensibility:</strong> Enables developers to augment and
+expand existing third-party types to fit custom runtime behaviors.</li>
+<li><strong>Error Prevention:</strong> Eliminates "Cannot find module"
+errors while retaining static type checking across the application
+boundary.</li>
+</ul></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

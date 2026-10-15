@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Object.keys Returns string[] in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, Object.keys returns string[] rather than (keyof T)[] because of how TypeScript&#39;s structural type system interacts with JavaScript at runtime. While narrowing the return type to (keyof T)[] feels intuitive, doing so would compromise type saf">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-object-keys-returns-string-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Object.keys Returns string[] in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-object-keys-returns-string-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, Object.keys returns string[] rather than (keyof T)[] because of how TypeScript&#39;s structural type system interacts with JavaScript at runtime. While narrowing the return type to (keyof T)[] feels intuitive, doing so would compromise type saf" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-objectkeys-returns-string-in-typescript">Why Object.keys
+Returns string[] in TypeScript</h1>
+<p>In TypeScript, <code>Object.keys</code> returns <code>string[]</code>
+rather than <code>(keyof T)[]</code> because of how TypeScript's
+structural type system interacts with JavaScript at runtime. While
+narrowing the return type to <code>(keyof T)[]</code> feels intuitive,
+doing so would compromise type safety whenever objects contain extra
+properties, inherit enumerable prototype keys, or change dynamically.
+This article explains the technical reasons behind this design choice
+and demonstrates how to safely type object keys when strictness is
+required.</p>
+<h3 id="1-structural-typing-and-excess-properties">1. Structural Typing
+and Excess Properties</h3>
+<p>TypeScript uses a structural type system rather than a nominal one.
+Under structural typing, a type is defined by its shape, meaning a value
+is compatible with an interface as long as it satisfies the required
+shape—even if it includes additional properties.</p>
+<p>Consider this scenario:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> User {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> admin <span class="op">=</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Alex&quot;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  role<span class="op">:</span> <span class="st">&quot;superadmin&quot;</span> <span class="co">// Excess property</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user<span class="op">:</span> User <span class="op">=</span> admin<span class="op">;</span> <span class="co">// Valid assignment due to structural subtyping</span></span></code></pre></div>
+<p>If <code>Object.keys(user)</code> returned
+<code>(keyof User)[]</code>, TypeScript would promise that every element
+in the resulting array is strictly <code>"id" | "name"</code>. At
+runtime, however, <code>Object.keys(user)</code> produces
+<code>["id", "name", "role"]</code>. If the compiler assumed only
+<code>"id" | "name"</code> were present, downstream code relying on this
+guarantee could behave unexpectedly or introduce subtle runtime
+bugs.</p>
+<h3 id="2-prototype-pollution-and-enumerable-properties">2. Prototype
+Pollution and Enumerable Properties</h3>
+<p><code>Object.keys</code> returns an array of a given object's own
+enumerable property names. However, JavaScript objects can inherit
+enumerable properties from their prototype chain, or external libraries
+might augment built-in prototypes. Because TypeScript cannot predict
+runtime alterations to an object or its prototype chain, assigning a
+strict compile-time union like <code>(keyof T)[]</code> would represent
+an unsound guarantee.</p>
+<h3 id="3-subtyping-and-the-soundness-trade-off">3. Subtyping and the
+Soundness Trade-off</h3>
+<p>The TypeScript design team prioritized type soundness over developer
+convenience in this case. In JavaScript, an object typed as
+<code>T</code> is strictly guaranteed to have <em>at least</em> the
+properties of <code>T</code>, but almost never <em>only</em> the
+properties of <code>T</code>. Therefore, the only guaranteed safe type
+for any generic object's keys at runtime is <code>string</code>.</p>
+<h3 id="safe-workarounds">Safe Workarounds</h3>
+<p>When you control the object lifecycle and are certain that no extra
+properties exist, you can enforce stricter typings using custom helper
+functions or type assertions.</p>
+<h4 id="using-a-type-assertion">Using a Type Assertion</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> person <span class="op">=</span> { name<span class="op">:</span> <span class="st">&quot;Sam&quot;</span><span class="op">,</span> age<span class="op">:</span> <span class="dv">30</span> }<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> keys <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(person) <span class="im">as</span> (<span class="kw">keyof</span> <span class="kw">typeof</span> person)[]<span class="op">;</span></span></code></pre></div>
+<h4 id="creating-a-generic-helper-function">Creating a Generic Helper
+Function</h4>
+<p>To avoid repeating type assertions, define a reusable utility
+function:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getKeys</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">&gt;</span>(obj<span class="op">:</span> T)<span class="op">:</span> (<span class="kw">keyof</span> T)[] {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(obj) <span class="im">as</span> (<span class="kw">keyof</span> T)[]<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> { host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span> port<span class="op">:</span> <span class="dv">8080</span> }<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> configKeys <span class="op">=</span> <span class="fu">getKeys</span>(config)<span class="op">;</span> <span class="co">// Type is (&quot;host&quot; | &quot;port&quot;)[]</span></span></code></pre></div>
+<p>By keeping the default return type as <code>string[]</code>,
+TypeScript prevents incorrect assumptions in open type hierarchies while
+still allowing developers to opt into stricter types when
+appropriate.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

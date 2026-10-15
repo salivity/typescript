@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Typings for CSS Modules and Images - typescript</title>
+    <meta name="description" content="TypeScript is designed to compile JavaScript and TypeScript files, meaning it natively lacks the ability to interpret non-code assets such as images and stylesheets. To prevent compilation errors when importing these static files, TypeScript uses ambient">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-typings-for-css-modules-and-images">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Typings for CSS Modules and Images - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-typings-for-css-modules-and-images" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript is designed to compile JavaScript and TypeScript files, meaning it natively lacks the ability to interpret non-code assets such as images and stylesheets. To prevent compilation errors when importing these static files, TypeScript uses ambient" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-typings-for-css-modules-and-images">TypeScript
+Typings for CSS Modules and Images</h1>
+<p>TypeScript is designed to compile JavaScript and TypeScript files,
+meaning it natively lacks the ability to interpret non-code assets such
+as images and stylesheets. To prevent compilation errors when importing
+these static files, TypeScript uses ambient module declarations defined
+in declaration files (<code>.d.ts</code>). This article explains how
+TypeScript recognizes non-code assets via ambient typings, how to
+configure declarations for images and CSS modules, and how these
+declarations integrate into the TypeScript compiler workflow.</p>
+<h2 id="the-import-problem-for-non-code-assets">The Import Problem for
+Non-Code Assets</h2>
+<p>When an application bundles assets using tools like Webpack, Vite, or
+Rollup, developers often import assets directly into their code:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logo <span class="im">from</span> <span class="st">&#39;./logo.svg&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> styles <span class="im">from</span> <span class="st">&#39;./Button.module.css&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>By default, the TypeScript compiler checks the local file system for
+a corresponding <code>.ts</code>, <code>.tsx</code>, or
+<code>.d.ts</code> file. Since <code>logo.svg</code> and
+<code>Button.module.css</code> are not recognized source files, the
+compiler produces error
+<code>TS2307: Cannot find module '...' or its corresponding type declarations</code>.</p>
+<h2 id="ambient-module-declarations">Ambient Module Declarations</h2>
+<p>TypeScript resolves this limitation using ambient declarations via
+the <code>declare module</code> syntax. Ambient declarations describe
+the shape of an imported module without providing an implementation. By
+utilizing wildcard module names (pattern matching), developers can
+define typing rules for entire categories of file extensions.</p>
+<p>These definitions are conventionally stored in a declaration file,
+such as <code>globals.d.ts</code> or <code>declarations.d.ts</code>,
+placed within the project's source directory.</p>
+<h3 id="declaring-static-image-assets">Declaring Static Image
+Assets</h3>
+<p>For static image formats (such as <code>.svg</code>,
+<code>.png</code>, <code>.jpg</code>, or <code>.webp</code>), bundlers
+typically resolve the import to a string representing the public URL or
+file path. The ambient declaration mirrors this behavior:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.svg&#39;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> content<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> content<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.png&#39;</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> content<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> content<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.jpg&#39;</span> {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> content<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> content<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>With this declaration in scope, any import matching
+<code>*.png</code> or <code>*.svg</code> is assigned a type where the
+default export is a <code>string</code>.</p>
+<h3 id="declaring-css-modules">Declaring CSS Modules</h3>
+<p>CSS modules generate scoped class names at build time and export an
+object mapping original class names to their hashed, unique equivalents.
+The ambient declaration for CSS modules models this key-value
+structure:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.module.css&#39;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> classes<span class="op">:</span> { <span class="kw">readonly</span> [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> classes<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;*.module.scss&#39;</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> classes<span class="op">:</span> { <span class="kw">readonly</span> [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> classes<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This wildcard typing allows arbitrary property access on the imported
+styles object (e.g., <code>styles.buttonContainer</code>), returning a
+string for each accessed class.</p>
+<h2 id="generating-exact-types-for-css-modules">Generating Exact Types
+for CSS Modules</h2>
+<p>While a generic <code>Record&lt;string, string&gt;</code> stops
+TypeScript from throwing errors, it does not provide autocomplete or
+protect against typos in class names. To achieve strict type safety for
+CSS modules, developers use specialized tooling rather than a single
+wildcard declaration:</p>
+<ol type="1">
+<li><strong>Build-Time Generators:</strong> Tools like
+<code>typed-css-modules</code> or bundler plugins automatically generate
+dedicated <code>.d.ts</code> files alongside each stylesheet (e.g.,
+creating <code>Button.module.css.d.ts</code> alongside
+<code>Button.module.css</code>).</li>
+<li><strong>IDE Integration:</strong> Plugins such as the TypeScript CSS
+Modules Language Service allow editors to read the underlying CSS files
+directly and provide real-time type inference without polluting the
+source tree with generated files.</li>
+</ol>
+<h2 id="configuring-typescript-to-read-declarations">Configuring
+TypeScript to Read Declarations</h2>
+<p>For TypeScript to recognize ambient declarations, the
+<code>.d.ts</code> file must be included in the compiler's compilation
+context. This is managed in the <code>tsconfig.json</code> file via the
+<code>include</code> array:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ESNext&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="st">&quot;ESNext&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;moduleResolution&quot;</span><span class="fu">:</span> <span class="st">&quot;node&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;include&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/**/*&quot;</span><span class="ot">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/declarations.d.ts&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>As long as the ambient declaration file matches the paths specified
+in <code>include</code>, TypeScript applies these typings globally
+across the project, allowing seamless imports of static assets.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

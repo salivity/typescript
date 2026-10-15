@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Stage 3 Decorators: addInitializer Explained - typescript</title>
+    <meta name="description" content="The addInitializer method is a built-in lifecycle hook provided on the context object of ECMAScript Stage 3 decorators in TypeScript. It allows developers to register custom initialization functions that run either when a class is defined or when an insta">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-stage-3-decorators-add-initializer-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Stage 3 Decorators: addInitializer Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-stage-3-decorators-add-initializer-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The addInitializer method is a built-in lifecycle hook provided on the context object of ECMAScript Stage 3 decorators in TypeScript. It allows developers to register custom initialization functions that run either when a class is defined or when an insta" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-stage-3-decorators-addinitializer-explained">TypeScript
+Stage 3 Decorators: addInitializer Explained</h1>
+<p>The <code>addInitializer</code> method is a built-in lifecycle hook
+provided on the context object of ECMAScript Stage 3 decorators in
+TypeScript. It allows developers to register custom initialization
+functions that run either when a class is defined or when an instance of
+that class is constructed. This article explores how
+<code>addInitializer</code> functions, where it fits in the decorator
+execution timeline, and why it is essential for modern decorator
+patterns such as auto-binding and metadata registration.</p>
+<h3 id="the-role-of-addinitializer">The Role of
+<code>addInitializer</code></h3>
+<p>Under the Stage 3 decorators specification, decorators cannot
+directly modify property descriptors or alter the constructor logic in
+arbitrary ways like legacy (Stage 2) experimental decorators did.
+Instead, each decorator receives two arguments: the value being
+decorated and a <code>context</code> object (such as
+<code>ClassDecoratorContext</code>,
+<code>ClassMethodDecoratorContext</code>, or
+<code>ClassFieldDecoratorContext</code>).</p>
+<p>The <code>addInitializer</code> method exists on these context
+objects. Its primary purpose is to allow a decorator to run extra logic
+at the exact moment a class or class member becomes ready for use.</p>
+<h3 id="execution-timing">Execution Timing</h3>
+<p>The execution of the callback passed to <code>addInitializer</code>
+depends entirely on the type of decorator calling it:</p>
+<ol type="1">
+<li><p><strong>Member Decorators (Methods, Accessors, and
+Fields):</strong> When invoked inside a method, getter, setter, or field
+decorator, callbacks registered with <code>addInitializer</code> execute
+during instance construction. They run before the body of the class
+constructor executes. This gives you direct access to the newly created
+instance (<code>this</code>) to perform per-instance setup.</p></li>
+<li><p><strong>Class Decorators:</strong> When invoked inside a
+class-level decorator, the callback runs after the class has been
+completely defined and all static initializers have completed. At this
+point, the class constructor function is finalized and fully
+accessible.</p></li>
+</ol>
+<h3 id="common-use-cases">Common Use Cases</h3>
+<ul>
+<li><strong>Auto-binding Methods:</strong> Because Stage 3 method
+decorators transform functions on the prototype rather than individual
+instances, they cannot directly bind <code>this</code> to an instance
+during prototype construction. Using <code>addInitializer</code>, a
+method decorator can capture the specific instance when it is
+constructed and bind the method to it automatically:</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">bound</span>(value<span class="op">:</span> <span class="bu">Function</span><span class="op">,</span> context<span class="op">:</span> ClassMethodDecoratorContext) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  context<span class="op">.</span><span class="fu">addInitializer</span>(<span class="kw">function</span> (<span class="kw">this</span><span class="op">:</span> <span class="dt">any</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span>[context<span class="op">.</span><span class="at">name</span>] <span class="op">=</span> <span class="kw">this</span>[context<span class="op">.</span><span class="at">name</span>]<span class="op">.</span><span class="fu">bind</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><p><strong>Event Listeners and Observers:</strong> You can
+automatically register an instance method as an event listener or
+observer on a global bus or local emitter right when an instance is
+instantiated, removing the need for boilerplate setup inside the class
+constructor.</p></li>
+<li><p><strong>Registry and Dependency Injection:</strong> For
+class-level decorators, <code>addInitializer</code> provides a clean way
+to register the fully defined class with an external dependency
+injection container, plugin system, or route registry after its
+prototype and static members are finalized.</p></li>
+</ul>
+<p>By bridging the gap between decorator evaluation time and instance
+creation time, <code>addInitializer</code> provides a standardized,
+type-safe mechanism to run side effects and instance-specific logic
+without hacking the class prototype or overriding constructors.</p></article>
+        <div id="comments-container"></div>
+        <script>
+            const utterancesScript = document.createElement('script');
+            utterancesScript.setAttribute('src', 'https://utteranc.es/client.js');
+            utterancesScript.setAttribute('repo', 'salivity/typescript'); 
+            utterancesScript.setAttribute('issue-term', 'pathname'); 
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            utterancesScript.setAttribute('theme', currentTheme === 'dark' ? 'github-dark' : 'github-light'); 
+            utterancesScript.setAttribute('crossorigin', 'anonymous');
+            utterancesScript.async = true;
+            document.getElementById('comments-container').appendChild(utterancesScript);
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
