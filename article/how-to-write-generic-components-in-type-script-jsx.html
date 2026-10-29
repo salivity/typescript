@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Write Generic Components in TypeScript JSX - typescript</title>
+    <meta name="description" content="This guide explains how to define and use generic components in React with TypeScript JSX (.tsx). It covers the syntax for standard function declarations and arrow functions, demonstrates how to define generic prop interfaces, explores type constraints, a">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-write-generic-components-in-type-script-jsx">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Write Generic Components in TypeScript JSX - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-write-generic-components-in-type-script-jsx" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to define and use generic components in React with TypeScript JSX (.tsx). It covers the syntax for standard function declarations and arrow functions, demonstrates how to define generic prop interfaces, explores type constraints, a" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-write-generic-components-in-typescript-jsx">How to Write
+Generic Components in TypeScript JSX</h1>
+<p>This guide explains how to define and use generic components in React
+with TypeScript JSX (<code>.tsx</code>). It covers the syntax for
+standard function declarations and arrow functions, demonstrates how to
+define generic prop interfaces, explores type constraints, and provides
+solutions for common parser ambiguities unique to JSX.</p>
+<h2 id="generic-component-with-function-declarations">Generic Component
+with Function Declarations</h2>
+<p>The most straightforward way to write a generic component in TSX is
+using standard <code>function</code> syntax. You place the generic type
+parameter directly after the function name.</p>
+<pre class="tsx"><code>interface ListProps&lt;T&gt; {
+  items: T[];
+  renderItem: (item: T) =&gt; React.ReactNode;
+}
+
+function List&lt;T&gt;(props: ListProps&lt;T&gt;) {
+  return (
+    &lt;ul&gt;
+      {props.items.map((item, index) =&gt; (
+        &lt;li key={index}&gt;{props.renderItem(item)}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+<h2 id="generic-component-with-arrow-functions">Generic Component with
+Arrow Functions</h2>
+<p>When using arrow functions in a <code>.tsx</code> file, writing
+<code>&lt;T&gt;</code> causes a syntax conflict because the TypeScript
+compiler interprets <code>&lt;T&gt;</code> as an opening JSX tag rather
+than a type parameter.</p>
+<p>To resolve this ambiguity, you can either add a trailing comma or
+explicitly extend a type such as <code>unknown</code>:</p>
+<h3 id="method-1-trailing-comma">Method 1: Trailing Comma</h3>
+<pre class="tsx"><code>const List = &lt;T,&gt;(props: ListProps&lt;T&gt;) =&gt; {
+  return (
+    &lt;ul&gt;
+      {props.items.map((item, index) =&gt; (
+        &lt;li key={index}&gt;{props.renderItem(item)}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+};</code></pre>
+<h3 id="method-2-extending-unknown">Method 2: Extending
+<code>unknown</code></h3>
+<pre class="tsx"><code>const List = &lt;T extends unknown&gt;(props: ListProps&lt;T&gt;) =&gt; {
+  return (
+    &lt;ul&gt;
+      {props.items.map((item, index) =&gt; (
+        &lt;li key={index}&gt;{props.renderItem(item)}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+};</code></pre>
+<h2 id="applying-generic-constraints">Applying Generic Constraints</h2>
+<p>You can restrict the generic type to ensure incoming data contains
+required properties. This is done using the <code>extends</code>
+keyword.</p>
+<pre class="tsx"><code>interface Identifiable {
+  id: string | number;
+}
+
+interface TableProps&lt;T extends Identifiable&gt; {
+  data: T[];
+  columns: (keyof T)[];
+}
+
+function Table&lt;T extends Identifiable&gt;({ data, columns }: TableProps&lt;T&gt;) {
+  return (
+    &lt;table&gt;
+      &lt;tbody&gt;
+        {data.map((row) =&gt; (
+          &lt;tr key={row.id}&gt;
+            {columns.map((col) =&gt; (
+              &lt;td key={String(col)}&gt;{String(row[col])}&lt;/td&gt;
+            ))}
+          &lt;/tr&gt;
+        ))}
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  );
+}</code></pre>
+<h2 id="using-generic-components-in-jsx">Using Generic Components in
+JSX</h2>
+<p>TypeScript can automatically infer generic types based on the props
+passed to the component:</p>
+<pre class="tsx"><code>interface User {
+  id: number;
+  name: string;
+}
+
+const users: User[] = [
+  { id: 1, name: &quot;Alice&quot; },
+  { id: 2, name: &quot;Bob&quot; },
+];
+
+// Type inference determines T is User
+function App() {
+  return &lt;List items={users} renderItem={(user) =&gt; &lt;span&gt;{user.name}&lt;/span&gt;} /&gt;;
+}</code></pre>
+<p>If type inference fails or you need strict enforcement, you can
+explicitly pass the type argument to the JSX element:</p>
+<pre class="tsx"><code>function App() {
+  return (
+    &lt;List&lt;User&gt;
+      items={users}
+      renderItem={(user) =&gt; &lt;span&gt;{user.name}&lt;/span&gt;}
+    /&gt;
+  );
+}</code></pre></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-to-write-generic-components-in-type-script-jsx';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

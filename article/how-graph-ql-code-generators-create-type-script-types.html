@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How GraphQL Code Generators Create TypeScript Types - typescript</title>
+    <meta name="description" content="GraphQL code generators automate type safety by transforming GraphQL schemas and query documents into native TypeScript definitions. This article explains the technical pipeline behind this transformation: parsing GraphQL Schema Definition Language (SDL)">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-graph-ql-code-generators-create-type-script-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How GraphQL Code Generators Create TypeScript Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-graph-ql-code-generators-create-type-script-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="GraphQL code generators automate type safety by transforming GraphQL schemas and query documents into native TypeScript definitions. This article explains the technical pipeline behind this transformation: parsing GraphQL Schema Definition Language (SDL)" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-graphql-code-generators-create-typescript-types">How GraphQL
+Code Generators Create TypeScript Types</h1>
+<p>GraphQL code generators automate type safety by transforming GraphQL
+schemas and query documents into native TypeScript definitions. This
+article explains the technical pipeline behind this transformation:
+parsing GraphQL Schema Definition Language (SDL) and client operations
+into Abstract Syntax Trees (ASTs), validating and matching operations
+against the schema, mapping GraphQL types to TypeScript counterparts,
+and emitting precise, operation-specific TypeScript interfaces.</p>
+<h3 id="1-ingestion-and-ast-parsing">1. Ingestion and AST Parsing</h3>
+<p>The process begins by reading two sets of inputs: the GraphQL schema
+(provided via an introspection JSON file or SDL) and client-side
+operations (queries, mutations, subscriptions, and fragments extracted
+from <code>.graphql</code> files or inline template literals).</p>
+<p>The code generator uses the core <code>graphql-js</code> parser to
+convert this raw text into an Abstract Syntax Tree (AST). The AST is a
+structured JSON representation of the syntax, breaking down objects,
+scalar definitions, directives, fields, and arguments into distinct
+nodes.</p>
+<h3 id="2-validation-and-normalization">2. Validation and
+Normalization</h3>
+<p>Once the ASTs are created, the generator validates the client
+operations against the target schema:</p>
+<ul>
+<li><strong>Fragment Inlining and Resolution:</strong> Named fragments
+are resolved and matched to their target types.</li>
+<li><strong>Semantic Analysis:</strong> The generator verifies that
+requested fields exist on the queried types, arguments match defined
+inputs, and variables conform to expected types.</li>
+<li><strong>Directive Processing:</strong> Custom client or server
+directives (such as <code>@client</code> or <code>@skip</code>) are
+processed to alter type generation rules accordingly.</li>
+</ul>
+<h3 id="3-type-mapping-schema-level">3. Type Mapping (Schema Level)</h3>
+<p>The generator establishes a mapping layer that translates GraphQL
+primitives to TypeScript equivalents:</p>
+<ul>
+<li><strong>Scalars:</strong> Standard scalars are converted directly
+(<code>String</code> to <code>string</code>, <code>Int</code> and
+<code>Float</code> to <code>number</code>, <code>Boolean</code> to
+<code>boolean</code>, and <code>ID</code> to <code>string</code>).
+Custom scalars are mapped via configuration (e.g., mapping a
+<code>DateTime</code> scalar to a TypeScript <code>string</code> or
+<code>Date</code>).</li>
+<li><strong>Nullability Handling:</strong> In GraphQL, fields are
+nullable by default unless marked with an exclamation point
+(<code>!</code>). The generator mirrors this by appending
+<code>| null</code> or optional modifiers (<code>?</code>) to TypeScript
+properties unless a field is explicitly defined as non-nullable.</li>
+<li><strong>Enums:</strong> GraphQL enums are converted into TypeScript
+string unions or native TypeScript <code>enum</code> declarations.</li>
+<li><strong>Input Objects:</strong> Mutation input types are converted
+into standard TypeScript interfaces representing request payloads.</li>
+</ul>
+<h3 id="4-selection-set-projection-operation-level">4. Selection Set
+Projection (Operation Level)</h3>
+<p>A major challenge in GraphQL code generation is that client queries
+rarely fetch entire schema entities; they select specific sub-fields.
+Creating types simply mirroring the server-side models leads to
+inaccurate typings on the client.</p>
+<p>To handle this, the generator performs a projection:</p>
+<ol type="1">
+<li>It traverses the operation AST's <code>SelectionSet</code>.</li>
+<li>It walks through the corresponding path in the schema AST.</li>
+<li>It constructs a narrow, bespoke TypeScript type representing only
+the requested fields for that specific query.</li>
+<li>For polymorphic responses (Unions and Interfaces), it creates
+TypeScript discriminated union types based on the
+<code>__typename</code> field.</li>
+</ol>
+<h3 id="5-code-emission">5. Code Emission</h3>
+<p>In the final step, the generator serializes the in-memory TypeScript
+representations into code files (typically <code>.ts</code> or
+<code>.d.ts</code>). Using string templates or AST printers (such as the
+TypeScript Compiler API), the generator writes out:</p>
+<ul>
+<li><strong>Base Schema Types:</strong> Global definitions for all
+types, inputs, and enums defined in the API.</li>
+<li><strong>Operation Types:</strong> Strongly typed definitions for
+both the input variables (<code>Exact&lt;{ ... }&gt;</code>) and the
+query response data (<code>{ __typename: 'Query', ... }</code>).</li>
+<li><strong>Framework Artifacts (Optional):</strong> Pre-typed hooks or
+SDK functions (e.g., Apollo Client, TanStack Query, or URQL
+integrations) that bind the generated input and output types directly to
+execution functions.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-graph-ql-code-generators-create-type-script-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

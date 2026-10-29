@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circular Type References in TypeScript Mapped Types - typescript</title>
+    <meta name="description" content="This article examines how the TypeScript compiler processes circular type references inside mapped types. When handling recursive structures, the type checker uses deferred evaluation, internal cycle-detection markers, and strict instantiation depth limit">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/circular-type-references-in-type-script-mapped-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Circular Type References in TypeScript Mapped Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/circular-type-references-in-type-script-mapped-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines how the TypeScript compiler processes circular type references inside mapped types. When handling recursive structures, the type checker uses deferred evaluation, internal cycle-detection markers, and strict instantiation depth limit" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="circular-type-references-in-typescript-mapped-types">Circular
+Type References in TypeScript Mapped Types</h1>
+<p>This article examines how the TypeScript compiler processes circular
+type references inside mapped types. When handling recursive structures,
+the type checker uses deferred evaluation, internal cycle-detection
+markers, and strict instantiation depth limits to prevent infinite loops
+while enabling expressive structural transformations like deep
+immutability and schema parsing.</p>
+<h3 id="deferred-evaluation-and-lazy-resolution">Deferred Evaluation and
+Lazy Resolution</h3>
+<p>TypeScript does not evaluate mapped types instantaneously across an
+entire recursive tree. Instead, it relies on lazy evaluation. When a
+mapped type references itself—either directly or indirectly through a
+nested property—the compiler defers the resolution of the recursive
+branch until that specific property is indexed or accessed.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeepReadonly<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K] <span class="kw">extends</span> <span class="dt">object</span> <span class="op">?</span> DeepReadonly<span class="op">&lt;</span>T[K]<span class="op">&gt;</span> <span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>In the example above, the compiler does not recursively expand
+<code>DeepReadonly&lt;T&gt;</code> indefinitely at declaration time. It
+computes the immediate keys of <code>T</code>, and only when a consumer
+accesses a nested property (for example,
+<code>value.nested.property</code>) does the compiler resolve the next
+recursive step for that specific branch.</p>
+<h3 id="internal-cycle-detection">Internal Cycle Detection</h3>
+<p>During type checking, the compiler maintains an internal stack of
+types currently being instantiated. Each type identity is tracked to
+verify whether the compiler is re-entering a previously active type
+resolution path.</p>
+<ol type="1">
+<li><strong>Instantiation Stack</strong>: When resolving a mapped type,
+the compiler pushes the type ID onto a resolution stack.</li>
+<li><strong>Marker Application</strong>: If the compiler encounters the
+same type reference with the exact same type arguments while already
+resolving that type, it marks the relationship as circular.</li>
+<li><strong>Short-Circuiting</strong>: Once a cycle is detected without
+an intermediate transformation or termination condition, the compiler
+short-circuits the evaluation and infers the circular reference as
+<code>any</code> or emits error
+<code>TS2456: Type alias circularly references itself</code>.</li>
+</ol>
+<h3 id="recursion-depth-and-instantiation-thresholds">Recursion Depth
+and Instantiation Thresholds</h3>
+<p>When a mapped type operates on types that refer to themselves via
+interfaces or object shapes (such as linked lists or tree nodes),
+standard cycle detection might not terminate immediately if each
+recursive pass introduces subtle variations in the type arguments.</p>
+<p>To prevent the compiler from hanging or crashing the process via
+stack overflow, TypeScript enforces strict global instantiation
+limits:</p>
+<ul>
+<li><strong>Depth Limit</strong>: The compiler sets a maximum depth
+threshold (typically around 50 to 100 levels) for recursive type
+instantiations.</li>
+<li><strong>Count Limit</strong>: A global counter tracks the total
+number of type instantiations within a single evaluation context.</li>
+</ul>
+<p>If a circular mapped type traverses deeper than these safety
+thresholds without resolving to a primitive or base case, the compiler
+aborts evaluation and produces
+<code>TS2589: Type instantiation is excessively deep and possibly infinite</code>.</p>
+<h3
+id="distinguishing-safe-recursion-from-true-circularity">Distinguishing
+Safe Recursion from True Circularity</h3>
+<p>The compiler differentiates between benign structural recursion and
+non-terminating circular definitions based on base-case conditions:</p>
+<ul>
+<li><strong>Safe Recursive Patterns</strong>: Combining mapped types
+with conditional types (<code>T extends object ? ... : ...</code>)
+allows the compiler to identify terminal leaf nodes (such as primitives,
+functions, or non-object types). Because primitives do not have
+sub-properties, the recursion terminates cleanly before exceeding the
+instantiation depth.</li>
+<li><strong>Direct Self-Alias Cycles</strong>: Direct references where a
+mapped type aliases itself without an unmapped property boundary or
+condition will fail cycle detection immediately, preventing unbounded
+evaluation before instantiation even begins.</li>
+</ul>
+<h3 id="strategies-to-prevent-compiler-errors">Strategies to Prevent
+Compiler Errors</h3>
+<p>To prevent mapped types from exhausting the compiler's circular
+evaluation limits when handling deeply nested or self-referential
+structures:</p>
+<ol type="1">
+<li><strong>Use Interfaces to Break Immediate Cycles</strong>:
+TypeScript delays resolving interface bodies more aggressively than type
+aliases. Wrapping a recursive mapped reference inside an interface or
+using an interface property provides a fresh evaluation boundary.</li>
+<li><strong>Implement Explicit Depth Counters</strong>: Developers can
+pass a tuple to track and limit recursion depth explicitly:</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeepPartial<span class="op">&lt;</span>T<span class="op">,</span> Depth <span class="kw">extends</span> <span class="dt">unknown</span>[] <span class="op">=</span> []<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  Depth[<span class="st">&#39;length&#39;</span>] <span class="kw">extends</span> <span class="dv">5</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> T </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> { [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">?:</span> DeepPartial<span class="op">&lt;</span>T[K]<span class="op">,</span> [<span class="op">...</span>Depth<span class="op">,</span> <span class="dt">unknown</span>]<span class="op">&gt;</span> }<span class="op">;</span></span></code></pre></div>
+<p>This ensures the compiler terminates the traversal at a predetermined
+limit, avoiding <code>TS2589</code> entirely.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/circular-type-references-in-type-script-mapped-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

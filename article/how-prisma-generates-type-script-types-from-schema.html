@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Prisma Generates TypeScript Types from Schema - typescript</title>
+    <meta name="description" content="Prisma ORM achieves end-to-end type safety by reading your declarative data model in the schema.prisma file, transforming it into an internal data representation, and generating customized TypeScript definition files directly into your project&#39;s dependenc">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-prisma-generates-type-script-types-from-schema">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Prisma Generates TypeScript Types from Schema - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-prisma-generates-type-script-types-from-schema" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Prisma ORM achieves end-to-end type safety by reading your declarative data model in the schema.prisma file, transforming it into an internal data representation, and generating customized TypeScript definition files directly into your project&#39;s dependenc" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-prisma-generates-typescript-types-from-schema">How Prisma
+Generates TypeScript Types from Schema</h1>
+<p>Prisma ORM achieves end-to-end type safety by reading your
+declarative data model in the <code>schema.prisma</code> file,
+transforming it into an internal data representation, and generating
+customized TypeScript definition files directly into your project's
+dependencies. When you run the <code>prisma generate</code> command,
+Prisma's Rust-based engine and TypeScript generators collaborate to
+create type definitions tailored to your specific database models, field
+types, and query capabilities, eliminating the need to manually
+synchronize database changes with TypeScript interfaces.</p>
+<h3 id="1-the-schema-as-the-single-source-of-truth">1. The Schema as the
+Single Source of Truth</h3>
+<p>The type generation process begins with the
+<code>schema.prisma</code> file. Here, you define your database models,
+field types, relations, and generator configuration:</p>
+<pre class="prisma"><code>datasource db {
+  provider = &quot;postgresql&quot;
+  url      = env(&quot;DATABASE_URL&quot;)
+}
+
+generator client {
+  provider = &quot;prisma-client-js&quot;
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}</code></pre>
+<p>The <code>generator client</code> block specifies that the Prisma
+Client generator will process this schema and output client code with
+corresponding TypeScript typings.</p>
+<h3 id="2-schema-parsing-and-dmmf-generation">2. Schema Parsing and DMMF
+Generation</h3>
+<p>When you execute <code>npx prisma generate</code>, Prisma uses its
+core engine—written in Rust—to parse and validate the
+<code>schema.prisma</code> file. The engine validates model constraints,
+attributes (such as <code>@unique</code>, <code>@relation</code>, and
+<code>@default</code>), and relational integrity.</p>
+<p>Once validated, the Rust engine transforms the schema into an
+intermediate representation known as the <strong>Data Model Meta Format
+(DMMF)</strong>. The DMMF is a structured JSON representation that
+captures:</p>
+<ul>
+<li><strong>Datamodel:</strong> All defined models, fields, primary
+keys, and relationship structures.</li>
+<li><strong>Schema:</strong> The available operations (queries,
+mutations, arguments, and return types) supported by the database
+engine.</li>
+<li><strong>Mappings:</strong> How database entities correspond to
+Prisma Client API methods.</li>
+</ul>
+<h3 id="3-code-and-type-generation">3. Code and Type Generation</h3>
+<p>The DMMF is passed to <code>@prisma/client</code>'s generator engine,
+which uses TypeScript templates to produce the concrete client
+implementation and its associated type declaration files
+(<code>index.d.ts</code>).</p>
+<p>By default, these files are written to
+<code>node_modules/.prisma/client</code> and re-exported via
+<code>@prisma/client</code>. Because the code is placed inside
+<code>node_modules</code>, your editor and the TypeScript compiler
+resolve the types automatically without requiring custom path
+aliases.</p>
+<p>The generated types include:</p>
+<ul>
+<li><strong>Model Types:</strong> Exact representations of the records
+stored in your tables (e.g., <code>User</code>).</li>
+<li><strong>Input and Filter Types:</strong> Structured types for
+filtering, sorting, pagination, and data mutations (e.g.,
+<code>UserWhereInput</code>, <code>UserCreateInput</code>,
+<code>UserUpdateInput</code>).</li>
+<li><strong>Payload Types:</strong> Types that represent the exact data
+shapes returned by operations based on query arguments.</li>
+</ul>
+<h3 id="4-advanced-generics-and-dynamic-query-payloads">4. Advanced
+Generics and Dynamic Query Payloads</h3>
+<p>Prisma does not simply generate static interfaces for each table.
+Instead, it utilizes TypeScript generics, mapped types, and conditional
+types to provide accurate typings based on specific queries.</p>
+<p>For example, when using Prisma's <code>select</code> or
+<code>include</code> arguments to fetch partial data or joined
+relations, TypeScript calculates the shape of the returned object
+dynamically:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Prisma resolves the type dynamically to only include &#39;id&#39; and &#39;email&#39;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="cf">await</span> prisma<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="fu">findUnique</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  where<span class="op">:</span> { id<span class="op">:</span> <span class="dv">1</span> }<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  select<span class="op">:</span> { id<span class="op">:</span> <span class="kw">true</span><span class="op">,</span> email<span class="op">:</span> <span class="kw">true</span> }<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Under the hood, Prisma uses a conditional type helper, such as
+<code>Prisma.UserGetPayload&lt;T&gt;</code>, where <code>T</code>
+represents the query arguments. If a field is omitted from
+<code>select</code>, TypeScript automatically strips that field from the
+inferred return type at compile time.</p>
+<h3 id="5-type-mapping-between-database-and-typescript">5. Type Mapping
+Between Database and TypeScript</h3>
+<p>Prisma automatically maps native database types to corresponding
+TypeScript primitives:</p>
+<ul>
+<li><code>String</code> maps to <code>string</code></li>
+<li><code>Boolean</code> maps to <code>boolean</code></li>
+<li><code>Int</code> and <code>Float</code> map to
+<code>number</code></li>
+<li><code>BigInt</code> maps to <code>bigint</code></li>
+<li><code>DateTime</code> maps to <code>Date</code></li>
+<li><code>Json</code> maps to <code>Prisma.JsonValue</code></li>
+<li>Optional fields (<code>?</code>) map to nullable union types
+(<code>Type | null</code>)</li>
+</ul>
+<p>Through this automated pipeline—parsing the schema, converting it to
+the DMMF, and generating generic-driven declaration files—Prisma ensures
+that any change in the database structure is instantly reflected in
+TypeScript's compile-time checks.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-prisma-generates-type-script-types-from-schema';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

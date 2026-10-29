@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Arguments vs Contextual Typing in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, explicit type arguments and contextual typing represent opposite directions of the type inference process. Explicit type arguments occur when a developer manually specifies the generic types for a function or class call, directing the compi">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-arguments-vs-contextual-typing-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type Arguments vs Contextual Typing in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-arguments-vs-contextual-typing-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, explicit type arguments and contextual typing represent opposite directions of the type inference process. Explicit type arguments occur when a developer manually specifies the generic types for a function or class call, directing the compi" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-arguments-vs-contextual-typing-in-typescript">Type
+Arguments vs Contextual Typing in TypeScript</h1>
+<p>In TypeScript, explicit type arguments and contextual typing
+represent opposite directions of the type inference process. Explicit
+type arguments occur when a developer manually specifies the generic
+types for a function or class call, directing the compiler on how to
+handle the data. Conversely, contextual typing occurs when the
+TypeScript compiler automatically deduces the type of an expression
+based on its surrounding context or location in the code. Understanding
+the difference between these two concepts allows developers to write
+cleaner, more type-safe code while avoiding unnecessary annotations.</p>
+<h2 id="what-are-explicit-type-arguments">What Are Explicit Type
+Arguments?</h2>
+<p>Explicit type arguments allow you to manually pass types to a generic
+function, interface, or class using angle bracket syntax
+(<code>&lt;Type&gt;</code>). In this scenario, information flows outward
+from the developer to the compiler.</p>
+<p>TypeScript is generally capable of inferring generic types based on
+the values passed into a function. However, there are scenarios where
+the compiler lacks sufficient information, or where you want to enforce
+a stricter constraint than the default inference.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createList</span><span class="op">&lt;</span>T<span class="op">&gt;</span>()<span class="op">:</span> T[] {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> []<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Without an explicit type argument, TS might infer unknown[] or never[]</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Explicit type argument specifies that T is a string</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> names <span class="op">=</span> <span class="fu">createList</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>names<span class="op">.</span><span class="fu">push</span>(<span class="st">&quot;Alice&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Explicit type arguments are particularly useful when:</p>
+<ul>
+<li>A generic function takes no arguments to infer types from (e.g.,
+<code>createList&lt;T&gt;()</code>).</li>
+<li>You need to broaden or constrain a type to a specific union (e.g.,
+<code>useState&lt;string | number&gt;(1)</code>).</li>
+<li>The returned data needs to be cast accurately from an untyped source
+(e.g., <code>fetchData&lt;UserResponse&gt;()</code>).</li>
+</ul>
+<h2 id="what-is-contextual-typing">What Is Contextual Typing?</h2>
+<p>Contextual typing is a form of implicit type inference where the type
+of an expression is determined by its position or context within the
+program. Instead of reading types from the expression itself, TypeScript
+looks "from the outside in."</p>
+<p>The most common example of contextual typing occurs in callback
+functions:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// &#39;n&#39; is contextually typed as &#39;number&#39; based on the array it is mapping over</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">map</span>((n) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> n <span class="op">*</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because TypeScript knows that <code>numbers</code> is an array of
+numbers, it contextually assigns the type <code>number</code> to the
+parameter <code>n</code>. You do not need to annotate
+<code>(n: number)</code>.</p>
+<p>Contextual typing also occurs in:</p>
+<ul>
+<li><strong>Event listeners</strong>: Parameters in
+<code>window.addEventListener('click', (e) =&gt; ...)</code>
+automatically type <code>e</code> as <code>MouseEvent</code>.</li>
+<li><strong>Object assignments</strong>: Assigning an object literal to
+a typed variable checks properties against that target type.</li>
+</ul>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Explicit Type Arguments</th>
+<th style="text-align: left;">Contextual Typing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Direction of Flow</strong></td>
+<td style="text-align: left;">Developer <span
+class="math inline">\(\to\)</span> Compiler (Manual)</td>
+<td style="text-align: left;">Context <span
+class="math inline">\(\to\)</span> Expression (Automatic)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Syntax</strong></td>
+<td style="text-align: left;">Angle brackets <code>&lt;T&gt;</code></td>
+<td style="text-align: left;">No extra syntax required</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Primary Target</strong></td>
+<td style="text-align: left;">Generic functions, classes, and types</td>
+<td style="text-align: left;">Function parameters, callbacks, object
+literals</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Purpose</strong></td>
+<td style="text-align: left;">Guiding or overriding generic
+resolution</td>
+<td style="text-align: left;">Eliminating boilerplate type
+annotations</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-they-work-together">How They Work Together</h2>
+<p>Explicit type arguments and contextual typing frequently interact.
+When you provide an explicit type argument to a generic function, that
+generic type becomes the context used to contextually type the
+function's parameters:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Transformer<span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (input<span class="op">:</span> T)<span class="op">:</span> U<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processValue</span><span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span>(value<span class="op">:</span> T<span class="op">,</span> transform<span class="op">:</span> Transformer<span class="op">&lt;</span>T<span class="op">,</span> U<span class="op">&gt;</span>)<span class="op">:</span> U {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">transform</span>(value)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Explicit type arguments create the context for the anonymous callback function</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">processValue</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span>(<span class="dv">42</span><span class="op">,</span> (item) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;item&#39; is contextually typed as &#39;number&#39; because T was explicitly declared as &#39;number&#39;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> item<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Explicit type arguments provide manual control when generic inference
+falls short, while contextual typing reduces repetitive type annotations
+by letting TypeScript rely on the surrounding program structure.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-arguments-vs-contextual-typing-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

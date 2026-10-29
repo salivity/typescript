@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the Difference Between any and unknown in TypeScript? - typescript</title>
+    <meta name="description" content="In TypeScript, both any and unknown represent values of any possible type, but they enforce fundamentally different safety guarantees. The any type acts as an escape hatch from the type checker, allowing any operation, property access, or assignment witho">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-the-difference-between-any-and-unknown-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the Difference Between any and unknown in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-the-difference-between-any-and-unknown-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, both any and unknown represent values of any possible type, but they enforce fundamentally different safety guarantees. The any type acts as an escape hatch from the type checker, allowing any operation, property access, or assignment witho" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="what-is-the-difference-between-any-and-unknown-in-typescript">What
+Is the Difference Between any and unknown in TypeScript?</h1>
+<p>In TypeScript, both <code>any</code> and <code>unknown</code>
+represent values of any possible type, but they enforce fundamentally
+different safety guarantees. The <code>any</code> type acts as an escape
+hatch from the type checker, allowing any operation, property access, or
+assignment without compile-time verification. In contrast, the
+<code>unknown</code> type represents a type-safe counterpart that
+requires explicit type narrowing or type assertions before any operation
+can be performed on the value.</p>
+<h2 id="understanding-the-any-type">Understanding the any Type</h2>
+<p>The <code>any</code> type completely disables TypeScript's static
+type analysis for the assigned variable. When a value is typed as
+<code>any</code>, the compiler assumes that all properties, methods, and
+operations exist and are valid.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> value<span class="op">:</span> <span class="dt">any</span> <span class="op">=</span> <span class="st">&quot;Hello World&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>value<span class="op">.</span><span class="fu">foo</span>()<span class="op">;</span> <span class="co">// Compiles without error, fails at runtime</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>value<span class="op">.</span><span class="at">length</span><span class="op">;</span> <span class="co">// Compiles without error</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> isNumber<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> value<span class="op">;</span> <span class="co">// Compiles without error, even though value is a string</span></span></code></pre></div>
+<p>While <code>any</code> provides maximum flexibility, it eliminates
+compile-time safety and can introduce runtime errors. It is primarily
+intended for migrating legacy JavaScript codebases or handling scenarios
+where typing provides no practical benefit.</p>
+<h2 id="understanding-the-unknown-type">Understanding the unknown
+Type</h2>
+<p>Introduced in TypeScript 3.0, <code>unknown</code> is the type-safe
+equivalent of <code>any</code>. A variable of type <code>unknown</code>
+can hold any value, but the compiler will not allow arbitrary operations
+or property accesses on it without first verifying its concrete
+type.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> value<span class="op">:</span> <span class="dt">unknown</span> <span class="op">=</span> <span class="st">&quot;Hello World&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// value.foo(); // Error: Object is of type &#39;unknown&#39;.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// value.length; // Error: Object is of type &#39;unknown&#39;.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// let isNumber: number = value; // Error: Type &#39;unknown&#39; is not assignable to type &#39;number&#39;.</span></span></code></pre></div>
+<p>Before interacting with an <code>unknown</code> variable, you must
+narrow its type using control flow analysis tools such as
+<code>typeof</code>, <code>instanceof</code>, or custom type guards.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;string&quot;</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(value<span class="op">.</span><span class="at">length</span>)<span class="op">;</span> <span class="co">// Valid: narrowed to string</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th><code>any</code></th>
+<th><code>unknown</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accepts any value</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Assignable to other types</td>
+<td>Yes (except <code>never</code>)</td>
+<td>Only to <code>unknown</code> and <code>any</code></td>
+</tr>
+<tr>
+<td>Direct property access</td>
+<td>Allowed without checks</td>
+<td>Disallowed without narrowing</td>
+</tr>
+<tr>
+<td>Direct method invocation</td>
+<td>Allowed without checks</td>
+<td>Disallowed without narrowing</td>
+</tr>
+<tr>
+<td>Type safety level</td>
+<td>None</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h2 id="when-to-use-each-type">When to Use Each Type</h2>
+<p>Use <code>unknown</code> as the default choice when dealing with data
+whose structure is not known ahead of time, such as deserialized JSON,
+user input, or responses from third-party APIs. This forces callers to
+perform runtime checks before operating on the data.</p>
+<p>Reserve <code>any</code> strictly for temporary migration phases,
+rapid prototyping, or dynamic edge cases where writing a sound type
+signature or guard is impractical.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-the-difference-between-any-and-unknown-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

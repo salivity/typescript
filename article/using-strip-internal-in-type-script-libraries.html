@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using stripInternal in TypeScript Libraries - typescript</title>
+    <meta name="description" content="The stripInternal compiler option in TypeScript automatically removes declarations marked with the / @internal / JSDoc annotation from generated declaration (.d.ts) files. In library development, it solves the problem of exposing private implementation de">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/using-strip-internal-in-type-script-libraries">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Using stripInternal in TypeScript Libraries - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/using-strip-internal-in-type-script-libraries" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The stripInternal compiler option in TypeScript automatically removes declarations marked with the / @internal / JSDoc annotation from generated declaration (.d.ts) files. In library development, it solves the problem of exposing private implementation de" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="using-stripinternal-in-typescript-libraries">Using stripInternal
+in TypeScript Libraries</h1>
+<p>The <code>stripInternal</code> compiler option in TypeScript
+automatically removes declarations marked with the
+<code>/** @internal */</code> JSDoc annotation from generated
+declaration (<code>.d.ts</code>) files. In library development, it
+solves the problem of exposing private implementation details that must
+be shared across internal modules, allowing maintainers to keep a clean,
+reliable, and strictly defined public API for end users.</p>
+<h3 id="the-problem-in-typescript-library-design">The Problem in
+TypeScript Library Design</h3>
+<p>When building a TypeScript package, you often need to share utility
+functions, classes, or helper types between different files inside your
+project. To make these elements accessible across files, you must use
+the <code>export</code> keyword.</p>
+<p>However, exporting a symbol also means TypeScript will include it in
+the generated <code>.d.ts</code> files if that module is part of the
+library's public entry point. As a result, consumers of your package can
+see and import implementation details that were never meant for public
+consumption, leading to accidental dependencies on unstable code.</p>
+<h3 id="how-stripinternal-works">How stripInternal Works</h3>
+<p>When you enable <code>stripInternal</code>, the TypeScript compiler
+inspects exported elements for the <code>/** @internal */</code> JSDoc
+tag during declaration emission. Any construct carrying this annotation
+is omitted from the resulting <code>.d.ts</code> output.</p>
+<h4 id="enabling-the-option">Enabling the Option</h4>
+<p>Add <code>stripInternal</code> to the <code>compilerOptions</code>
+section of your <code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declaration&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;stripInternal&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h4 id="code-example">Code Example</h4>
+<p>Consider an exported helper function inside your library:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * A public API function.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> tax<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">applyInternalDiscount</span>(price) <span class="op">+</span> tax<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@internal</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">applyInternalDiscount</span>(price<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> price <span class="op">*</span> <span class="fl">0.9</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Without <code>stripInternal</code>, the emitted <code>.d.ts</code>
+file includes both <code>calculateTotal</code> and
+<code>applyInternalDiscount</code>.</p>
+<p>With <code>stripInternal: true</code>, the generated
+<code>.d.ts</code> file only contains:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">declare</span> <span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> tax<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span></code></pre></div>
+<h3 id="key-benefits-for-library-authors">Key Benefits for Library
+Authors</h3>
+<ul>
+<li><strong>Cleaner Public API:</strong> Consumers only see the intended
+API surface in their IDE autocomplete, reducing confusion.</li>
+<li><strong>Freedom to Refactor:</strong> Maintainers can modify or
+delete internal helpers across major versions without introducing
+breaking changes to public typings.</li>
+<li><strong>Simpler Architecture:</strong> Developers can use standard
+TypeScript <code>import</code> and <code>export</code> statements across
+the codebase without relying on complex multi-entry build pipelines to
+hide types.</li>
+</ul>
+<h3 id="important-considerations">Important Considerations</h3>
+<ul>
+<li><strong>Emitted JavaScript is Unaffected:</strong> The
+<code>stripInternal</code> setting only strips typings from
+<code>.d.ts</code> files. It does not alter the emitted JavaScript
+files. The underlying functions will still be present in the runtime
+bundle.</li>
+<li><strong>Leaked Types:</strong> If a public function returns an
+<code>@internal</code> type or accepts one as a parameter, stripping the
+type will cause TypeScript errors in the emitted declaration files.
+Ensure that public signatures only reference non-internal types.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/using-strip-internal-in-type-script-libraries';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

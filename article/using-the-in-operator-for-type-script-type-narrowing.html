@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using the in Operator for TypeScript Type Narrowing - typescript</title>
+    <meta name="description" content="This article explores how TypeScript utilizes JavaScript&#39;s native in operator as an effective control flow type guard. You will learn the mechanics behind runtime property checking, how the TypeScript compiler leverages these checks to automatically narro">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/using-the-in-operator-for-type-script-type-narrowing">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Using the in Operator for TypeScript Type Narrowing - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/using-the-in-operator-for-type-script-type-narrowing" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript utilizes JavaScript&#39;s native in operator as an effective control flow type guard. You will learn the mechanics behind runtime property checking, how the TypeScript compiler leverages these checks to automatically narro" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="using-the-in-operator-for-typescript-type-narrowing">Using the
+in Operator for TypeScript Type Narrowing</h1>
+<p>This article explores how TypeScript utilizes JavaScript's native
+<code>in</code> operator as an effective control flow type guard. You
+will learn the mechanics behind runtime property checking, how the
+TypeScript compiler leverages these checks to automatically narrow union
+types within conditional blocks, and how this technique compares to
+other narrowing methods without requiring custom type guard
+functions.</p>
+<h2 id="the-mechanics-of-the-in-operator">The Mechanics of the
+<code>in</code> Operator</h2>
+<p>In JavaScript, the <code>in</code> operator is a runtime expression
+that evaluates to <code>true</code> if a specified property exists
+within an object or its prototype chain. Its basic syntax is:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;propertyName&quot;</span> <span class="kw">in</span> <span class="kw">object</span></span></code></pre></div>
+<p>TypeScript enhances this runtime check by turning it into a built-in
+type guard. When the TypeScript compiler encounters an <code>in</code>
+check inside a conditional statement (like an <code>if</code> block), it
+inspects the union type of the target object. It narrows the type down
+to only the variants of the union that are known to contain that
+specific property.</p>
+<h2 id="practical-example-of-type-narrowing">Practical Example of Type
+Narrowing</h2>
+<p>Consider a scenario with two distinct object types that do not share
+a common status or <code>type</code> discriminant property:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Admin <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  privileges<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RegularUser <span class="op">=</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Account <span class="op">=</span> Admin <span class="op">|</span> RegularUser<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleAccount</span>(account<span class="op">:</span> Account) {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">&quot;privileges&quot;</span> <span class="kw">in</span> account) {</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Within this block, TypeScript narrows &#39;account&#39; to &#39;Admin&#39;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Admin privileges: </span><span class="sc">${</span>account<span class="op">.</span><span class="at">privileges</span><span class="op">.</span><span class="fu">join</span>(<span class="st">&quot;, &quot;</span>)<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// In this branch, TypeScript knows &#39;account&#39; must be &#39;RegularUser&#39;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`User ID: </span><span class="sc">${</span>account<span class="op">.</span><span class="at">id</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the example above, checking for
+<code>"privileges" in account</code> allows the compiler to deduce that
+the true branch contains only the <code>Admin</code> type, granting safe
+access to <code>account.privileges</code>. In the <code>else</code>
+branch, TypeScript automatically eliminates <code>Admin</code> from the
+union, narrowing the type to <code>RegularUser</code>.</p>
+<h2 id="handling-optional-properties">Handling Optional Properties</h2>
+<p>The <code>in</code> operator also accounts for optional
+properties:</p>
+<ul>
+<li><strong>In the <code>true</code> branch</strong>: The type narrows
+to any type that declares the property, whether the property is required
+or optional.</li>
+<li><strong>In the <code>else</code> branch</strong>: The type narrows
+to types that do not declare the property, or types where the property
+is optional (since an optional property might simply not exist on the
+object at runtime).</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FileAttachment <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  filename<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  size<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LinkAttachment <span class="op">=</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  url<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Attachment <span class="op">=</span> FileAttachment <span class="op">|</span> LinkAttachment<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processAttachment</span>(item<span class="op">:</span> Attachment) {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">&quot;size&quot;</span> <span class="kw">in</span> item) {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Narrowed to FileAttachment</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(item<span class="op">.</span><span class="at">filename</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="advantages-over-alternative-approaches">Advantages Over
+Alternative Approaches</h2>
+<ol type="1">
+<li><strong>No Discriminant Required</strong>: Discriminated unions
+require a shared literal property (such as <code>kind: "admin"</code>).
+The <code>in</code> operator allows you to differentiate between
+external or third-party types that lack explicit discriminant
+fields.</li>
+<li><strong>Zero Runtime Overhead</strong>: Unlike custom type
+predicates (<code>function isFish(pet: Pet): pet is Fish</code>), the
+<code>in</code> operator requires no extra wrapper function declarations
+or auxiliary code, utilizing native JavaScript control flow
+directly.</li>
+<li><strong>Prototype Awareness</strong>: The check inspects the entire
+prototype chain of the object, ensuring methods or properties inherited
+through classes or prototypes correctly validate at runtime.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/using-the-in-operator-for-type-script-type-narrowing';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

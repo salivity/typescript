@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why noPropertyAccessFromIndexSignature Requires Brackets - typescript</title>
+    <meta name="description" content="TypeScript’s noPropertyAccessFromIndexSignature compiler option enforces the use of bracket notation (obj[&#39;key&#39;]) over dot notation (obj.key) when accessing dynamic properties defined by an index signature. By mandating this syntactic distinction, the rul">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-no-property-access-from-index-signature-requires-brackets">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why noPropertyAccessFromIndexSignature Requires Brackets - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-no-property-access-from-index-signature-requires-brackets" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript’s noPropertyAccessFromIndexSignature compiler option enforces the use of bracket notation (obj[&#39;key&#39;]) over dot notation (obj.key) when accessing dynamic properties defined by an index signature. By mandating this syntactic distinction, the rul" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-nopropertyaccessfromindexsignature-requires-brackets">Why
+noPropertyAccessFromIndexSignature Requires Brackets</h1>
+<p>TypeScript’s <code>noPropertyAccessFromIndexSignature</code> compiler
+option enforces the use of bracket notation (<code>obj['key']</code>)
+over dot notation (<code>obj.key</code>) when accessing dynamic
+properties defined by an index signature. By mandating this syntactic
+distinction, the rule prevents developers from mistaking speculative,
+dynamic properties for statically declared, guaranteed fields. This
+article breaks down why this requirement exists, how it improves type
+safety, and how it guards against runtime errors.</p>
+<h3 id="the-problem-with-dot-notation-on-index-signatures">The Problem
+with Dot Notation on Index Signatures</h3>
+<p>An index signature allows an object to accept arbitrary properties of
+a given type:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserScores {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [username<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> scores<span class="op">:</span> UserScores <span class="op">=</span> { alice<span class="op">:</span> <span class="dv">100</span> }<span class="op">;</span></span></code></pre></div>
+<p>By default, TypeScript allows you to access properties on
+<code>scores</code> using standard dot notation:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(scores<span class="op">.</span><span class="at">bob</span>)<span class="op">;</span> <span class="co">// Valid at compile time, but returns undefined at runtime</span></span></code></pre></div>
+<p>Dot notation traditionally implies that a property is an explicitly
+declared member of an object structure. When dot access is permitted on
+broad index signatures, typos and assumptions about an object's contents
+go unnoticed. Writing <code>scores.bob</code> visually mimics a fixed
+property contract, making code review and refactoring prone to missed
+<code>undefined</code> values.</p>
+<h3 id="why-bracket-notation-is-enforced">Why Bracket Notation Is
+Enforced</h3>
+<p>When <code>noPropertyAccessFromIndexSignature</code> is set to
+<code>true</code>, TypeScript explicitly forbids dot notation for any
+property not defined directly on the type:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Property &#39;bob&#39; comes from an index signature, so it must be accessed with [&#39;bob&#39;].</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(scores<span class="op">.</span><span class="at">bob</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(scores[<span class="st">&#39;bob&#39;</span>])<span class="op">;</span></span></code></pre></div>
+<p>TypeScript enforces this requirement for several key reasons:</p>
+<h4 id="1-semantic-clarity">1. Semantic Clarity</h4>
+<p>Bracket notation explicitly indicates dynamic or uncertain lookup.
+When skimming code, developers intuitively recognize
+<code>obj['prop']</code> as a dictionary lookup or dynamic map query,
+whereas <code>obj.prop</code> signals a known, stable property
+guaranteed to exist on the interface.</p>
+<h4 id="2-clear-separation-of-known-and-unknown-keys">2. Clear
+Separation of Known and Unknown Keys</h4>
+<p>Consider a type with both fixed properties and an index
+signature:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Settings {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  theme<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userSettings<span class="op">:</span> Settings <span class="op">=</span> { theme<span class="op">:</span> <span class="st">&#39;dark&#39;</span><span class="op">,</span> customSidebar<span class="op">:</span> <span class="st">&#39;open&#39;</span> }<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>userSettings<span class="op">.</span><span class="at">theme</span><span class="op">;</span>             <span class="co">// Allowed (explicitly declared)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>userSettings<span class="op">.</span><span class="at">customSidebar</span><span class="op">;</span>      <span class="co">// Compile error</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>userSettings[<span class="st">&#39;customSidebar&#39;</span>]<span class="op">;</span>   <span class="co">// Allowed</span></span></code></pre></div>
+<p>The rule ensures that explicitly declared properties remain distinct
+from arbitrary extensions. If you accidentally misspell an explicit
+property (e.g., <code>userSettings.thmee</code>), TypeScript will reject
+it instead of silently falling back to the index signature.</p>
+<h4 id="3-synergy-with-nouncheckedindexedaccess">3. Synergy with
+<code>noUncheckedIndexedAccess</code></h4>
+<p>When used alongside <code>noUncheckedIndexedAccess</code>, bracket
+notation access automatically typed as <code>T | undefined</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> value <span class="op">=</span> scores[<span class="st">&#39;bob&#39;</span>]<span class="op">;</span> <span class="co">// Type is number | undefined</span></span></code></pre></div>
+<p>This combination forces developers to handle missing keys defensively
+while maintaining normal, non-optional types for properties accessed via
+dot notation that are guaranteed by the interface.</p>
+<p>Requiring bracket notation creates a strict boundary between static
+object shapes and dynamic dictionaries, making code intent clearer and
+preventing accidental <code>undefined</code> runtime crashes.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-no-property-access-from-index-signature-requires-brackets';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

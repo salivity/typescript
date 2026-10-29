@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using allowJs for TypeScript Migration - typescript</title>
+    <meta name="description" content="Migrating an existing JavaScript codebase to TypeScript can be an intimidating undertaking if approached as an all-or-nothing rewrite. The allowJs compiler option solves this problem by allowing JavaScript and TypeScript files to coexist and interoperate">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/using-allow-js-for-type-script-migration">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Using allowJs for TypeScript Migration - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/using-allow-js-for-type-script-migration" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Migrating an existing JavaScript codebase to TypeScript can be an intimidating undertaking if approached as an all-or-nothing rewrite. The allowJs compiler option solves this problem by allowing JavaScript and TypeScript files to coexist and interoperate" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="using-allowjs-for-typescript-migration">Using allowJs for
+TypeScript Migration</h1>
+<p>Migrating an existing JavaScript codebase to TypeScript can be an
+intimidating undertaking if approached as an all-or-nothing rewrite. The
+<code>allowJs</code> compiler option solves this problem by allowing
+JavaScript and TypeScript files to coexist and interoperate within the
+same project. This article explains how enabling <code>allowJs</code>
+facilitates an incremental migration, prevents workflow disruption, and
+allows development teams to adopt static typing gradually.</p>
+<h3 id="enables-incremental-adoption">Enables Incremental Adoption</h3>
+<p>The primary advantage of the <code>allowJs</code> setting is that it
+eliminates the need for a massive, high-risk migration. In large
+codebases, rewriting every file from <code>.js</code> to
+<code>.ts</code> in a single release cycle is rarely feasible. When
+<code>allowJs: true</code> is set in the <code>tsconfig.json</code>
+file, the TypeScript compiler (<code>tsc</code>) processes both
+<code>.js</code> and <code>.ts</code> files concurrently. Teams can
+migrate individual files, modules, or features one at a time while
+standard product development continues uninterrupted.</p>
+<h3 id="seamless-file-interoperability">Seamless File
+Interoperability</h3>
+<p>With <code>allowJs</code> enabled, TypeScript files can directly
+import JavaScript files, and JavaScript files can import compiled
+TypeScript modules. Developers do not need to construct complex build
+configurations or module aliases to bridge the gap between two different
+file types. TypeScript will parse the JavaScript files, attempt to infer
+types automatically, and surface type errors in the consuming TypeScript
+files if imported values are misused.</p>
+<h3 id="unifies-the-build-pipeline">Unifies the Build Pipeline</h3>
+<p>Without <code>allowJs</code>, running a hybrid project often requires
+two parallel build tools: one compiler (such as Babel) to bundle
+JavaScript, and another (such as <code>tsc</code>) to handle TypeScript.
+Enabling <code>allowJs</code> allows the TypeScript compiler to manage
+the entire project pipeline. It will ingest both file types and emit
+standard JavaScript to the target directory, significantly reducing
+tooling complexity and configuration overhead.</p>
+<h3 id="enhances-type-checking-via-jsdoc-and-checkjs">Enhances Type
+Checking via JSDoc and <code>checkJs</code></h3>
+<p>The <code>allowJs</code> flag acts as a foundation for other
+migration features, notably <code>checkJs</code>. When used together,
+developers can enforce type safety inside JavaScript files using JSDoc
+annotations without immediately converting file extensions to
+<code>.ts</code>. This step allows teams to catch bugs and document data
+structures in legacy code immediately, making the eventual conversion to
+pure TypeScript trivial.</p>
+<h3 id="minimizes-team-disruption">Minimizes Team Disruption</h3>
+<p>Shifting an entire engineering team to TypeScript overnight can cause
+friction and lower velocity. <code>allowJs</code> lets developers adopt
+the language at a sustainable pace. Team members who are already
+proficient in TypeScript can write new features in <code>.ts</code>,
+while others continue to write or maintain <code>.js</code> code until
+they become comfortable with TypeScript syntax and concepts.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/using-allow-js-for-type-script-migration';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

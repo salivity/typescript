@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Template Literal Types Recursion Limits - typescript</title>
+    <meta name="description" content="TypeScript enforces specific recursion limits on template literal types when they are combined with recursive conditional types to parse or transform strings. These boundaries prevent the compiler from entering infinite loops and consuming excessive memor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-template-literal-types-recursion-limits">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Template Literal Types Recursion Limits - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-template-literal-types-recursion-limits" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript enforces specific recursion limits on template literal types when they are combined with recursive conditional types to parse or transform strings. These boundaries prevent the compiler from entering infinite loops and consuming excessive memor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-template-literal-types-recursion-limits">TypeScript
+Template Literal Types Recursion Limits</h1>
+<p>TypeScript enforces specific recursion limits on template literal
+types when they are combined with recursive conditional types to parse
+or transform strings. These boundaries prevent the compiler from
+entering infinite loops and consuming excessive memory during
+type-checking. Depending on how the recursive type is
+structured—specifically whether it utilizes tail-call optimization—the
+depth limit ranges from approximately 50 iterations for standard
+recursion to around 1,000 iterations for tail-recursive implementations
+before triggering a compiler error.</p>
+<h3 id="standard-recursion-limit-50-iterations">Standard Recursion Limit
+(~50 Iterations)</h3>
+<p>When writing naive recursive template literal types where the
+recursive step is embedded inside an expression rather than at the tail
+position, TypeScript enforces a hard limit of approximately 45 to 50
+recursive calls. Once this threshold is crossed, the compiler halts type
+evaluation and throws the following error:</p>
+<p><code>Type instantiation is excessively deep and possibly infinite. (TS2589)</code></p>
+<p>This strict boundary exists to quickly catch unbounded recursive
+types, such as poorly defined string parsers or splitters that fail to
+consume characters on each step.</p>
+<h3 id="tail-recursion-elimination-limit-1000-iterations">Tail-Recursion
+Elimination Limit (~1,000 Iterations)</h3>
+<p>Introduced in TypeScript 4.5, tail-recursion elimination (often
+referred to as tail-call optimization) significantly increases recursion
+capabilities for conditional types. When a template literal type is
+written using an accumulator pattern—where the final result is
+accumulated and passed directly into the next recursive call as the
+return expression—TypeScript does not consume the standard call stack
+for each step.</p>
+<p>For tail-recursive types:</p>
+<ul>
+<li>The depth limit is extended from ~50 up to <strong>1,000
+iterations</strong> (often hitting the limit at 999 or 1,000
+steps).</li>
+<li>If the operation requires more than 1,000 steps, TypeScript will
+still abort and issue error <code>TS2589</code>.</li>
+</ul>
+<p>An example of a tail-recursive pattern involves passing an
+accumulator parameter:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReverseString<span class="op">&lt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  S <span class="kw">extends</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Acc <span class="kw">extends</span> string <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> <span class="op">=</span> S <span class="kw">extends</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">infer</span> Head<span class="sc">}${</span><span class="kw">infer</span> Tail<span class="sc">}</span><span class="vs">`</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> ReverseString<span class="op">&lt;</span>Tail<span class="op">,</span> <span class="vs">`</span><span class="sc">${</span>Head<span class="sc">}${</span>Acc<span class="sc">}</span><span class="vs">`</span><span class="op">&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> Acc<span class="op">;</span></span></code></pre></div>
+<p>Because <code>ReverseString</code> directly returns the next
+recursive invocation without wrapping it in additional template
+literals, it benefits from the ~1,000-iteration ceiling instead of
+failing at ~50.</p>
+<h3 id="union-expansion-and-combinatorial-limits">Union Expansion and
+Combinatorial Limits</h3>
+<p>Template literal types that accept or produce union types are subject
+to combinatorial expansion. If a recursive template literal branches
+across unions, the compiler evaluates the Cartesian product of the
+inputs.</p>
+<p>Even if the recursion depth stays well below the 1,000-iteration
+limit, generating unions with thousands of constituent types will
+trigger a different failure:</p>
+<p><code>Expression produces a union type that is too complex to represent. (TS2590)</code></p>
+<p>This limit is memory-based rather than strictly depth-based,
+protecting Node.js from running out of heap memory during the
+type-checking phase.</p>
+<h3 id="handling-recursion-constraints">Handling Recursion
+Constraints</h3>
+<p>To work within TypeScript's recursion limits:</p>
+<ul>
+<li><strong>Adopt the Accumulator Pattern</strong>: Always structure
+deeply recursive string operations so that the recursive type invocation
+is in the tail position.</li>
+<li><strong>Chunking</strong>: For string processing exceeding 1,000
+characters, break strings into multi-character chunks before processing
+rather than recursing character-by-character.</li>
+<li><strong>Delegate to Runtime</strong>: Complex string parsing,
+lexing, or validation beyond simple utility types is typically best
+handled at runtime with schemas or standard validation functions rather
+than purely inside the TypeScript type system.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-template-literal-types-recursion-limits';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

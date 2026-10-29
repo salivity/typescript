@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object.seal vs Object.freeze TypeScript Type Inference - typescript</title>
+    <meta name="description" content="In JavaScript, Object.seal() and Object.freeze() provide runtime immutability safeguards, but TypeScript treats them fundamentally differently during static type inference. While Object.freeze() transforms an object type into an immutable representation b">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/object-seal-vs-object-freeze-type-script-type-inference">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Object.seal vs Object.freeze TypeScript Type Inference - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/object-seal-vs-object-freeze-type-script-type-inference" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In JavaScript, Object.seal() and Object.freeze() provide runtime immutability safeguards, but TypeScript treats them fundamentally differently during static type inference. While Object.freeze() transforms an object type into an immutable representation b" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="objectseal-vs-objectfreeze-typescript-type-inference">Object.seal vs
+Object.freeze TypeScript Type Inference</h1>
+<p>In JavaScript, <code>Object.seal()</code> and
+<code>Object.freeze()</code> provide runtime immutability safeguards,
+but TypeScript treats them fundamentally differently during static type
+inference. While <code>Object.freeze()</code> transforms an object type
+into an immutable representation by applying the
+<code>Readonly&lt;T&gt;</code> utility type to top-level properties,
+<code>Object.seal()</code> returns the object's original type
+<code>T</code> unchanged. Understanding this distinction is essential
+for writing accurate, type-safe TypeScript applications when controlling
+object mutability.</p>
+<h3 id="type-signature-of-objectseal">Type Signature of
+Object.seal()</h3>
+<p>In TypeScript’s standard library definitions
+(<code>lib.es5.d.ts</code>), <code>Object.seal()</code> is declared as
+follows:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seal</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(o<span class="op">:</span> T)<span class="op">:</span> T<span class="op">;</span></span></code></pre></div>
+<p>Because <code>Object.seal()</code> prevents properties from being
+added or deleted at runtime but still permits the modification of
+existing writable properties, TypeScript does not modify the structure
+or modifiers of the incoming type <code>T</code>.</p>
+<p>If you pass an object with mutable properties into
+<code>Object.seal()</code>, TypeScript still infers those properties as
+mutable:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">seal</span>({ name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> age<span class="op">:</span> <span class="dv">30</span> })<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred Type: { name: string; age: number; }</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>user<span class="op">.</span><span class="at">age</span> <span class="op">=</span> <span class="dv">31</span><span class="op">;</span> <span class="co">// Allowed by TypeScript and permitted at runtime</span></span></code></pre></div>
+<p>TypeScript cannot statically enforce the prevention of property
+additions or deletions on generic object shapes, so the returned type
+remains identical to the input type.</p>
+<h3 id="type-signature-of-objectfreeze">Type Signature of
+Object.freeze()</h3>
+<p>In contrast, <code>Object.freeze()</code> marks existing properties
+as non-writable at runtime in addition to preventing property addition
+and removal. TypeScript reflects this change in its type system using
+the <code>Readonly&lt;T&gt;</code> mapped type:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">freeze</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(f<span class="op">:</span> T)<span class="op">:</span> <span class="bu">Readonly</span><span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div>
+<p>When an object is passed to <code>Object.freeze()</code>, TypeScript
+appends the <code>readonly</code> modifier to all top-level
+properties:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">freeze</span>({ name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span><span class="op">,</span> age<span class="op">:</span> <span class="dv">30</span> })<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred Type: { readonly name: string; readonly age: number; }</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>user<span class="op">.</span><span class="at">age</span> <span class="op">=</span> <span class="dv">31</span><span class="op">;</span> </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile error: Cannot assign to &#39;age&#39; because it is a read-only property.</span></span></code></pre></div>
+<p>By inferring <code>Readonly&lt;T&gt;</code>, the TypeScript compiler
+catches unauthorized mutations during development, matching the runtime
+constraint imposed by the JavaScript engine.</p>
+<h3 id="key-differences-in-type-checking">Key Differences in Type
+Checking</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><code>Object.seal()</code> Inference</th>
+<th style="text-align: left;"><code>Object.freeze()</code>
+Inference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Return Type</strong></td>
+<td style="text-align: left;"><code>T</code></td>
+<td style="text-align: left;"><code>Readonly&lt;T&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Property
+Reassignment</strong></td>
+<td style="text-align: left;">Allowed by compiler</td>
+<td style="text-align: left;">Blocked by compiler
+(<code>readonly</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Object Extension</strong></td>
+<td style="text-align: left;">Runtime error only</td>
+<td style="text-align: left;">Blocked by compiler and runtime</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Type Mutation</strong></td>
+<td style="text-align: left;">Preserves existing modifiers</td>
+<td style="text-align: left;">Adds <code>readonly</code> modifier</td>
+</tr>
+</tbody>
+</table>
+<h3 id="shallow-inference-behavior">Shallow Inference Behavior</h3>
+<p>Neither method performs deep inference by default. Both
+<code>Object.seal()</code> and <code>Object.freeze()</code> act
+shallowly at runtime, and TypeScript's standard library mirrors this
+behavior.</p>
+<p>Nested objects passed through <code>Object.freeze()</code> will have
+their top-level keys marked as <code>readonly</code>, but nested child
+objects will retain their original mutable types unless they are
+individually frozen or cast using a const assertion
+(<code>as const</code>).</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/object-seal-vs-object-freeze-type-script-type-inference';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

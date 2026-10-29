@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is Emitted in a TypeScript .d.ts File? - typescript</title>
+    <meta name="description" content="TypeScript declaration files, designated by the .d.ts extension, act as type-only blueprints for JavaScript code. This article explains the exact information the TypeScript compiler emits into a .d.ts file, illustrating how executable logic is stripped aw">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-emitted-in-a-type-script-d-ts-file">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is Emitted in a TypeScript .d.ts File? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-emitted-in-a-type-script-d-ts-file" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript declaration files, designated by the .d.ts extension, act as type-only blueprints for JavaScript code. This article explains the exact information the TypeScript compiler emits into a .d.ts file, illustrating how executable logic is stripped aw" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-emitted-in-a-typescript-dts-file">What Is Emitted in a
+TypeScript .d.ts File?</h1>
+<p>TypeScript declaration files, designated by the <code>.d.ts</code>
+extension, act as type-only blueprints for JavaScript code. This article
+explains the exact information the TypeScript compiler emits into a
+<code>.d.ts</code> file, illustrating how executable logic is stripped
+away to leave only the shape, documentation, and metadata necessary for
+type checking, IntelliSense, and cross-project consumption.</p>
+<h3 id="function-and-method-signatures">Function and Method
+Signatures</h3>
+<p>The compiler emits the names, parameter lists, parameter types, and
+return types of all exported functions and methods. All implementation
+blocks (<code>{ ... }</code>) are stripped entirely, leaving only the
+signature ending in a semicolon. Overloaded functions retain all
+distinct overload signatures to provide accurate type inference to
+consumers.</p>
+<h3 id="type-aliases-and-interfaces">Type Aliases and Interfaces</h3>
+<p>All exported <code>type</code> aliases, <code>interface</code>
+definitions, and generic type constraints are preserved directly in the
+<code>.d.ts</code> output. These elements are inherently type-level
+constructs, so they undergo minimal transformation beyond normalizing
+module imports and resolving internal aliases.</p>
+<h3 id="class-declarations">Class Declarations</h3>
+<p>Classes in declaration files are emitted as structural outlines. The
+output includes:</p>
+<ul>
+<li><strong>Constructors:</strong> Parameter names and types, without
+execution logic.</li>
+<li><strong>Public and Protected Members:</strong> Property names, their
+types, and method signatures.</li>
+<li><strong>Accessibility Modifiers:</strong> Keywords such as
+<code>public</code>, <code>protected</code>, and TypeScript-style
+<code>private</code> to inform access rules.</li>
+<li><strong>Readonly Modifiers:</strong> Flags indicating immutable
+properties.</li>
+</ul>
+<p>Implementation details, including method bodies, default property
+initializers, and ECMAScript private fields (<code>#field</code>), are
+omitted.</p>
+<h3 id="variable-and-constant-declarations">Variable and Constant
+Declarations</h3>
+<p>Exported variables declared with <code>var</code>, <code>let</code>,
+or <code>const</code> are prefixed with the <code>declare</code>
+keyword. The file contains the variable name paired with its explicit or
+inferred type. Runtime values are stripped; however, for primitive
+<code>const</code> declarations, TypeScript may preserve literal types
+(e.g., <code>declare const PORT = 3000;</code> rather than
+<code>number</code>) to retain type precision.</p>
+<h3 id="enums">Enums</h3>
+<p>Regular TypeScript enums are emitted either as ambient enum
+declarations or as declaration blocks detailing the enum members and
+their assigned numerical or string values. These values are retained
+because enums often exist at both the type and value levels in consuming
+code.</p>
+<h3 id="export-and-import-statements">Export and Import Statements</h3>
+<p>The <code>.d.ts</code> file accurately mirrors the module structure
+of the original file. It includes:</p>
+<ul>
+<li>Explicit <code>import</code> declarations for external types
+referenced by the signatures.</li>
+<li>Named, default, and wildcard <code>export</code> declarations.</li>
+<li>Ambient namespace or module declarations if the source uses internal
+modules.</li>
+</ul>
+<p>Internal variables, unexported helper functions, and unused imports
+are excluded from the output.</p>
+<h3 id="jsdoc-comments">JSDoc Comments</h3>
+<p>JSDoc comments (<code>/** ... */</code>) associated with exported
+declarations are preserved and copied into the declaration file. This
+ensures that parameter descriptions, deprecation notices
+(<code>@deprecated</code>), and usage notes remain visible via IDE
+tooltips for downstream users.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-emitted-in-a-type-script-d-ts-file';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

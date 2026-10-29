@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing WebGL and Canvas Contexts in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript delivers robust type safety for graphics programming on the web by leveraging its built-in DOM standard library definitions. Through function overloads on the canvas element, TypeScript automatically infers the correct context interfaces—such a">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-web-gl-and-canvas-contexts-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing WebGL and Canvas Contexts in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-web-gl-and-canvas-contexts-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript delivers robust type safety for graphics programming on the web by leveraging its built-in DOM standard library definitions. Through function overloads on the canvas element, TypeScript automatically infers the correct context interfaces—such a" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-webgl-and-canvas-contexts-in-typescript">Typing WebGL and
+Canvas Contexts in TypeScript</h1>
+<p>TypeScript delivers robust type safety for graphics programming on
+the web by leveraging its built-in DOM standard library definitions.
+Through function overloads on the canvas element, TypeScript
+automatically infers the correct context interfaces—such as
+<code>CanvasRenderingContext2D</code>,
+<code>WebGLRenderingContext</code>, or
+<code>WebGL2RenderingContext</code>—based on the string identifier
+passed to the retrieval method. This article explores how TypeScript
+structures these types, resolves contexts dynamically, and manages
+graphics states safely.</p>
+<h2 id="built-in-dom-typings">Built-In DOM Typings</h2>
+<p>TypeScript ships with comprehensive definitions for browser APIs via
+its <code>lib.dom.d.ts</code> declaration file. Graphics programming
+interfaces are standardized directly from the W3C and Khronos Group
+specifications.</p>
+<p>When working with HTML canvas elements, TypeScript defines the
+<code>HTMLCanvasElement</code> interface, which includes the
+<code>getContext</code> method. Rather than returning a generic
+<code>object</code> or <code>any</code>, the method uses TypeScript
+method overloads tied to string literal types to return the exact
+context interface.</p>
+<h2 id="method-overloading-on-getcontext">Method Overloading on
+<code>getContext</code></h2>
+<p>The core mechanism for typing contexts is method overloading based on
+the context identifier. TypeScript defines overloads similar to the
+following:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="bu">HTMLCanvasElement</span> <span class="kw">extends</span> <span class="bu">HTMLElement</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="st">&quot;2d&quot;</span><span class="op">,</span> options<span class="op">?:</span> CanvasRenderingContext2DSettings)<span class="op">:</span> <span class="bu">CanvasRenderingContext2D</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="st">&quot;bitmaprenderer&quot;</span><span class="op">,</span> options<span class="op">?:</span> ImageBitmapRenderingContextSettings)<span class="op">:</span> ImageBitmapRenderingContext <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="st">&quot;webgl&quot;</span><span class="op">,</span> options<span class="op">?:</span> WebGLContextAttributes)<span class="op">:</span> <span class="bu">WebGLRenderingContext</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="st">&quot;experimental-webgl&quot;</span><span class="op">,</span> options<span class="op">?:</span> WebGLContextAttributes)<span class="op">:</span> <span class="bu">WebGLRenderingContext</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="st">&quot;webgl2&quot;</span><span class="op">,</span> options<span class="op">?:</span> WebGLContextAttributes)<span class="op">:</span> WebGL2RenderingContext <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getContext</span>(contextId<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> options<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="bu">RenderingContext</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because TypeScript uses string literal types (<code>"2d"</code>,
+<code>"webgl"</code>, <code>"webgl2"</code>), passing a specific literal
+string allows the compiler to narrow down the return type automatically
+without explicit type casting.</p>
+<h2 id="handling-nullability-and-initialization">Handling Nullability
+and Initialization</h2>
+<p>Context creation in browsers can fail if hardware acceleration is
+unavailable, disabled, or if the system runs out of resources.
+TypeScript models this by typing the return value as a union containing
+<code>null</code> (e.g., <code>WebGLRenderingContext | null</code>).</p>
+<p>Developers must handle the possibility of <code>null</code> before
+interacting with the graphics API:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&quot;canvas&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type: WebGLRenderingContext | null</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gl <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&quot;webgl&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="op">!</span>gl) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;WebGL is not supported or context creation failed.&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type: WebGLRenderingContext</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>gl<span class="op">.</span><span class="fu">clearColor</span>(<span class="fl">0.0</span><span class="op">,</span> <span class="fl">0.0</span><span class="op">,</span> <span class="fl">0.0</span><span class="op">,</span> <span class="fl">1.0</span>)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>gl<span class="op">.</span><span class="fu">clear</span>(gl<span class="op">.</span><span class="at">COLOR_BUFFER_BIT</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="typing-webgl-buffers-shaders-and-programs">Typing WebGL Buffers,
+Shaders, and Programs</h2>
+<p>WebGL introduces opaque wrapper objects representing GPU-side
+resources, including <code>WebGLBuffer</code>, <code>WebGLShader</code>,
+<code>WebGLProgram</code>, and <code>WebGLTexture</code>. TypeScript
+models these as distinct interfaces, preventing accidental
+cross-assignment between different resource types.</p>
+<p>Methods that create resources also account for failure states by
+returning <code>null</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> program<span class="op">:</span> <span class="bu">WebGLProgram</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">=</span> gl<span class="op">.</span><span class="fu">createProgram</span>()<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> shader<span class="op">:</span> <span class="bu">WebGLShader</span> <span class="op">|</span> <span class="dt">null</span> <span class="op">=</span> gl<span class="op">.</span><span class="fu">createShader</span>(gl<span class="op">.</span><span class="at">VERTEX_SHADER</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="op">!</span>program <span class="op">||</span> <span class="op">!</span>shader) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;Failed to allocate WebGL resources.&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>gl<span class="op">.</span><span class="fu">attachShader</span>(program<span class="op">,</span> shader)<span class="op">;</span></span></code></pre></div>
+<h2 id="webgl-extensions-and-dynamic-features">WebGL Extensions and
+Dynamic Features</h2>
+<p>WebGL capabilities vary across hardware and drivers, requiring
+feature detection via <code>getExtension()</code>. TypeScript types this
+method with generic constraints and overloads matching standard
+extension identifiers:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type: EXT_color_buffer_float | null</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ext <span class="op">=</span> gl<span class="op">.</span><span class="fu">getExtension</span>(<span class="st">&quot;EXT_color_buffer_float&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (ext) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Access extension-specific properties safely</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you query a vendor-prefixed or newer extension that lacks a
+built-in overload, you can supply a type argument:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ext <span class="op">=</span> gl<span class="op">.</span><span class="fu">getExtension</span>(<span class="st">&quot;WEBGL_compressed_texture_s3tc&quot;</span>) <span class="im">as</span> WEBGL_compressed_texture_s3tc <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span></code></pre></div>
+<h2 id="distinct-types-for-webgl-1-vs-webgl-2">Distinct Types for WebGL
+1 vs. WebGL 2</h2>
+<p>TypeScript treats <code>WebGLRenderingContext</code> and
+<code>WebGL2RenderingContext</code> as distinct interfaces. While
+<code>WebGL2RenderingContext</code> extends the baseline capabilities,
+it introduces modern API specifications such as Vertex Array Objects
+(VAOs), Transform Feedback, and Uniform Buffer Objects directly into the
+main interface.</p>
+<p>By selecting <code>"webgl2"</code> in
+<code>canvas.getContext("webgl2")</code>, TypeScript restricts or
+enables features strictly aligned with the WebGL 2 specification,
+alerting developers if they attempt to call WebGL 2-only functions on a
+standard WebGL 1 context.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/typing-web-gl-and-canvas-contexts-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

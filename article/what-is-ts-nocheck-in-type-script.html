@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is ts-nocheck in TypeScript? - typescript</title>
+    <meta name="description" content="The // @ts-nocheck directive in TypeScript is a special comment placed at the top of a file to completely disable type checking for that specific file. While TypeScript normally inspects your code for type errors, missing properties, and syntax anomalies,">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-ts-nocheck-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is ts-nocheck in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-ts-nocheck-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The // @ts-nocheck directive in TypeScript is a special comment placed at the top of a file to completely disable type checking for that specific file. While TypeScript normally inspects your code for type errors, missing properties, and syntax anomalies," />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-ts-nocheck-in-typescript">What Is ts-nocheck in
+TypeScript?</h1>
+<p>The <code>// @ts-nocheck</code> directive in TypeScript is a special
+comment placed at the top of a file to completely disable type checking
+for that specific file. While TypeScript normally inspects your code for
+type errors, missing properties, and syntax anomalies, this directive
+tells the compiler to bypass all type validation within the file. This
+guide explains what the directive does, how to use it, its most common
+use cases, and how it compares to other suppression comments.</p>
+<h2 id="how-ts-nocheck-works">How ts-nocheck Works</h2>
+<p>When the TypeScript compiler encounters <code>// @ts-nocheck</code>
+at the beginning of a source file, it suppresses all type-related
+diagnostic errors that would normally be reported for that file.</p>
+<p>To use the directive, add it as a single-line comment at the very top
+of your file:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// @ts-nocheck</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> count<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="st">&quot;this is a string&quot;</span><span class="op">;</span> <span class="co">// No error reported</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>count<span class="op">.</span><span class="fu">nonExistentMethod</span>()<span class="op">;</span>             <span class="co">// No error reported</span></span></code></pre></div>
+<p>Even though the assignment and method call are invalid according to
+TypeScript's type system, the compiler produces zero errors during
+compilation.</p>
+<h2 id="common-use-cases">Common Use Cases</h2>
+<p>While bypassing TypeScript's safety features is generally
+discouraged, there are specific scenarios where
+<code>// @ts-nocheck</code> is practical:</p>
+<ul>
+<li><strong>Migrating Legacy JavaScript Projects:</strong> When
+converting a large JavaScript codebase to TypeScript, converting every
+file simultaneously can cause hundreds of compiler errors. Using
+<code>// @ts-nocheck</code> allows you to rename <code>.js</code> files
+to <code>.ts</code> and re-enable type checks incrementally over
+time.</li>
+<li><strong>Auto-Generated Files:</strong> Code produced by external
+generators or build tools may not always adhere to your project's strict
+TypeScript configuration. Adding this directive prevents generated code
+from breaking your build.</li>
+<li><strong>Rapid Prototyping:</strong> During early experimentation,
+you may want to focus on runtime logic without spending time defining
+complex types or interfaces.</li>
+<li><strong>Troubleshooting and Debugging:</strong> Temporarily adding
+the directive helps isolate whether a build failure is caused by runtime
+issues or purely static type mismatches.</li>
+</ul>
+<h2 id="difference-between-ts-nocheck-and-ts-ignore">Difference Between
+ts-nocheck and ts-ignore</h2>
+<p>TypeScript offers several comment directives to control error
+reporting. The primary difference lies in their scope:</p>
+<ul>
+<li><strong><code>// @ts-nocheck</code>:</strong> Disables all type
+checking for the <strong>entire file</strong>. It must be placed at the
+top of the file to take effect.</li>
+<li><strong><code>// @ts-ignore</code>:</strong> Suppresses errors only
+on the <strong>immediate next line</strong> of code. The rest of the
+file continues to be type-checked.</li>
+<li><strong><code>// @ts-expect-error</code>:</strong> Suppresses errors
+on the <strong>immediate next line</strong>, but will trigger an error
+if the suppressed line does not actually contain a type error.</li>
+</ul>
+<h2 id="risks-and-best-practices">Risks and Best Practices</h2>
+<p>Using <code>// @ts-nocheck</code> removes the safety guarantees that
+TypeScript provides. Code inside an unchecked file can introduce runtime
+crashes that the compiler would normally prevent, such as accessing
+undefined properties or passing incorrect arguments.</p>
+<p>Best practices when using the directive include:</p>
+<ol type="1">
+<li><strong>Treat it as temporary:</strong> Whenever possible, use
+<code>// @ts-nocheck</code> as a placeholder during migrations with a
+plan to remove it later.</li>
+<li><strong>Prefer localized suppression:</strong> If only one or two
+lines are causing issues, use <code>// @ts-expect-error</code> instead
+of turning off checks for the whole file.</li>
+<li><strong>Audit files regularly:</strong> Track which files in your
+repository contain <code>// @ts-nocheck</code> to ensure technical debt
+does not accumulate unnoticed.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-ts-nocheck-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

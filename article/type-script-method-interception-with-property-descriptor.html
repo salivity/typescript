@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Method Interception with PropertyDescriptor - typescript</title>
+    <meta name="description" content="TypeScript method decorators provide access to the target method&#39;s underlying PropertyDescriptor, enabling developers to inspect, modify, or completely replace the method implementation at runtime. By capturing the original function assigned to descriptor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-method-interception-with-property-descriptor">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Method Interception with PropertyDescriptor - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-method-interception-with-property-descriptor" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript method decorators provide access to the target method&#39;s underlying PropertyDescriptor, enabling developers to inspect, modify, or completely replace the method implementation at runtime. By capturing the original function assigned to descriptor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-method-interception-with-propertydescriptor">TypeScript
+Method Interception with PropertyDescriptor</h1>
+<p>TypeScript method decorators provide access to the target method's
+underlying <code>PropertyDescriptor</code>, enabling developers to
+inspect, modify, or completely replace the method implementation at
+runtime. By capturing the original function assigned to
+<code>descriptor.value</code> and reassigning it to a new wrapper
+function, developers can intercept execution flow to execute custom
+logic before and after the invocation, modify arguments, alter return
+values, or handle errors seamlessly without changing the original class
+code.</p>
+<h3 id="the-role-of-propertydescriptor">The Role of
+PropertyDescriptor</h3>
+<p>In JavaScript and TypeScript, every object property is defined
+internally by a property descriptor, which details its configuration
+attributes: <code>value</code>, <code>writable</code>,
+<code>enumerable</code>, and <code>configurable</code>. For class
+methods, the actual callable function is held inside the
+<code>value</code> property.</p>
+<p>When TypeScript evaluates a method decorator, it passes three
+arguments:</p>
+<ol type="1">
+<li><code>target</code>: The prototype of the class (or the constructor
+function for static members).</li>
+<li><code>propertyKey</code>: The name of the member being
+decorated.</li>
+<li><code>descriptor</code>: A typed
+<code>TypedPropertyDescriptor&lt;T&gt;</code> object representing the
+target method.</li>
+</ol>
+<p>Because the decorator receives this descriptor by reference,
+modifying <code>descriptor.value</code> directly dictates what the
+runtime executes when the method is called.</p>
+<h3 id="how-method-interception-works">How Method Interception
+Works</h3>
+<p>Method interception using <code>PropertyDescriptor</code> follows a
+four-step pattern:</p>
+<ol type="1">
+<li><strong>Capture the Original Method:</strong> Store a reference to
+<code>descriptor.value</code> in a local variable to preserve the
+original implementation.</li>
+<li><strong>Assign a Wrapper Function:</strong> Reassign
+<code>descriptor.value</code> to a new function. This new function
+receives the arguments passed to the method at call time.</li>
+<li><strong>Invoke with Correct Context:</strong> Inside the wrapper,
+call the original method using
+<code>originalMethod.apply(this, args)</code>. Using <code>this</code>
+ensures the original method retains access to the class instance and its
+state.</li>
+<li><strong>Return the Descriptor:</strong> Return the mutated
+descriptor from the decorator function so the TypeScript runtime applies
+the modified configuration via <code>Object.defineProperty</code>.</li>
+</ol>
+<h3 id="implementation-example">Implementation Example</h3>
+<p>The following code illustrates an execution-logging interceptor:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">LogExecution</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> <span class="dt">any</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  propertyKey<span class="op">:</span> <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  descriptor<span class="op">:</span> PropertyDescriptor</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> PropertyDescriptor {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Capture original method reference</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> originalMethod <span class="op">=</span> descriptor<span class="op">.</span><span class="at">value</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. Override descriptor.value with an intercepting function</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  descriptor<span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="kw">function</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`[Before] Invoking </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs"> with arguments:`</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Execute original method preserving the &#39;this&#39; context</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> originalMethod<span class="op">.</span><span class="fu">apply</span>(<span class="kw">this</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`[After] </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs"> returned:`</span><span class="op">,</span> result)<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Return the result back to the caller</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> descriptor<span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> OrderService {</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  @LogExecution</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">calculateTotal</span>(price<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> quantity<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> price <span class="op">*</span> quantity<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="advantages-of-propertydescriptor-interception">Advantages of
+PropertyDescriptor Interception</h3>
+<ul>
+<li><strong>Aspect-Oriented Programming (AOP):</strong> Cross-cutting
+concerns such as logging, validation, caching, performance profiling,
+and authorization can be encapsulated into modular, reusable decorator
+functions.</li>
+<li><strong>Context Preservation:</strong> Standard invocation via
+<code>apply(this, args)</code> prevents breaking access to class member
+variables and private fields.</li>
+<li><strong>Asynchronous Compatibility:</strong> By marking the wrapper
+function as <code>async</code> and awaiting
+<code>originalMethod.apply(this, args)</code>, the pattern naturally
+extends to asynchronous promises without altering method
+signatures.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-method-interception-with-property-descriptor';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

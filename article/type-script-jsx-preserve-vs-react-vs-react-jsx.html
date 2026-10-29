@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript JSX: Preserve vs React vs React-JSX - typescript</title>
+    <meta name="description" content="TypeScript provides the jsx compiler option in tsconfig.json to control how JSX syntax is processed and emitted into JavaScript files. Choosing between preserve, react, and react-jsx determines whether TypeScript transforms JSX directly, which runtime fun">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-jsx-preserve-vs-react-vs-react-jsx">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript JSX: Preserve vs React vs React-JSX - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-jsx-preserve-vs-react-vs-react-jsx" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides the jsx compiler option in tsconfig.json to control how JSX syntax is processed and emitted into JavaScript files. Choosing between preserve, react, and react-jsx determines whether TypeScript transforms JSX directly, which runtime fun" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-jsx-preserve-vs-react-vs-react-jsx">TypeScript JSX:
+Preserve vs React vs React-JSX</h1>
+<p>TypeScript provides the <code>jsx</code> compiler option in
+<code>tsconfig.json</code> to control how JSX syntax is processed and
+emitted into JavaScript files. Choosing between <code>preserve</code>,
+<code>react</code>, and <code>react-jsx</code> determines whether
+TypeScript transforms JSX directly, which runtime functions it
+generates, and whether an explicit React import is required in your
+source files. This guide breaks down how each setting works, what output
+it produces, and when to use it.</p>
+<hr />
+<h3 id="1-preserve">1. <code>preserve</code></h3>
+<p>The <code>preserve</code> mode instructs TypeScript to leave all JSX
+syntax untouched in the emitted JavaScript. Instead of compiling JSX
+into function calls, it outputs code containing raw JSX with a
+<code>.jsx</code> file extension.</p>
+<ul>
+<li><strong>Emitted Output:</strong> Native JSX tags remain intact
+(e.g., <code>&lt;div className="box"&gt;Hello&lt;/div&gt;</code>).</li>
+<li><strong>Runtime Requirement:</strong> None at the TypeScript
+compilation level.</li>
+<li><strong>Imports Needed:</strong> Depends on your downstream build
+tool.</li>
+</ul>
+<p><strong>When to use it:</strong> Use <code>preserve</code> when
+TypeScript is not the final step in your build pipeline. This is common
+when using bundlers and transpilers like Babel, Vite, SWC, or esbuild,
+which handle the final JSX transformation and optimization
+themselves.</p>
+<hr />
+<h3 id="2-react">2. <code>react</code></h3>
+<p>The <code>react</code> mode represents the classic React transform
+introduced in early versions of React. TypeScript compiles JSX tags
+directly into <code>React.createElement</code> calls and emits standard
+<code>.js</code> files.</p>
+<ul>
+<li><strong>Emitted Output:</strong>
+<code>React.createElement("div", { className: "box" }, "Hello")</code></li>
+<li><strong>Runtime Requirement:</strong> React must be globally
+available or imported in the file.</li>
+<li><strong>Imports Needed:</strong> You must explicitly include
+<code>import React from 'react'</code> at the top of every file
+containing JSX, even if <code>React</code> is not directly referenced
+elsewhere.</li>
+</ul>
+<p><strong>When to use it:</strong> Use <code>react</code> if you are
+working on older React applications (React 16 or earlier) or targeting
+environments that specifically require the classic
+<code>React.createElement</code> API without an intermediate build
+tool.</p>
+<hr />
+<h3 id="3-react-jsx">3. <code>react-jsx</code></h3>
+<p>Introduced in TypeScript 4.1 to support the modern JSX transform
+released in React 17, <code>react-jsx</code> compiles JSX into internal
+runtime function calls rather than <code>React.createElement</code>.</p>
+<ul>
+<li><strong>Emitted Output:</strong> Calls to <code>_jsx</code> or
+<code>_jsxs</code> functions imported automatically from
+<code>react/jsx-runtime</code> (e.g.,
+<code>import { jsx as _jsx } from "react/jsx-runtime"; _jsx("div", { className: "box", children: "Hello" })</code>).</li>
+<li><strong>Runtime Requirement:</strong> React 17 or higher (or a
+compatible runtime).</li>
+<li><strong>Imports Needed:</strong> No manual
+<code>import React from 'react'</code> is required purely for JSX
+syntax.</li>
+</ul>
+<p><em>(Note: A related option, <code>react-jsxdev</code>, behaves the
+same way but emits debug information like file names and line numbers
+via <code>react/jsx-dev-runtime</code> for development builds.)</em></p>
+<p><strong>When to use it:</strong> Use <code>react-jsx</code> for
+modern React projects (version 17 and above) when you want TypeScript
+itself to compile JSX directly to standard JavaScript without needing an
+external transpiler like Babel.</p>
+<hr />
+<h3 id="summary-of-differences">Summary of Differences</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Option</th>
+<th style="text-align: left;">Output Syntax</th>
+<th style="text-align: left;">File Extension</th>
+<th style="text-align: left;">Requires <code>import React</code>?</th>
+<th style="text-align: left;">Typical Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td
+style="text-align: left;"><strong><code>preserve</code></strong></td>
+<td style="text-align: left;">Raw JSX (<code>&lt;div /&gt;</code>)</td>
+<td style="text-align: left;"><code>.jsx</code></td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Secondary build step handles JSX (Babel,
+Vite, esbuild)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>react</code></strong></td>
+<td style="text-align: left;"><code>React.createElement(...)</code></td>
+<td style="text-align: left;"><code>.js</code></td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: left;">Legacy React (v16 and older)</td>
+</tr>
+<tr>
+<td
+style="text-align: left;"><strong><code>react-jsx</code></strong></td>
+<td style="text-align: left;"><code>_jsx(...)</code> via
+<code>react/jsx-runtime</code></td>
+<td style="text-align: left;"><code>.js</code></td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Modern React (v17+) using TS for direct
+emission</td>
+</tr>
+</tbody>
+</table></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-jsx-preserve-vs-react-vs-react-jsx';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

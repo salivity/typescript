@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why TypeScript Fails Contextual Typing on Variables - typescript</title>
+    <meta name="description" content="When developers extract an inline callback into a separate variable in TypeScript, they often encounter type errors because parameters suddenly revert to any. This article explains contextual typing, why TypeScript cannot infer types across decoupled vari">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-type-script-fails-contextual-typing-on-variables">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why TypeScript Fails Contextual Typing on Variables - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-type-script-fails-contextual-typing-on-variables" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When developers extract an inline callback into a separate variable in TypeScript, they often encounter type errors because parameters suddenly revert to any. This article explains contextual typing, why TypeScript cannot infer types across decoupled vari" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-typescript-fails-contextual-typing-on-variables">Why
+TypeScript Fails Contextual Typing on Variables</h1>
+<p>When developers extract an inline callback into a separate variable
+in TypeScript, they often encounter type errors because parameters
+suddenly revert to <code>any</code>. This article explains contextual
+typing, why TypeScript cannot infer types across decoupled variable
+declarations, and the compiler mechanics that enforce this behavior.</p>
+<h2 id="how-contextual-typing-works">How Contextual Typing Works</h2>
+<p>Contextual typing occurs when the type of an expression is inferred
+from its location in the code, rather than from the expression itself.
+When you pass a callback directly to a higher-order function like
+<code>Array.prototype.map</code>, TypeScript knows the signature that
+<code>map</code> expects:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">map</span>((num) <span class="kw">=&gt;</span> num <span class="op">*</span> <span class="dv">2</span>)<span class="op">;</span> <span class="co">// &#39;num&#39; is contextually typed as &#39;number&#39;</span></span></code></pre></div>
+<p>In this inline form, the compiler uses the "target type" defined by
+<code>Array&lt;number&gt;.prototype.map</code> to push type information
+downward into the callback’s parameter list.</p>
+<h2 id="the-decoupling-problem">The Decoupling Problem</h2>
+<p>When you extract the callback into an independent variable, the
+inference mechanism breaks:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Parameter &#39;num&#39; implicitly has an &#39;any&#39; type</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> double <span class="op">=</span> (num) <span class="kw">=&gt;</span> num <span class="op">*</span> <span class="dv">2</span><span class="op">;</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">.</span><span class="fu">map</span>(double)<span class="op">;</span></span></code></pre></div>
+<p>TypeScript fails to infer <code>num</code> here because of how the
+compiler orders type evaluation.</p>
+<h3 id="1-isolated-variable-evaluation">1. Isolated Variable
+Evaluation</h3>
+<p>TypeScript determines types locally and unidirectionally. When
+evaluating <code>const double = (num) =&gt; num * 2</code>, the compiler
+evaluates the variable declaration in total isolation. At the moment of
+declaration, there is no target type available to inform what
+<code>num</code> should be. Consequently, TypeScript falls back to
+<code>any</code> (or triggers a compiler error if
+<code>noImplicitAny</code> is enabled).</p>
+<h3 id="2-lack-of-reverse-flow-no-whole-program-inference">2. Lack of
+Reverse Flow (No Whole-Program Inference)</h3>
+<p>TypeScript does not use full unification or Hindley-Milner type
+inference across statement boundaries. It will not look ahead to future
+calls—such as <code>[1, 2, 3].map(double)</code>—to retroactively infer
+the signature of <code>double</code>.</p>
+<p>Implementing look-ahead type inference would introduce significant
+architectural trade-offs:</p>
+<ul>
+<li><strong>Ambiguity:</strong> If <code>double</code> is later passed
+to both <code>[1, 2, 3].map(double)</code> and
+<code>['a', 'b'].map(double)</code>, the compiler would face conflicting
+type constraints.</li>
+<li><strong>Performance:</strong> Scanning the entire codebase to solve
+for variable types creates a combinatorial explosion in compile
+times.</li>
+<li><strong>Poor Error Locality:</strong> If a parameter is typed
+retroactively, type mismatch errors would be reported far from where the
+actual mistake occurred, making debugging difficult.</li>
+</ul>
+<h2 id="solutions-for-decoupled-callbacks">Solutions for Decoupled
+Callbacks</h2>
+<p>To maintain type safety when separating callbacks, you must supply
+the context that the compiler no longer has access to.</p>
+<h3 id="explicit-parameter-types">Explicit Parameter Types</h3>
+<p>The simplest approach is to annotate the function's parameters
+directly:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> double <span class="op">=</span> (num<span class="op">:</span> <span class="dt">number</span>) <span class="kw">=&gt;</span> num <span class="op">*</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">.</span><span class="fu">map</span>(double)<span class="op">;</span></span></code></pre></div>
+<h3 id="explicit-function-signatures">Explicit Function Signatures</h3>
+<p>If you are writing functions that must conform to a specific
+contract, you can type the variable explicitly:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NumberMapper <span class="op">=</span> (value<span class="op">:</span> <span class="dt">number</span>) <span class="kw">=&gt;</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> double<span class="op">:</span> NumberMapper <span class="op">=</span> (num) <span class="kw">=&gt;</span> num <span class="op">*</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">.</span><span class="fu">map</span>(double)<span class="op">;</span></span></code></pre></div>
+<h3 id="parameter-helper-types">Parameter Helper Types</h3>
+<p>When reusing complex library signatures, you can extract the
+parameter types using TypeScript utility types:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { <span class="kw">type</span> RequestHandler } <span class="im">from</span> <span class="st">&#39;express&#39;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> customHandler<span class="op">:</span> RequestHandler <span class="op">=</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="st">&#39;Success&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>By providing the type context at the site of declaration, you satisfy
+TypeScript's requirement for localized, unidirectional type
+inference.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-type-script-fails-contextual-typing-on-variables';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Caught Errors Are Unknown in Modern TypeScript - typescript</title>
+    <meta name="description" content="Modern TypeScript types caught error variables as unknown instead of any to enforce type safety and eliminate runtime crashes caused by unvalidated assumptions. Because JavaScript permits throwing any arbitrary value—from strings and numbers to null or st">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-caught-errors-are-unknown-in-modern-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Caught Errors Are Unknown in Modern TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-caught-errors-are-unknown-in-modern-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Modern TypeScript types caught error variables as unknown instead of any to enforce type safety and eliminate runtime crashes caused by unvalidated assumptions. Because JavaScript permits throwing any arbitrary value—from strings and numbers to null or st" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-caught-errors-are-unknown-in-modern-typescript">Why Caught
+Errors Are Unknown in Modern TypeScript</h1>
+<p>Modern TypeScript types caught error variables as
+<code>unknown</code> instead of <code>any</code> to enforce type safety
+and eliminate runtime crashes caused by unvalidated assumptions. Because
+JavaScript permits throwing any arbitrary value—from strings and numbers
+to null or standard <code>Error</code> objects—typing errors as
+<code>any</code> created a false sense of security by completely
+disabling compiler checks. By defaulting caught errors to
+<code>unknown</code>, TypeScript forces developers to inspect and narrow
+the error’s type before accessing its properties, ensuring
+exception-handling code is genuinely resilient.</p>
+<h2 id="the-flaw-of-typing-caught-errors-as-any">The Flaw of Typing
+Caught Errors as <code>any</code></h2>
+<p>In early versions of TypeScript, caught errors were automatically
+typed as <code>any</code>. While convenient, this behavior undermined
+the primary goal of the type system. When an identifier is typed as
+<code>any</code>, TypeScript permits arbitrary property access, method
+calls, and assignments without validation:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">performRiskyOperation</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (error) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// If &#39;error&#39; is &#39;any&#39;, the compiler allows this without warning:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(error<span class="op">.</span><span class="at">message</span><span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If <code>performRiskyOperation()</code> throws a string, a number, or
+an object missing a <code>message</code> property, the code above will
+crash at runtime with a
+<code>TypeError: Cannot read properties of undefined</code>. Typing
+caught errors as <code>any</code> silenced compiler warnings precisely
+where uncertainty was highest.</p>
+<h2 id="javascript-can-throw-any-value">JavaScript Can Throw Any
+Value</h2>
+<p>Unlike languages such as Java or C#, JavaScript does not require
+thrown values to inherit from a base <code>Error</code> class. A program
+can legally throw any data type:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">throw</span> <span class="st">&quot;Something went wrong&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">throw</span> <span class="dv">500</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">throw</span> { <span class="dt">code</span><span class="op">:</span> <span class="st">&quot;NOT_FOUND&quot;</span><span class="op">,</span> <span class="dt">status</span><span class="op">:</span> <span class="dv">404</span> }<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">throw</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">throw</span> <span class="kw">undefined</span><span class="op">;</span></span></code></pre></div>
+<p>Because external libraries, third-party APIs, and legacy code can
+throw non-standard values, the runtime type of a caught exception is
+genuinely unknowable until it is inspected.</p>
+<h2 id="why-unknown-is-the-correct-representation">Why
+<code>unknown</code> Is the Correct Representation</h2>
+<p>TypeScript introduced the <code>unknown</code> type in version 3.0 as
+a type-safe counterpart to <code>any</code>. While both types accept any
+value, <code>unknown</code> forbids you from reading properties, calling
+methods, or passing the value to other functions until you explicitly
+narrow it to a specific type.</p>
+<p>By representing caught errors as <code>unknown</code>, the compiler
+accurately reflects the unpredictability of JavaScript's
+<code>throw</code> statement:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">performRiskyOperation</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (error<span class="op">:</span> <span class="dt">unknown</span>) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Compiler Error: &#39;error&#39; is of type &#39;unknown&#39;.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(error<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This restriction prevents accidental runtime errors by making
+unverified assumptions impossible to compile.</p>
+<h2 id="handling-unknown-errors-safely">Handling <code>unknown</code>
+Errors Safely</h2>
+<p>Working with <code>unknown</code> catch variables requires explicit
+runtime type checks using narrowing techniques, such as the
+<code>instanceof</code> operator or custom type guards.</p>
+<h3 id="using-instanceof-error">Using <code>instanceof Error</code></h3>
+<p>The most common approach is verifying whether the caught value is an
+instance of JavaScript's built-in <code>Error</code> class:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">performRiskyOperation</span>()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (error) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (error <span class="kw">instanceof</span> <span class="bu">Error</span>) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(error<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(error<span class="op">.</span><span class="at">stack</span>)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&quot;An unexpected error occurred:&quot;</span><span class="op">,</span> <span class="bu">String</span>(error))<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="using-type-narrowing-helpers">Using Type Narrowing Helpers</h3>
+<p>When working with custom error structures or non-standard payloads,
+you can write helper functions to safely extract error information:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getErrorMessage</span>(error<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (error <span class="kw">instanceof</span> <span class="bu">Error</span>) <span class="cf">return</span> error<span class="op">.</span><span class="at">message</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">typeof</span> error <span class="op">===</span> <span class="st">&quot;string&quot;</span>) <span class="cf">return</span> error<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (error <span class="op">&amp;&amp;</span> <span class="kw">typeof</span> error <span class="op">===</span> <span class="st">&quot;object&quot;</span> <span class="op">&amp;&amp;</span> <span class="st">&quot;message&quot;</span> <span class="kw">in</span> error) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">String</span>((error <span class="im">as</span> { message<span class="op">:</span> <span class="dt">unknown</span> })<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="st">&quot;Unknown error&quot;</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">performRiskyOperation</span>()<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (error) {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="fu">getErrorMessage</span>(error))<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="the-typescript-configuration-setting">The TypeScript
+Configuration Setting</h2>
+<p>Starting in TypeScript 4.0, catch clause variables could be
+explicitly annotated as either <code>unknown</code> or <code>any</code>.
+In TypeScript 4.4, the compiler introduced the
+<code>useUnknownInCatchVariables</code> flag, which is enabled by
+default under <code>strict</code> mode.</p>
+<p>When enabled, all unannotated <code>catch (error)</code> variables
+default to <code>unknown</code> rather than <code>any</code>, cementing
+modern TypeScript's shift toward absolute type safety in exception
+handling.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-caught-errors-are-unknown-in-modern-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

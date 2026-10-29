@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Node16 and NodeNext Module Resolution - typescript</title>
+    <meta name="description" content="TypeScript&#39;s node16 and nodenext module resolution modes align TypeScript&#39;s compilation and lookup behaviors directly with Node.js&#39;s native dual CommonJS (CJS) and ECMAScript Modules (ESM) system. This article explains how these resolution modes operate,">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-node-16-and-node-next-module-resolution">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Node16 and NodeNext Module Resolution - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-node-16-and-node-next-module-resolution" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript&#39;s node16 and nodenext module resolution modes align TypeScript&#39;s compilation and lookup behaviors directly with Node.js&#39;s native dual CommonJS (CJS) and ECMAScript Modules (ESM) system. This article explains how these resolution modes operate," />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-node16-and-nodenext-module-resolution">TypeScript
+Node16 and NodeNext Module Resolution</h1>
+<p>TypeScript's <code>node16</code> and <code>nodenext</code> module
+resolution modes align TypeScript's compilation and lookup behaviors
+directly with Node.js's native dual CommonJS (CJS) and ECMAScript
+Modules (ESM) system. This article explains how these resolution modes
+operate, how they determine whether a file is treated as ESM or
+CommonJS, how relative imports and file extensions are handled, and how
+package entry points are resolved using modern <code>package.json</code>
+fields.</p>
+<h2 id="the-difference-between-node16-and-nodenext">The Difference
+Between Node16 and NodeNext</h2>
+<p>In TypeScript, <code>node16</code> freezes module resolution behavior
+to match the specifications established in Node.js v16. The
+<code>nodenext</code> setting serves as an evolving target that updates
+alongside future Node.js releases to reflect newer module behaviors. In
+practice, both currently share identical resolution mechanics, but
+<code>nodenext</code> ensures your configuration adopts modern Node.js
+module semantics as the runtime ecosystem updates.</p>
+<h2 id="determining-module-format-esm-vs-commonjs">Determining Module
+Format: ESM vs. CommonJS</h2>
+<p>Under <code>node16</code> and <code>nodenext</code>, TypeScript does
+not assume your entire project is purely ESM or purely CommonJS.
+Instead, the format of each individual file is determined dynamically
+using two primary factors: file extensions and <code>package.json</code>
+configurations.</p>
+<ol type="1">
+<li><strong>Explicit File Extensions:</strong>
+<ul>
+<li><code>.mts</code> files compile to <code>.mjs</code> and are always
+treated as ES modules.</li>
+<li><code>.cts</code> files compile to <code>.cjs</code> and are always
+treated as CommonJS modules.</li>
+<li><code>.ts</code> files compile to <code>.js</code> and inherit their
+format from the nearest parent <code>package.json</code>.</li>
+</ul></li>
+<li><strong>The <code>package.json</code> "type" Field:</strong>
+<ul>
+<li>If the nearest enclosing <code>package.json</code> contains
+<code>"type": "module"</code>, all <code>.ts</code> files in that scope
+are treated as ES modules.</li>
+<li>If <code>"type"</code> is <code>"commonjs"</code> or omitted, all
+<code>.ts</code> files are treated as CommonJS.</li>
+</ul></li>
+</ol>
+<p>The resolved module format dictates syntax allowances: top-level
+<code>await</code> and <code>import</code>/<code>export</code>
+statements are allowed in ESM, while <code>require()</code> and
+<code>module.exports</code> are restricted to CommonJS files unless
+dynamically imported.</p>
+<h2 id="mandatory-relative-import-extensions">Mandatory Relative Import
+Extensions</h2>
+<p>When writing relative imports in an ES module context under
+<code>node16</code> or <code>nodenext</code>, TypeScript adheres
+strictly to the ECMAScript module specification implemented by Node.js.
+Node.js ESM does not perform directory lookups (like
+<code>/index.js</code>) or automatically append file extensions.</p>
+<p>Because of this runtime requirement:</p>
+<ul>
+<li>You must include the explicit output file extension in your import
+path.</li>
+<li>Even when authoring a <code>.ts</code> file, you must write the
+import path using <code>.js</code>, <code>.mjs</code>, or
+<code>.cjs</code>.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Importing &#39;./utils.ts&#39; in an ESM context:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { helper } <span class="im">from</span> <span class="st">&quot;./utils.js&quot;</span><span class="op">;</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Directory index imports require explicit filenames:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { config } <span class="im">from</span> <span class="st">&quot;./config/index.js&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript uses the <code>.js</code> extension in the source code to
+locate the corresponding <code>./utils.ts</code> or
+<code>./utils.d.ts</code> file on disk during type checking, and it
+outputs the exact <code>./utils.js</code> path to the compiled
+JavaScript.</p>
+<h2 id="package-resolution-exports-and-imports">Package Resolution:
+<code>exports</code> and <code>imports</code></h2>
+<p>Under traditional <code>node</code> (Node10) resolution, TypeScript
+looked only at the <code>"main"</code> or <code>"types"</code> fields in
+a dependency’s <code>package.json</code>. With <code>node16</code> and
+<code>nodenext</code>, TypeScript prioritizes the modern Node.js
+<code>"exports"</code> and <code>"imports"</code> fields.</p>
+<h3 id="the-exports-field">The "exports" Field</h3>
+<p>The <code>"exports"</code> field in a dependency defines internal
+encapsulation and public entry points. If a library defines an
+<code>"exports"</code> field, TypeScript will prevent imports of any
+subpaths not explicitly listed.</p>
+<p>When resolving imports, TypeScript matches conditions specified
+inside <code>"exports"</code>. Under <code>node16</code> and
+<code>nodenext</code>, resolution changes based on whether the consuming
+file is ESM or CJS:</p>
+<ul>
+<li>An ESM file resolves against the <code>"import"</code>
+condition.</li>
+<li>A CommonJS file resolves against the <code>"require"</code>
+condition.</li>
+<li>Type definitions are located using the <code>"types"</code>
+condition.</li>
+</ul>
+<p>For example, given this dependency configuration:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;example-lib&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;exports&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;.&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/index.d.ts&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;import&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/index.js&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;require&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/index.cjs&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;./feature&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/feature.d.ts&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;import&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/feature.js&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li>An import of <code>example-lib</code> inside an ES module maps to
+<code>./dist/index.js</code> and checks types via
+<code>./dist/index.d.ts</code>.</li>
+<li>An attempt to import <code>example-lib/dist/internal.js</code> fails
+at compile time because it is not exposed in the <code>"exports"</code>
+map.</li>
+</ul>
+<h3 id="the-imports-field-subpath-imports">The "imports" Field (Subpath
+Imports)</h3>
+<p>TypeScript also honors internal package aliases declared in the
+<code>"imports"</code> field of your project's own
+<code>package.json</code>. These entries must begin with a
+<code>#</code> symbol and allow internal modules to reference paths
+without relative traversal:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;imports&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;#database&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="st">&quot;./src/db/index.d.ts&quot;</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;default&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/db/index.js&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>A file can reference <code>import db from "#database";</code>, and
+TypeScript will correctly resolve the types and module location based on
+the active conditions.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-node-16-and-node-next-module-resolution';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

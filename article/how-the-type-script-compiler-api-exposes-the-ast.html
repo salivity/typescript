@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How the TypeScript Compiler API Exposes the AST - typescript</title>
+    <meta name="description" content="The TypeScript Compiler API parses source code into an Abstract Syntax Tree (AST), exposing it through a tree-like hierarchy of specialized node objects rooted in a SourceFile. By leveraging parsing functions, visiting utilities, and syntax discriminators">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-the-type-script-compiler-api-exposes-the-ast">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How the TypeScript Compiler API Exposes the AST - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-the-type-script-compiler-api-exposes-the-ast" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The TypeScript Compiler API parses source code into an Abstract Syntax Tree (AST), exposing it through a tree-like hierarchy of specialized node objects rooted in a SourceFile. By leveraging parsing functions, visiting utilities, and syntax discriminators" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-the-typescript-compiler-api-exposes-the-ast">How the
+TypeScript Compiler API Exposes the AST</h1>
+<p>The TypeScript Compiler API parses source code into an Abstract
+Syntax Tree (AST), exposing it through a tree-like hierarchy of
+specialized node objects rooted in a <code>SourceFile</code>. By
+leveraging parsing functions, visiting utilities, and syntax
+discriminators provided by the <code>typescript</code> package,
+developers can programmatically inspect, traverse, and manipulate every
+syntactic token, declaration, and statement in a TypeScript or
+JavaScript file.</p>
+<h3 id="parsing-code-into-a-sourcefile">Parsing Code into a
+SourceFile</h3>
+<p>The entry point to the AST is the <code>SourceFile</code> node, which
+represents the entire parsed file. You can generate a
+<code>SourceFile</code> without setting up a full compilation pipeline
+by using the <code>ts.createSourceFile</code> utility:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> ts <span class="im">from</span> <span class="st">&quot;typescript&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sourceCode <span class="op">=</span> <span class="vs">`const greeting: string = &quot;Hello, world!&quot;;`</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sourceFile <span class="op">=</span> ts<span class="op">.</span><span class="fu">createSourceFile</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;example.ts&quot;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  sourceCode<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  ts<span class="op">.</span><span class="at">ScriptTarget</span><span class="op">.</span><span class="at">Latest</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/* setParentNodes */</span> <span class="kw">true</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<p>For multi-file projects requiring semantic analysis or type
+information, the AST is obtained through a <code>ts.Program</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> program <span class="op">=</span> ts<span class="op">.</span><span class="fu">createProgram</span>([<span class="st">&quot;example.ts&quot;</span>]<span class="op">,</span> {})<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sourceFile <span class="op">=</span> program<span class="op">.</span><span class="fu">getSourceFile</span>(<span class="st">&quot;example.ts&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="the-structure-of-an-ast-node">The Structure of an AST Node</h3>
+<p>Every element within the AST implements the <code>ts.Node</code>
+interface. The <code>SourceFile</code> acts as the root node, and its
+children represent top-level statements, which branch further into
+expressions, declarations, and literals.</p>
+<p>Each <code>Node</code> exposes foundational properties:</p>
+<ul>
+<li><code>kind</code>: A member of the <code>ts.SyntaxKind</code> enum
+identifying what the node represents (e.g.,
+<code>VariableStatement</code>, <code>FunctionDeclaration</code>,
+<code>Identifier</code>).</li>
+<li><code>pos</code> and <code>end</code>: Character offsets indicating
+where the node starts and ends in the raw source text.</li>
+<li><code>parent</code>: A reference to the node's parent (populated
+when <code>setParentNodes</code> is enabled).</li>
+</ul>
+<p>To retrieve the original source code corresponding to any node, use
+<code>node.getText(sourceFile)</code>.</p>
+<h3 id="traversing-the-ast">Traversing the AST</h3>
+<p>The API provides two primary mechanisms to walk the tree:</p>
+<h4 id="1-tsforeachchild">1. <code>ts.forEachChild</code></h4>
+<p><code>ts.forEachChild</code> visits the immediate children of a given
+node, making it ideal for linear, read-only traversals:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">traverse</span>(node<span class="op">:</span> ts<span class="op">.</span><span class="at">Node</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(ts<span class="op">.</span><span class="at">SyntaxKind</span>[node<span class="op">.</span><span class="at">kind</span>])<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  ts<span class="op">.</span><span class="fu">forEachChild</span>(node<span class="op">,</span> traverse)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">traverse</span>(sourceFile)<span class="op">;</span></span></code></pre></div>
+<h4 id="2-ast-visitors-tsvisiteachchild-and-tsvisitnode">2. AST Visitors
+(<code>ts.visitEachChild</code> and <code>ts.visitNode</code>)</h4>
+<p>When transforming nodes or building custom AST transformations, the
+visitor API allows deep traversal while returning modified or
+replacement nodes:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> transformer<span class="op">:</span> ts<span class="op">.</span><span class="at">TransformerFactory</span><span class="op">&lt;</span>ts<span class="op">.</span><span class="at">SourceFile</span><span class="op">&gt;</span> <span class="op">=</span> (context) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (rootNode) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">function</span> <span class="fu">visit</span>(node<span class="op">:</span> ts<span class="op">.</span><span class="at">Node</span>)<span class="op">:</span> ts<span class="op">.</span><span class="at">Node</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Return a modified node or continue traversing</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> ts<span class="op">.</span><span class="fu">visitEachChild</span>(node<span class="op">,</span> visit<span class="op">,</span> context)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ts<span class="op">.</span><span class="fu">visitNode</span>(rootNode<span class="op">,</span> visit) <span class="im">as</span> ts<span class="op">.</span><span class="at">SourceFile</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="type-guards-and-syntax-kinds">Type Guards and Syntax Kinds</h3>
+<p>Because the AST uses a tagged union pattern based on
+<code>node.kind</code>, the API exposes built-in type guard functions
+(prefixed with <code>is</code>) that narrow a generic
+<code>ts.Node</code> to its specific subclass:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ts<span class="op">.</span><span class="fu">forEachChild</span>(sourceFile<span class="op">,</span> (node) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (ts<span class="op">.</span><span class="fu">isVariableStatement</span>(node)) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// node is narrowed to ts.VariableStatement</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> declarations <span class="op">=</span> node<span class="op">.</span><span class="at">declarationList</span><span class="op">.</span><span class="at">declarations</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    declarations<span class="op">.</span><span class="fu">forEach</span>((decl) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (ts<span class="op">.</span><span class="fu">isIdentifier</span>(decl<span class="op">.</span><span class="at">name</span>)) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Variable name: </span><span class="sc">${</span>decl<span class="op">.</span><span class="at">name</span><span class="op">.</span><span class="at">text</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="connecting-the-ast-to-semantics">Connecting the AST to
+Semantics</h3>
+<p>While the AST captures structural syntax, the Compiler API binds
+these syntax nodes to semantic data through a <code>TypeChecker</code>.
+By calling <code>program.getTypeChecker()</code>, you can bridge syntax
+nodes to symbols and types:</p>
+<ul>
+<li><code>checker.getSymbolAtLocation(node)</code>: Resolves an
+identifier AST node to its <code>ts.Symbol</code> definition.</li>
+<li><code>checker.getTypeAtLocation(node)</code>: Resolves the computed
+<code>ts.Type</code> of an expression node.</li>
+</ul>
+<p>This separation keeps the AST lightweight and strictly focused on
+representing the source code structure, while allowing rich semantic
+querying when needed.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-the-type-script-compiler-api-exposes-the-ast';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

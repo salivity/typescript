@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Checking Tailwind CSS Config with TypeScript - typescript</title>
+    <meta name="description" content="This article provides a comprehensive guide on how Tailwind CSS integrates type checking into its configuration files. By leveraging the built-in Config type definition provided by the framework, developers can validate their configuration files using eit">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-checking-tailwind-css-config-with-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type Checking Tailwind CSS Config with TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-checking-tailwind-css-config-with-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a comprehensive guide on how Tailwind CSS integrates type checking into its configuration files. By leveraging the built-in Config type definition provided by the framework, developers can validate their configuration files using eit" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-checking-tailwind-css-config-with-typescript">Type Checking
+Tailwind CSS Config with TypeScript</h1>
+<p>This article provides a comprehensive guide on how Tailwind CSS
+integrates type checking into its configuration files. By leveraging the
+built-in <code>Config</code> type definition provided by the framework,
+developers can validate their configuration files using either native
+TypeScript (<code>tailwind.config.ts</code>) or JSDoc type annotations
+in standard JavaScript files. This setup enforces schema correctness,
+validates theme extensions, and delivers full IntelliSense and
+autocompletion in supported code editors.</p>
+<h3 id="the-config-type-definition">The <code>Config</code> Type
+Definition</h3>
+<p>At the core of Tailwind CSS type checking is the <code>Config</code>
+interface exported directly from the <code>tailwindcss</code> package.
+This type definition models the complete structure of a valid Tailwind
+configuration object, including keys such as <code>content</code>,
+<code>theme</code>, <code>plugins</code>, <code>presets</code>, and
+<code>corePlugins</code>.</p>
+<p>Because the schema for Tailwind's configuration is complex and deeply
+nested, importing this interface allows the TypeScript compiler (and
+editor language servers) to check for missing required fields,
+misspelled property names, or incorrect data types.</p>
+<h3
+id="method-1-native-typescript-configuration-tailwindconfigts">Method 1:
+Native TypeScript Configuration (<code>tailwind.config.ts</code>)</h3>
+<p>Starting in Tailwind CSS v3.3, native TypeScript configuration files
+are supported out of the box without requiring manual build-step
+pre-compilation.</p>
+<p>To implement type checking using a <code>.ts</code> file, define your
+configuration as follows:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { Config } <span class="im">from</span> <span class="st">&#39;tailwindcss&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config<span class="op">:</span> Config <span class="op">=</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  content<span class="op">:</span> [</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;./pages/**/*.{js,ts,jsx,tsx,mdx}&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;./components/**/*.{js,ts,jsx,tsx,mdx}&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;./app/**/*.{js,ts,jsx,tsx,mdx}&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  theme<span class="op">:</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    extend<span class="op">:</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      colors<span class="op">:</span> {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        brand<span class="op">:</span> {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>          light<span class="op">:</span> <span class="st">&#39;#3fbaeb&#39;</span><span class="op">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>          DEFAULT<span class="op">:</span> <span class="st">&#39;#0fa9e6&#39;</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>          dark<span class="op">:</span> <span class="st">&#39;#0c87b8&#39;</span><span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  plugins<span class="op">:</span> []<span class="op">,</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> config</span></code></pre></div>
+<p>Using <code>import type</code> ensures that the type definitions are
+erased during transpilation, preventing unnecessary runtime dependencies
+on TypeScript types.</p>
+<h3 id="method-2-jsdoc-type-annotations-tailwindconfigjs">Method 2:
+JSDoc Type Annotations (<code>tailwind.config.js</code>)</h3>
+<p>If a project relies on standard JavaScript configuration files
+(CommonJS or ES Modules), Tailwind CSS enables type checking through
+JSDoc comments. Modern IDEs like Visual Studio Code parse JSDoc type
+casts using the TypeScript engine in the background.</p>
+<h4 id="for-commonjs">For CommonJS:</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@type</span><span class="co"> {import(&#39;tailwindcss&#39;).Config} */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">content</span><span class="op">:</span> [<span class="st">&#39;./src/**/*.{html,js}&#39;</span>]<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">theme</span><span class="op">:</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">extend</span><span class="op">:</span> {}<span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> []<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="for-esm">For ESM:</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@type</span><span class="co"> {import(&#39;tailwindcss&#39;).Config} */</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">content</span><span class="op">:</span> [<span class="st">&#39;./src/**/*.{html,js}&#39;</span>]<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">theme</span><span class="op">:</span> {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">extend</span><span class="op">:</span> {}<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> []<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The inline <code>import('tailwindcss').Config</code> directive
+fetches the typing information without altering the runtime execution of
+the JavaScript file.</p>
+<h3 id="how-tailwind-executes-typescript-files-at-runtime">How Tailwind
+Executes TypeScript Files at Runtime</h3>
+<p>While the editor and the TypeScript compiler provide static type
+checking during authoring, Tailwind CSS must execute the configuration
+at build time.</p>
+<p>Tailwind uses <code>jiti</code> internally to seamlessly load
+<code>.ts</code> configuration files on the fly. When a build tool (like
+PostCSS, Vite, or the Tailwind CLI) runs, <code>jiti</code> transpiles
+the TypeScript configuration into JavaScript in memory, allowing Node.js
+to evaluate it without an explicit ahead-of-time build step.</p>
+<h3 id="key-benefits-of-typed-configurations">Key Benefits of Typed
+Configurations</h3>
+<ol type="1">
+<li><strong>Autocompletion for Theme Keys</strong>: IntelliSense can
+automatically suggest available properties within the <code>theme</code>
+and <code>extend</code> objects, such as <code>spacing</code>,
+<code>screens</code>, <code>fontFamily</code>, and
+<code>colors</code>.</li>
+<li><strong>Plugin Type Safety</strong>: Plugins added to the
+<code>plugins</code> array are checked to ensure they match the
+<code>PluginCreator</code> signature, catching integration issues
+early.</li>
+<li><strong>Catching Breaking Changes</strong>: When upgrading Tailwind
+CSS versions, TypeScript immediately flags deprecated or restructured
+configuration options.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-checking-tailwind-css-config-with-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

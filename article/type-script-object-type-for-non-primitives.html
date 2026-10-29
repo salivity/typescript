@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript object Type for Non-Primitives - typescript</title>
+    <meta name="description" content="In TypeScript, ensuring that an argument or variable strictly represents a reference type rather than a primitive value is a common requirement. This guide demonstrates how to strictly enforce non-primitive types using TypeScript’s lowercase object keywor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-object-type-for-non-primitives">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript object Type for Non-Primitives - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-object-type-for-non-primitives" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, ensuring that an argument or variable strictly represents a reference type rather than a primitive value is a common requirement. This guide demonstrates how to strictly enforce non-primitive types using TypeScript’s lowercase object keywor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-object-type-for-non-primitives">TypeScript object
+Type for Non-Primitives</h1>
+<p>In TypeScript, ensuring that an argument or variable strictly
+represents a reference type rather than a primitive value is a common
+requirement. This guide demonstrates how to strictly enforce
+non-primitive types using TypeScript’s lowercase <code>object</code>
+keyword, details how it differs from types like <code>Object</code> and
+<code>{}</code>, and illustrates its application in functions, generic
+constraints, and runtime narrowing.</p>
+<h3 id="understanding-the-object-keyword">Understanding the
+<code>object</code> Keyword</h3>
+<p>TypeScript introduced the lowercase <code>object</code> type in
+version 2.2 specifically to represent any non-primitive type. A
+primitive in JavaScript is any value that is not an object and has no
+methods: <code>string</code>, <code>number</code>, <code>bigint</code>,
+<code>boolean</code>, <code>symbol</code>, <code>null</code>, or
+<code>undefined</code>.</p>
+<p>When a variable or parameter is annotated with <code>object</code>,
+TypeScript permits any reference value—such as plain objects, arrays,
+functions, sets, and class instances—while strictly rejecting all
+primitive values.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processReference</span>(target<span class="op">:</span> <span class="dt">object</span>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Logic here</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid assignments (non-primitives)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>({})<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>({ key<span class="op">:</span> <span class="st">&quot;value&quot;</span> })<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>([<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>])<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(() <span class="kw">=&gt;</span> <span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="kw">new</span> <span class="bu">Map</span>())<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile-time errors (primitives)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="dv">42</span>)<span class="op">;</span>         <span class="co">// Error: Argument of type &#39;number&#39; is not assignable to parameter of type &#39;object&#39;.</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="st">&quot;text&quot;</span>)<span class="op">;</span>     <span class="co">// Error: Argument of type &#39;string&#39; is not assignable to parameter of type &#39;object&#39;.</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="kw">true</span>)<span class="op">;</span>       <span class="co">// Error: Argument of type &#39;boolean&#39; is not assignable to parameter of type &#39;object&#39;.</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="kw">null</span>)<span class="op">;</span>       <span class="co">// Error: Argument of type &#39;null&#39; is not assignable to parameter of type &#39;object&#39;.</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">processReference</span>(<span class="kw">undefined</span>)<span class="op">;</span>  <span class="co">// Error: Argument of type &#39;undefined&#39; is not assignable to parameter of type &#39;object&#39;.</span></span></code></pre></div>
+<h3 id="the-difference-between-object-object-and-">The Difference
+Between <code>object</code>, <code>Object</code>, and
+<code>{}</code></h3>
+<p>A common pitfall in TypeScript is confusing <code>object</code> with
+<code>Object</code> and <code>{}</code>:</p>
+<ul>
+<li><strong><code>object</code> (lowercase):</strong> Strictly
+non-primitive values.</li>
+<li><strong><code>Object</code> (uppercase):</strong> Represents the
+functionality provided by the JavaScript runtime's global
+<code>Object</code> interface. It permits any value except
+<code>null</code> and <code>undefined</code> because primitives can be
+auto-boxed into object wrappers.</li>
+<li><strong><code>{}</code> (empty type):</strong> Represents any
+non-nullish value. Similar to <code>Object</code>, strings, numbers, and
+booleans can be assigned to <code>{}</code>.</li>
+</ul>
+<p>To enforce non-primitive guarantees at compile time, always use
+lowercase <code>object</code>.</p>
+<h3 id="using-object-as-a-generic-constraint">Using <code>object</code>
+as a Generic Constraint</h3>
+<p>The <code>object</code> keyword is frequently used to constrain
+generic parameters, preventing consumers from passing primitive values
+to functions designed specifically for objects.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">freezeEntity</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">&gt;</span>(entity<span class="op">:</span> T)<span class="op">:</span> <span class="bu">Readonly</span><span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">freeze</span>(entity)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="fu">freezeEntity</span>({ id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> })<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> list <span class="op">=</span> <span class="fu">freezeEntity</span>([<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>])<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Prevented</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">freezeEntity</span>(<span class="st">&quot;invalid&quot;</span>)<span class="op">;</span> <span class="co">// Error: Type &#39;string&#39; does not satisfy the constraint &#39;object&#39;.</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">freezeEntity</span>(<span class="dv">100</span>)<span class="op">;</span>       <span class="co">// Error: Type &#39;number&#39; does not satisfy the constraint &#39;object&#39;.</span></span></code></pre></div>
+<h3 id="working-with-values-typed-as-object">Working with Values Typed
+as <code>object</code></h3>
+<p>The <code>object</code> type acts as a black box; by design, it does
+not expose arbitrary properties because TypeScript cannot infer its
+exact shape. Attempting to access arbitrary keys directly will trigger a
+compiler error:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">inspect</span>(data<span class="op">:</span> <span class="dt">object</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// console.log(data.id); // Error: Property &#39;id&#39; does not exist on type &#39;object&#39;.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>To safely interact with properties while retaining the non-primitive
+constraint:</p>
+<ol type="1">
+<li><p><strong>Use Type Narrowing with the <code>in</code>
+Operator:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">inspect</span>(data<span class="op">:</span> <span class="dt">object</span>) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">&quot;id&quot;</span> <span class="kw">in</span> data) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>((data <span class="im">as</span> { id<span class="op">:</span> <span class="dt">unknown</span> })<span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+<li><p><strong>Combine with
+<code>Record&lt;PropertyKey, unknown&gt;</code> for Dictionary
+Access:</strong> If dynamic property access is required, combine or
+replace <code>object</code> with an index signature:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">readDynamic</span>(data<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span>) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(data<span class="op">.</span><span class="at">id</span>)<span class="op">;</span> <span class="co">// Allowed, typed as &#39;unknown&#39;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-object-type-for-non-primitives';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>useDefineForClassFields and Inheritance in TypeScript - typescript</title>
+    <meta name="description" content="The useDefineForClassFields compiler flag in TypeScript switches class field emission from legacy assignment semantics to standard ECMAScript definition semantics. When enabled, class property initializers use Object.defineProperty instead of standard ass">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/use-define-for-class-fields-and-inheritance-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="useDefineForClassFields and Inheritance in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/use-define-for-class-fields-and-inheritance-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The useDefineForClassFields compiler flag in TypeScript switches class field emission from legacy assignment semantics to standard ECMAScript definition semantics. When enabled, class property initializers use Object.defineProperty instead of standard ass" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="usedefineforclassfields-and-inheritance-in-typescript">useDefineForClassFields
+and Inheritance in TypeScript</h1>
+<p>The <code>useDefineForClassFields</code> compiler flag in TypeScript
+switches class field emission from legacy assignment semantics to
+standard ECMAScript definition semantics. When enabled, class property
+initializers use <code>Object.defineProperty</code> instead of standard
+assignment (<code>this.field = value</code>). This change fundamentally
+alters inheritance behavior, specifically regarding how derived class
+properties interact with base class getters, setters, and initialized
+properties.</p>
+<h2 id="assignment-semantics-vs-definition-semantics">Assignment
+Semantics vs. Definition Semantics</h2>
+<p>To understand the impact on inheritance, it is essential to
+distinguish between the two emission modes:</p>
+<ul>
+<li><strong>When <code>false</code> (Legacy TypeScript):</strong> Fields
+are emitted as assignments (<code>this.x = value;</code>). Assignment
+follows the prototype chain, triggering any existing setter defined in a
+parent class.</li>
+<li><strong>When <code>true</code> (ECMAScript Standard):</strong>
+Fields are emitted using
+<code>Object.defineProperty(this, "x", { value, writable: true, enumerable: true, configurable: true })</code>.
+This explicitly creates an "own" property directly on the current
+instance, bypassing prototype setters entirely.</li>
+</ul>
+<h2 id="overriding-getters-and-setters-in-base-classes">Overriding
+Getters and Setters in Base Classes</h2>
+<p>The most common behavioral divergence occurs when a derived class
+declares a property that matches an accessor (getter/setter) on a parent
+class.</p>
+<p>Consider this structure:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Base {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">data</span>(value<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Base setter called with:&quot;</span><span class="op">,</span> value)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Derived <span class="kw">extends</span> Base {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  data <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="behavior-with-usedefineforclassfields-false">Behavior with
+<code>useDefineForClassFields: false</code></h3>
+<p>During the instantiation of <code>Derived</code>,
+<code>super()</code> runs, followed by <code>this.data = "hello"</code>.
+Because it uses assignment, JavaScript traverses the prototype chain,
+finds the <code>data</code> setter on <code>Base.prototype</code>, and
+executes it. The console outputs
+<code>"Base setter called with: hello"</code>.</p>
+<h3 id="behavior-with-usedefineforclassfields-true">Behavior with
+<code>useDefineForClassFields: true</code></h3>
+<p><code>Object.defineProperty</code> creates the <code>data</code>
+property directly on the <code>Derived</code> instance. It does not
+traverse the prototype chain, meaning the <code>data</code> setter on
+<code>Base</code> is never executed. Instead, the instance gains an own
+property called <code>data</code> that completely shadows the
+getter/setter pair on the base class.</p>
+<h2
+id="overwriting-base-properties-with-uninitialized-fields">Overwriting
+Base Properties with Uninitialized Fields</h2>
+<p>Another major shift affects class fields declared without explicit
+initializers.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Parent {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Child <span class="kw">extends</span> Parent {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="behavior-with-usedefineforclassfields-false-1">Behavior with
+<code>useDefineForClassFields: false</code></h3>
+<p>TypeScript strips out type-only declarations during compilation.
+Because <code>value</code> in <code>Child</code> has no initializer, no
+JavaScript code is generated for it in the child class. The instance
+retains <code>value = 10</code> set by the <code>Parent</code>
+constructor.</p>
+<h3 id="behavior-with-usedefineforclassfields-true-1">Behavior with
+<code>useDefineForClassFields: true</code></h3>
+<p>Per the ECMAScript specification, any declared class field without an
+explicit initializer is initialized to <code>undefined</code>. The
+emitted code for <code>Child</code> defines <code>value</code> as
+<code>void 0</code>.</p>
+<p>When <code>new Child()</code> runs:</p>
+<ol type="1">
+<li><code>super()</code> executes, setting
+<code>this.value = 10</code>.</li>
+<li>The <code>Child</code> initializer executes, defining
+<code>value</code> on the instance as <code>undefined</code>.</li>
+<li>The parent class's value is unintentionally overwritten.</li>
+</ol>
+<p>To retain the parent value without adding a runtime initializer in
+modern TypeScript, use the <code>declare</code> keyword:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Child <span class="kw">extends</span> Parent {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">declare</span> value<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> <span class="co">// Emits no runtime JavaScript</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="constructor-execution-order-and-tdz">Constructor Execution Order
+and TDZ</h2>
+<p>Because ECMAScript field definitions occur strictly after the base
+constructor returns, derived class property initializers evaluate in a
+distinct step:</p>
+<ol type="1">
+<li>Base class fields are initialized using <code>Define</code>.</li>
+<li>Base class constructor body executes.</li>
+<li>Derived class fields are initialized using <code>Define</code>.</li>
+<li>Derived class constructor body executes.</li>
+</ol>
+<p>If a base class constructor calls a virtual method that accesses a
+property declared in the derived class, legacy assignment would
+sometimes allow the method to observe the property if it was bound
+early. Under definition semantics, the derived field does not exist on
+the instance during the base constructor execution; attempting to access
+it will yield <code>undefined</code> or cause runtime initialization
+errors.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/use-define-for-class-fields-and-inheritance-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

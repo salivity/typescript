@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Unique Symbols Must Be Const in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, the unique symbol type provides a way to treat symbols as distinct, nominal types rather than a general, broad symbol primitive. This article explains why TypeScript strictly requires unique symbol declarations to be bound to const variable">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-unique-symbols-must-be-const-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Unique Symbols Must Be Const in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-unique-symbols-must-be-const-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, the unique symbol type provides a way to treat symbols as distinct, nominal types rather than a general, broad symbol primitive. This article explains why TypeScript strictly requires unique symbol declarations to be bound to const variable" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-unique-symbols-must-be-const-in-typescript">Why Unique
+Symbols Must Be Const in TypeScript</h1>
+<p>In TypeScript, the <code>unique symbol</code> type provides a way to
+treat symbols as distinct, nominal types rather than a general, broad
+<code>symbol</code> primitive. This article explains why TypeScript
+strictly requires <code>unique symbol</code> declarations to be bound to
+<code>const</code> variables or <code>readonly static</code> class
+properties. By examining reference immutability, compile-time identity
+tracking, and the mechanics of TypeScript's type checker, you will
+understand how these constraints maintain soundness and prevent identity
+drift in your code.</p>
+<h3 id="the-role-of-unique-symbol">The Role of
+<code>unique symbol</code></h3>
+<p>The standard <code>symbol</code> type in TypeScript represents any
+possible runtime symbol created via <code>Symbol()</code>. Because
+symbols are inherently unique at runtime, TypeScript introduced the
+<code>unique symbol</code> subtype to represent individual, literal
+symbol identities at compile time.</p>
+<p>This type allows symbols to act as unique property keys, branded
+types, or nominal identifiers. For the type system to treat a symbol as
+a unique type, it must link that type to a specific, unchangeable
+identifier.</p>
+<h3 id="preventing-reassignment-and-type-drift">Preventing Reassignment
+and Type Drift</h3>
+<p>TypeScript binds a <code>unique symbol</code> type directly to the
+variable identifier that declares it. If TypeScript allowed you to
+declare a <code>unique symbol</code> with <code>let</code> or
+<code>var</code>, the variable could be reassigned later in the
+program:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Disallowed by TypeScript:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> mySymbol<span class="op">:</span> unique <span class="dt">symbol</span> <span class="op">=</span> <span class="bu">Symbol</span>(<span class="st">&quot;key&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>mySymbol <span class="op">=</span> <span class="bu">Symbol</span>(<span class="st">&quot;anotherKey&quot;</span>)<span class="op">;</span> <span class="co">// Mutates the underlying identity</span></span></code></pre></div>
+<p>If reassignment were permitted, the variable would no longer reliably
+point to the exact same runtime symbol. Any code relying on
+<code>typeof mySymbol</code> as a type-level key or token would become
+unsound because the static type could no longer guarantee the identity
+of the underlying runtime value. Requiring <code>const</code> guarantees
+that the identifier always points to the exact same symbol reference
+created during initialization.</p>
+<h3 id="reference-identity-as-a-type">Reference Identity as a Type</h3>
+<p>In TypeScript, <code>unique symbol</code> types are nominal. Each
+declaration creates a new, mutually exclusive type that is not
+assignable to any other <code>unique symbol</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> symbolA<span class="op">:</span> unique <span class="dt">symbol</span> <span class="op">=</span> <span class="bu">Symbol</span>(<span class="st">&quot;token&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> symbolB<span class="op">:</span> unique <span class="dt">symbol</span> <span class="op">=</span> <span class="bu">Symbol</span>(<span class="st">&quot;token&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;typeof symbolB&#39; is not assignable to type &#39;typeof symbolA&#39;.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> symbolC<span class="op">:</span> <span class="kw">typeof</span> symbolA <span class="op">=</span> symbolB<span class="op">;</span> </span></code></pre></div>
+<p>Because TypeScript's type checker tracks these types through the
+identifier itself (using <code>typeof identifier</code>), the identifier
+must remain an immutable reference. A mutable binding breaks the
+compiler’s ability to use the identifier as a stable type token.</p>
+<h3 id="why-readonly-static-is-allowed-on-classes">Why
+<code>readonly static</code> is Allowed on Classes</h3>
+<p>TypeScript allows <code>unique symbol</code> properties on classes
+only when they are marked as both <code>readonly</code> and
+<code>static</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Registry {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">static</span> <span class="kw">readonly</span> entryId<span class="op">:</span> unique <span class="dt">symbol</span> <span class="op">=</span> <span class="bu">Symbol</span>(<span class="st">&quot;entryId&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This exception follows the same logic as <code>const</code>:</p>
+<ol type="1">
+<li><strong><code>readonly</code> ensures immutability:</strong> The
+property cannot be modified after class initialization, ensuring the
+reference never changes.</li>
+<li><strong><code>static</code> ensures single-instance
+identity:</strong> A static property belongs to the constructor function
+rather than class instances.</li>
+</ol>
+<p>Instance properties cannot hold <code>unique symbol</code> types
+because every new instance of a class would either share the same type
+while pointing to different runtime symbols, or require a distinct type
+for every instantiated object. TypeScript cannot track per-instance
+symbol types dynamically at compile time. Binding the symbol to the
+static constructor guarantees a single, predictable location in
+memory.</p>
+<h3 id="summary">Summary</h3>
+<p>TypeScript restricts <code>unique symbol</code> declarations to
+<code>const</code> variables and <code>readonly static</code> properties
+to enforce immutability. Because the static type checker relies directly
+on the variable's declaration to establish its nominal identity, the
+underlying reference must never change. This restriction guarantees that
+compile-time type distinctions remain completely aligned with runtime
+values.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-unique-symbols-must-be-const-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

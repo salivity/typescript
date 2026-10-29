@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript inlineSources and inlineSourceMap Explained - typescript</title>
+    <meta name="description" content="This article provides an overview of the inlineSourceMap and inlineSources compiler options in TypeScript, explaining their roles in debugging and output generation. You will learn how each flag modifies the generated JavaScript, how they interact with ea">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-inline-sources-and-inline-source-map-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript inlineSources and inlineSourceMap Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-inline-sources-and-inline-source-map-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of the inlineSourceMap and inlineSources compiler options in TypeScript, explaining their roles in debugging and output generation. You will learn how each flag modifies the generated JavaScript, how they interact with ea" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-inlinesources-and-inlinesourcemap-explained">TypeScript
+inlineSources and inlineSourceMap Explained</h1>
+<p>This article provides an overview of the <code>inlineSourceMap</code>
+and <code>inlineSources</code> compiler options in TypeScript,
+explaining their roles in debugging and output generation. You will
+learn how each flag modifies the generated JavaScript, how they interact
+with each other, and the practical scenarios and trade-offs associated
+with using them in your projects.</p>
+<h2 id="understanding-source-maps-in-typescript">Understanding Source
+Maps in TypeScript</h2>
+<p>When TypeScript compiles into JavaScript, the structure of the code
+changes. Source maps bridge this gap by mapping the compiled JavaScript
+code back to your original TypeScript source files, allowing debuggers
+in browsers and runtimes like Node.js to display line numbers,
+variables, and breakpoints as they appear in the original
+<code>.ts</code> files.</p>
+<p>By default, setting <code>"sourceMap": true</code> in your
+<code>tsconfig.json</code> generates separate <code>.js.map</code> files
+alongside your <code>.js</code> output. TypeScript provides
+<code>inlineSourceMap</code> and <code>inlineSources</code> to alter how
+these mapping data and source files are bundled.</p>
+<h2 id="the-inlinesourcemap-option">The <code>inlineSourceMap</code>
+Option</h2>
+<p>The <code>inlineSourceMap</code> flag instructs the TypeScript
+compiler to embed the source map data directly into the emitted
+<code>.js</code> file rather than creating an external
+<code>.js.map</code> file.</p>
+<ul>
+<li><strong>How it works:</strong> TypeScript encodes the entire source
+map as a base64 Data URI and appends it to the bottom of the generated
+JavaScript file as a comment (e.g.,
+<code>//# sourceMappingURL=data:application/json;base64,...</code>).</li>
+<li><strong>Purpose:</strong> It eliminates the need to distribute and
+manage separate <code>.map</code> files alongside your compiled output.
+This simplifies workflows where single-file distribution is preferred,
+such as automated testing or isolated Node.js utility scripts.</li>
+<li><strong>Important rule:</strong> <code>inlineSourceMap</code> is
+mutually exclusive with the standard <code>sourceMap</code> option.
+Enabling both simultaneously will result in a compiler error.</li>
+</ul>
+<h2 id="the-inlinesources-option">The <code>inlineSources</code>
+Option</h2>
+<p>The <code>inlineSources</code> flag instructs the compiler to embed
+the actual text of your original <code>.ts</code> source files directly
+inside the source map itself, stored within the source map's
+<code>sourcesContent</code> property.</p>
+<ul>
+<li><strong>How it works:</strong> Under standard settings, a source map
+references source files by file path or URL. If the debugger cannot find
+the original <code>.ts</code> file at that location, debugging fails.
+With <code>inlineSources: true</code>, the debugger reads the original
+source code directly from the map content.</li>
+<li><strong>Purpose:</strong> It ensures that your code can be fully
+debugged even if the original <code>.ts</code> files are deleted,
+omitted from a package, or not hosted on a web server.</li>
+<li><strong>Important rule:</strong> <code>inlineSources</code> requires
+a source map to exist. It must be used in conjunction with either
+<code>"sourceMap": true</code> or
+<code>"inlineSourceMap": true</code>.</li>
+</ul>
+<h2 id="combining-inlinesourcemap-and-inlinesources">Combining
+<code>inlineSourceMap</code> and <code>inlineSources</code></h2>
+<p>When you enable both options together in
+<code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;inlineSourceMap&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;inlineSources&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>TypeScript produces a single, fully self-contained <code>.js</code>
+file. This file includes:</p>
+<ol type="1">
+<li>The executable JavaScript code.</li>
+<li>The complete source map mapping runtime code to TypeScript
+code.</li>
+<li>The original TypeScript source code itself.</li>
+</ol>
+<h2 id="trade-offs-and-best-practices">Trade-offs and Best
+Practices</h2>
+<p>While these flags simplify deployment and guarantee that debugging
+always works, embedding maps and source files significantly increases
+the file size of your compiled JavaScript. Because of this overhead:</p>
+<ul>
+<li><strong>Production Web Applications:</strong> Avoid using
+<code>inlineSourceMap</code> and <code>inlineSources</code> in
+client-facing web bundles, as it unnecessarily bloats payload sizes and
+exposes your raw source code to the client.</li>
+<li><strong>Node.js Services and Libraries:</strong> Useful during
+development, local testing, and inside internal CLI tools where file
+size is less critical than having immediate, hassle-free stack traces
+that link directly to original source lines.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-inline-sources-and-inline-source-map-explained';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

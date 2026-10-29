@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ts-ignore vs ts-expect-error in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript provides two primary directives to silence compiler diagnostics: // @ts-ignore and // @ts-expect-error. While both comments suppress compilation errors on the immediate following line, they handle error absence differently. The @ts-ignore direc">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/ts-ignore-vs-ts-expect-error-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ts-ignore vs ts-expect-error in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/ts-ignore-vs-ts-expect-error-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides two primary directives to silence compiler diagnostics: // @ts-ignore and // @ts-expect-error. While both comments suppress compilation errors on the immediate following line, they handle error absence differently. The @ts-ignore direc" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="ts-ignore-vs-ts-expect-error-in-typescript">ts-ignore vs
+ts-expect-error in TypeScript</h1>
+<p>TypeScript provides two primary directives to silence compiler
+diagnostics: <code>// @ts-ignore</code> and
+<code>// @ts-expect-error</code>. While both comments suppress
+compilation errors on the immediate following line, they handle error
+absence differently. The <code>@ts-ignore</code> directive silences
+errors unconditionally, whereas <code>@ts-expect-error</code> demands
+that a type error actually exists; if the line has no error, the
+compiler throws an unused directive error. This distinction makes
+<code>@ts-expect-error</code> a strictly safer mechanism for long-term
+codebase maintenance.</p>
+<h2 id="understanding-ts-ignore">Understanding <span class="citation"
+data-cites="ts-ignore">@ts-ignore</span></h2>
+<p>The <code>// @ts-ignore</code> comment was introduced early in
+TypeScript's lifecycle. Placing it before a line of code instructs the
+compiler to ignore any type-checking errors that occur on that specific
+line.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// @ts-ignore</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="st">&quot;This is a string&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>The primary flaw of <code>@ts-ignore</code> is its silence when code
+changes. If a developer later refactors the variable to accept a string,
+or if an upstream library updates its types to match the usage,
+<code>@ts-ignore</code> remains dormant in the codebase. It does not
+alert developers that the comment is no longer necessary, often leading
+to stale, dead suppressions cluttering the source code.</p>
+<h2 id="understanding-ts-expect-error">Understanding <span
+class="citation"
+data-cites="ts-expect-error">@ts-expect-error</span></h2>
+<p>Introduced in TypeScript 3.9, <code>// @ts-expect-error</code> acts
+as an assertion that the following line contains a genuine compilation
+error.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// @ts-expect-error</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="st">&quot;This is a string&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>If the subsequent line produces a type error, the compiler suppresses
+it and builds successfully. However, if the line contains valid
+TypeScript code that produces no error, the compiler raises an
+error:</p>
+<p><code>error TS2578: Unused '@ts-expect-error' directive.</code></p>
+<p>This self-checking behavior prevents suppressions from outliving
+their necessity. When a refactor or dependency update resolves the
+underlying issue, the compiler immediately notifies you to remove the
+directive.</p>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><code>// @ts-ignore</code></th>
+<th style="text-align: left;"><code>// @ts-expect-error</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Error Suppression</strong></td>
+<td style="text-align: left;">Suppresses the next line's error</td>
+<td style="text-align: left;">Suppresses the next line's error</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Behavior When No Error
+Exists</strong></td>
+<td style="text-align: left;">Silent (does nothing)</td>
+<td style="text-align: left;">Throws compiler error
+<code>TS2578</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Refactoring Safety</strong></td>
+<td style="text-align: left;">Low (can mask valid code or stale
+comments)</td>
+<td style="text-align: left;">High (alerts when the suppression is
+obsolete)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Primary Use Case</strong></td>
+<td style="text-align: left;">Legacy migrations across TS versions</td>
+<td style="text-align: left;">Intentional temporary fixes, type
+testing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="when-to-use-each-directive">When to Use Each Directive</h2>
+<h3 id="use-ts-expect-error-by-default">Use
+<code>@ts-expect-error</code> by Default</h3>
+<p>In modern TypeScript codebases, <code>@ts-expect-error</code> is the
+recommended choice whenever an intentional error suppression is needed.
+It is particularly useful for:</p>
+<ul>
+<li><strong>Testing Types:</strong> Verifying that a function rejects
+invalid inputs during unit tests.</li>
+<li><strong>Temporary Workarounds:</strong> Silencing incomplete
+external type definitions while ensuring you are notified once the
+definitions are fixed.</li>
+<li><strong>Refactoring Safeguards:</strong> Ensuring that temporary
+suppressions do not become permanent blind spots in the build
+pipeline.</li>
+</ul>
+<h3 id="when-ts-ignore-is-still-relevant">When <code>@ts-ignore</code>
+is Still Relevant</h3>
+<p>The use of <code>@ts-ignore</code> is generally discouraged, but it
+remains useful in specific edge cases:</p>
+<ul>
+<li><strong>Multi-Version TypeScript Support:</strong> When maintaining
+a library that must build across different TypeScript versions where a
+line produces an error in version <code>4.x</code> but not in
+<code>5.x</code>. An <code>@ts-expect-error</code> directive would fail
+the build on the newer version, whereas <code>@ts-ignore</code> will
+pass on both.</li>
+<li><strong>Rapid Prototyping:</strong> Scaffolding large sections of
+incomplete code where strict compiler feedback is temporarily
+unwanted.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/ts-ignore-vs-ts-expect-error-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

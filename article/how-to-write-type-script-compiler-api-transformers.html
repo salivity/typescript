@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Write TypeScript Compiler API Transformers - typescript</title>
+    <meta name="description" content="This article provides a comprehensive guide to authoring custom Abstract Syntax Tree (AST) transformer plugins using the TypeScript Compiler API. It covers the foundational architecture of the TypeScript transformer pipeline, details how to traverse and m">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-write-type-script-compiler-api-transformers">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Write TypeScript Compiler API Transformers - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-write-type-script-compiler-api-transformers" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a comprehensive guide to authoring custom Abstract Syntax Tree (AST) transformer plugins using the TypeScript Compiler API. It covers the foundational architecture of the TypeScript transformer pipeline, details how to traverse and m" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-write-typescript-compiler-api-transformers">How to Write
+TypeScript Compiler API Transformers</h1>
+<p>This article provides a comprehensive guide to authoring custom
+Abstract Syntax Tree (AST) transformer plugins using the TypeScript
+Compiler API. It covers the foundational architecture of the TypeScript
+transformer pipeline, details how to traverse and modify AST nodes using
+the visitor pattern, demonstrates a complete code example that alters
+TypeScript code at compile time, and explains how to integrate your
+custom transformer into modern build workflows.</p>
+<hr />
+<h3 id="understanding-the-transformer-architecture">Understanding the
+Transformer Architecture</h3>
+<p>The TypeScript compiler operates in distinct phases: parsing source
+text into tokens, constructing an Abstract Syntax Tree (AST), binding
+symbols, type-checking, and emitting output (JavaScript and declaration
+files).</p>
+<p>Custom transformers hook directly into the emitter phase. They take
+an AST as input, traverse its nodes, and return a modified AST before
+the final code generation occurs. This allows you to remove debugging
+code, inline compile-time constants, inject logging, or implement custom
+domain-specific syntax transformations.</p>
+<h3 id="the-transformer-factory-pattern">The Transformer Factory
+Pattern</h3>
+<p>A custom transformer is implemented as a higher-order function known
+as a <code>TransformerFactory</code>. Its structure follows a three-tier
+hierarchy:</p>
+<ol type="1">
+<li><strong>Outer Factory:</strong> Accepts compiler options and plugin
+configurations.</li>
+<li><strong>Context Factory:</strong> Receives the
+<code>ts.TransformationContext</code>, which contains compiler state and
+the AST node factory (<code>context.factory</code>).</li>
+<li><strong>Node Transformer:</strong> Receives the root
+<code>ts.SourceFile</code> (or any <code>ts.Node</code>) and returns the
+transformed node.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ts <span class="im">from</span> <span class="st">&quot;typescript&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> <span class="kw">function</span> <span class="fu">customTransformer</span>(pluginOptions<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> ts<span class="op">.</span><span class="at">TransformerFactory</span><span class="op">&lt;</span>ts<span class="op">.</span><span class="at">SourceFile</span><span class="op">&gt;</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (context<span class="op">:</span> ts<span class="op">.</span><span class="at">TransformationContext</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (sourceFile<span class="op">:</span> ts<span class="op">.</span><span class="at">SourceFile</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Transformation logic executes here</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> sourceFile<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="implementing-the-visitor-pattern">Implementing the Visitor
+Pattern</h3>
+<p>To inspect and alter nodes, TypeScript provides the
+<code>ts.visitEachChild</code> utility, which facilitates recursive tree
+traversal using the visitor pattern.</p>
+<p>Within the visitor function:</p>
+<ul>
+<li>Return the original node to leave it unchanged.</li>
+<li>Return <code>undefined</code> to delete the node from the AST.</li>
+<li>Return a new or modified node (created using
+<code>context.factory</code>) to replace it.</li>
+</ul>
+<h3
+id="step-by-step-implementation-removing-consolelog-calls">Step-by-Step
+Implementation: Removing <code>console.log</code> Calls</h3>
+<p>The following complete example demonstrates a transformer that finds
+all <code>console.log(...)</code> calls and replaces them with an empty
+statement or strips them out completely.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ts <span class="im">from</span> <span class="st">&quot;typescript&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> <span class="kw">function</span> <span class="fu">removeConsoleTransformer</span>()<span class="op">:</span> ts<span class="op">.</span><span class="at">TransformerFactory</span><span class="op">&lt;</span>ts<span class="op">.</span><span class="at">SourceFile</span><span class="op">&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (context<span class="op">:</span> ts<span class="op">.</span><span class="at">TransformationContext</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { factory } <span class="op">=</span> context<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (sourceFile<span class="op">:</span> ts<span class="op">.</span><span class="at">SourceFile</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> visitor <span class="op">=</span> (node<span class="op">:</span> ts<span class="op">.</span><span class="at">Node</span>)<span class="op">:</span> ts<span class="op">.</span><span class="at">Node</span> <span class="op">|</span> <span class="dt">undefined</span> <span class="kw">=&gt;</span> {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check if the node is an expression statement containing a call expression</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (ts<span class="op">.</span><span class="fu">isExpressionStatement</span>(node) <span class="op">&amp;&amp;</span> ts<span class="op">.</span><span class="fu">isCallExpression</span>(node<span class="op">.</span><span class="at">expression</span>)) {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>          <span class="kw">const</span> call <span class="op">=</span> node<span class="op">.</span><span class="at">expression</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>          <span class="kw">const</span> expression <span class="op">=</span> call<span class="op">.</span><span class="at">expression</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>          <span class="co">// Check if the call target is `console.log`</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> (</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            ts<span class="op">.</span><span class="fu">isPropertyAccessExpression</span>(expression) <span class="op">&amp;&amp;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            ts<span class="op">.</span><span class="fu">isIdentifier</span>(expression<span class="op">.</span><span class="at">expression</span>) <span class="op">&amp;&amp;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            expression<span class="op">.</span><span class="at">expression</span><span class="op">.</span><span class="at">text</span> <span class="op">===</span> <span class="st">&quot;console&quot;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            expression<span class="op">.</span><span class="at">name</span><span class="op">.</span><span class="at">text</span> <span class="op">===</span> <span class="st">&quot;log&quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>          ) {</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Drop the node entirely</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">undefined</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>          }</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Continue walking through child nodes</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ts<span class="op">.</span><span class="fu">visitEachChild</span>(node<span class="op">,</span> visitor<span class="op">,</span> context)<span class="op">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      }<span class="op">;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> ts<span class="op">.</span><span class="fu">visitNode</span>(sourceFile<span class="op">,</span> visitor) <span class="im">as</span> ts<span class="op">.</span><span class="at">SourceFile</span><span class="op">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="creating-new-nodes-with-the-node-factory">Creating New Nodes
+with the Node Factory</h3>
+<p>When replacing nodes rather than removing them, always use
+<code>context.factory</code> methods rather than instantiating AST
+objects manually. This ensures internal node flags, parent pointers, and
+synthetic ranges are handled correctly.</p>
+<p>For example, to replace an identifier named <code>__VERSION__</code>
+with a literal string value:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (ts<span class="op">.</span><span class="fu">isIdentifier</span>(node) <span class="op">&amp;&amp;</span> node<span class="op">.</span><span class="at">text</span> <span class="op">===</span> <span class="st">&quot;__VERSION__&quot;</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> context<span class="op">.</span><span class="at">factory</span><span class="op">.</span><span class="fu">createStringLiteral</span>(<span class="st">&quot;1.0.0&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="running-custom-transformers">Running Custom Transformers</h3>
+<p>The standard TypeScript CLI (<code>tsc</code>) does not support
+pluggable compiler transformers natively via <code>tsconfig.json</code>.
+To execute custom transformers, use one of the following approaches:</p>
+<h4 id="1-using-ts-patch">1. Using <code>ts-patch</code></h4>
+<p><code>ts-patch</code> extends <code>tsc</code> to support the
+<code>plugins</code> field directly in <code>tsconfig.json</code>.</p>
+<p>Install <code>ts-patch</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="at">--save-dev</span> ts-patch</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> ts-patch install</span></code></pre></div>
+<p>Configure <code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;plugins&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;transform&quot;</span><span class="fu">:</span> <span class="st">&quot;./path/to/transformer.js&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h4 id="2-using-webpack-ts-loader">2. Using Webpack
+(<code>ts-loader</code>)</h4>
+<p>If using Webpack, pass the transformer into <code>ts-loader</code>
+options:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> removeConsoleTransformer <span class="op">=</span> <span class="pp">require</span>(<span class="st">&quot;./transformer&quot;</span>)<span class="op">.</span><span class="at">default</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">module</span><span class="op">:</span> {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rules</span><span class="op">:</span> [</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">test</span><span class="op">:</span> <span class="ss">/</span><span class="sc">\.</span><span class="ss">tsx</span><span class="sc">?$</span><span class="ss">/</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">loader</span><span class="op">:</span> <span class="st">&quot;ts-loader&quot;</span><span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">options</span><span class="op">:</span> {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>          <span class="dt">getCustomTransformers</span><span class="op">:</span> () <span class="kw">=&gt;</span> ({</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">before</span><span class="op">:</span> [<span class="fu">removeConsoleTransformer</span>()]<span class="op">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>          })<span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        }<span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h4 id="3-programmatic-invocation-via-tstranspilemodule">3. Programmatic
+Invocation via <code>ts.transpileModule</code></h4>
+<p>For testing transformers in isolation, use the compiler's
+programmatic API:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> source <span class="op">=</span> <span class="vs">`console.log(&quot;drop me&quot;); const x = 42;`</span><span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> ts<span class="op">.</span><span class="fu">transpileModule</span>(source<span class="op">,</span> {</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  compilerOptions<span class="op">:</span> { module<span class="op">:</span> ts<span class="op">.</span><span class="at">ModuleKind</span><span class="op">.</span><span class="at">CommonJS</span> }<span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  transformers<span class="op">:</span> {</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    before<span class="op">:</span> [<span class="fu">removeConsoleTransformer</span>()]<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(result<span class="op">.</span><span class="at">outputText</span>)<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Output: const x = 42;\n</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-to-write-type-script-compiler-api-transformers';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

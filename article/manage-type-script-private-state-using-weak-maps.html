@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage TypeScript Private State Using WeakMaps - typescript</title>
+    <meta name="description" content="Managing private state using WeakMap objects in TypeScript offers true runtime encapsulation while preventing memory leaks through automatic garbage collection. This pattern decouples private data from the class instance itself by storing state externally">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/manage-type-script-private-state-using-weak-maps">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Manage TypeScript Private State Using WeakMaps - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/manage-type-script-private-state-using-weak-maps" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing private state using WeakMap objects in TypeScript offers true runtime encapsulation while preventing memory leaks through automatic garbage collection. This pattern decouples private data from the class instance itself by storing state externally" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="manage-typescript-private-state-using-weakmaps">Manage
+TypeScript Private State Using WeakMaps</h1>
+<p>Managing private state using <code>WeakMap</code> objects in
+TypeScript offers true runtime encapsulation while preventing memory
+leaks through automatic garbage collection. This pattern decouples
+private data from the class instance itself by storing state externally,
+keyed to the object reference. This article explains how to implement
+<code>WeakMap</code>-based private state in TypeScript, demonstrates the
+pattern with clean type-safe code, and covers key architectural benefits
+and edge cases.</p>
+<h3 id="the-weakmap-private-pattern">The WeakMap Private Pattern</h3>
+<p>A <code>WeakMap</code> is a collection of key-value pairs where keys
+must be objects and are held weakly. When an object used as a key is
+dereferenced elsewhere in your application, its entry in the
+<code>WeakMap</code> becomes eligible for garbage collection.</p>
+<p>By keeping the <code>WeakMap</code> instance scoped inside a module
+and not exporting it, external code cannot access the map. Consequently,
+external code cannot access the private properties associated with an
+instance, even through reflection APIs like
+<code>Object.getOwnPropertyNames()</code> or
+<code>Reflect.ownKeys()</code>.</p>
+<h3 id="implementing-typed-private-state">Implementing Typed Private
+State</h3>
+<p>To implement this pattern safely in TypeScript, define an interface
+for the private state and instantiate a typed <code>WeakMap</code> at
+the module level.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Define the shape of your private state</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserPrivateState {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    passwordHash<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    loginAttempts<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Module-scoped WeakMap, not exported</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> privateState <span class="op">=</span> <span class="kw">new</span> <span class="bu">WeakMap</span><span class="op">&lt;</span>User<span class="op">,</span> UserPrivateState<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> User {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">readonly</span> username<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constructor</span>(username<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> initialPasswordHash<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">this</span><span class="op">.</span><span class="at">username</span> <span class="op">=</span> username<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Initialize private state</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        privateState<span class="op">.</span><span class="fu">set</span>(<span class="kw">this</span><span class="op">,</span> {</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            passwordHash<span class="op">:</span> initialPasswordHash<span class="op">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            loginAttempts<span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">authenticate</span>(attemptHash<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> state <span class="op">=</span> privateState<span class="op">.</span><span class="fu">get</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span>state) {</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(<span class="st">&quot;Instance state not initialized or destroyed.&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (state<span class="op">.</span><span class="at">passwordHash</span> <span class="op">===</span> attemptHash) {</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            state<span class="op">.</span><span class="at">loginAttempts</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        state<span class="op">.</span><span class="at">loginAttempts</span> <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">get</span> <span class="fu">attempts</span>()<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> state <span class="op">=</span> privateState<span class="op">.</span><span class="fu">get</span>(<span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state <span class="op">?</span> state<span class="op">.</span><span class="at">loginAttempts</span> <span class="op">:</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="encapsulation-and-typescript-type-safety">Encapsulation and
+TypeScript Type Safety</h3>
+<p>In standard TypeScript, marking a member <code>private</code> only
+enforces compile-time restrictions; the property still exists on the
+JavaScript object at runtime. JavaScript native private fields
+(<code>#field</code>) solve runtime visibility, but <code>WeakMap</code>
+provides unique structural advantages:</p>
+<ol type="1">
+<li><strong>True Runtime Privacy:</strong> No reflection mechanism in
+JavaScript can traverse from the key (<code>this</code>) to the
+<code>WeakMap</code> value without direct access to the
+<code>WeakMap</code> identifier.</li>
+<li><strong>Decoupled Architecture:</strong> State schemas can be
+declared separately from class signatures, keeping public interfaces
+clean and free of implementation details.</li>
+<li><strong>Immutability of the Instance Structure:</strong> The
+instance itself does not mutate its own property list when updating
+private state, making instances structurally stable for engine
+optimizations.</li>
+</ol>
+<h3 id="handling-state-initialization-and-inheritance">Handling State
+Initialization and Inheritance</h3>
+<p>When dealing with class inheritance, child classes do not
+automatically inherit access to a parent's <code>WeakMap</code> unless
+the map is explicitly shared via protected helper functions or an
+internal module export.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> AdvancedUser <span class="kw">extends</span> User {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// AdvancedUser instances inherit the parent constructor, </span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// populating the WeakMap, but cannot directly inspect privateState.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">resetAccount</span>()<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Must interact through public/protected methods on User</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Direct access to state.passwordHash is impossible here</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If inheritance requires shared access to private state across
+subclasses within the same module, expose explicit helper functions that
+validate the instance type before performing <code>.get()</code> or
+<code>.set()</code> operations.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/manage-type-script-private-state-using-weak-maps';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

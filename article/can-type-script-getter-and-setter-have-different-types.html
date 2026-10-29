@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can TypeScript Getter and Setter Have Different Types? - typescript</title>
+    <meta name="description" content="In TypeScript 4.3 and later, getters and setters can have different types for the same property. This feature, known as separate write types on properties, allows you to accept flexible input types when writing a value while returning a strict, refined ty">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/can-type-script-getter-and-setter-have-different-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can TypeScript Getter and Setter Have Different Types? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/can-type-script-getter-and-setter-have-different-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript 4.3 and later, getters and setters can have different types for the same property. This feature, known as separate write types on properties, allows you to accept flexible input types when writing a value while returning a strict, refined ty" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="can-typescript-getter-and-setter-have-different-types">Can
+TypeScript Getter and Setter Have Different Types?</h1>
+<p>In TypeScript 4.3 and later, getters and setters can have different
+types for the same property. This feature, known as separate write types
+on properties, allows you to accept flexible input types when writing a
+value while returning a strict, refined type when reading it. This
+article explains how differing accessor types work, the fundamental rule
+governing their relationship, and how to implement them in classes and
+interfaces.</p>
+<h3 id="how-different-accessor-types-work">How Different Accessor Types
+Work</h3>
+<p>Prior to version 4.3, TypeScript enforced that a setter's parameter
+must match the exact return type of its corresponding getter. Modern
+TypeScript removes this restriction to accommodate common JavaScript
+patterns where a setter converts incoming data before storing it.</p>
+<p>Here is a practical example:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Measurement {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> _meters<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">meters</span>()<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">_meters</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">meters</span>(value<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span>) {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;string&quot;</span>) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">_meters</span> <span class="op">=</span> <span class="pp">parseFloat</span>(value)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">_meters</span> <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> item <span class="op">=</span> <span class="kw">new</span> <span class="fu">Measurement</span>()<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid writes: accepts string or number</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>item<span class="op">.</span><span class="at">meters</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>item<span class="op">.</span><span class="at">meters</span> <span class="op">=</span> <span class="st">&quot;25.5&quot;</span><span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid read: returns number</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> distance<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> item<span class="op">.</span><span class="at">meters</span><span class="op">;</span></span></code></pre></div>
+<p>In this example, consumers can assign either a string or a number,
+but when accessing the property, TypeScript guarantees the result is
+always a number.</p>
+<h3 id="the-assignment-rule">The Assignment Rule</h3>
+<p>While getter and setter types can differ, they cannot be completely
+unrelated. TypeScript enforces one critical rule: <strong>the getter's
+return type must be assignable to the setter's parameter
+type.</strong></p>
+<p>This rule ensures that self-assignment operations like
+<code>obj.prop = obj.prop</code> are always type-safe:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// VALID: &#39;number&#39; is assignable to &#39;string | number&#39;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">get</span> <span class="fu">value</span>()<span class="op">:</span> <span class="dt">number</span> { <span class="op">...</span> }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="fu">value</span>(input<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span>) { <span class="op">...</span> }</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// INVALID: &#39;string | number&#39; is NOT assignable to &#39;number&#39;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">get</span> <span class="fu">value</span>()<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span> { <span class="op">...</span> }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="fu">value</span>(input<span class="op">:</span> <span class="dt">number</span>) { <span class="op">...</span> }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;string | number&#39; is not assignable to type &#39;number&#39;.</span></span></code></pre></div>
+<p>The setter type must represent a superset of the getter type.</p>
+<h3 id="usage-in-interfaces-and-types">Usage in Interfaces and
+Types</h3>
+<p>Separate read and write types are not limited to class declarations;
+they can also be defined in interfaces and type aliases using explicit
+<code>get</code> and <code>set</code> syntax:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> HTMLStyleSheet {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">opacity</span>()<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">opacity</span>(val<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">string</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Any class or object implementing this interface must provide a getter
+that outputs a <code>number</code> and a setter that accepts both
+<code>number</code> and <code>string</code>.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/can-type-script-getter-and-setter-have-different-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

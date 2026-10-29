@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>checkJs and ts-nocheck in TypeScript Migrations - typescript</title>
+    <meta name="description" content="Migrating a large JavaScript codebase to TypeScript often introduces an overwhelming volume of type errors if enabled all at once. Combining the checkJs compiler option with the // @ts-nocheck comment directive solves this by creating an inverted, opt-out">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/check-js-and-ts-nocheck-in-type-script-migrations">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="checkJs and ts-nocheck in TypeScript Migrations - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/check-js-and-ts-nocheck-in-type-script-migrations" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Migrating a large JavaScript codebase to TypeScript often introduces an overwhelming volume of type errors if enabled all at once. Combining the checkJs compiler option with the // @ts-nocheck comment directive solves this by creating an inverted, opt-out" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="checkjs-and-ts-nocheck-in-typescript-migrations">checkJs and
+ts-nocheck in TypeScript Migrations</h1>
+<p>Migrating a large JavaScript codebase to TypeScript often introduces
+an overwhelming volume of type errors if enabled all at once. Combining
+the <code>checkJs</code> compiler option with the
+<code>// @ts-nocheck</code> comment directive solves this by creating an
+inverted, opt-out migration workflow. This strategy establishes an
+immediate baseline of zero errors, enforces strict type checking on all
+newly created files by default, and allows developers to migrate legacy
+files incrementally without disrupting day-to-day feature
+development.</p>
+<h3 id="the-problem-with-traditional-migrations">The Problem with
+Traditional Migrations</h3>
+<p>When adopting TypeScript in an existing JavaScript repository,
+enabling type checking across the project usually produces thousands of
+compilation errors overnight. Teams are often faced with two suboptimal
+choices: halt feature development to resolve all errors simultaneously,
+or leave type checking disabled and manually opt in file-by-file using
+<code>// @ts-check</code>.</p>
+<p>The manual opt-in approach frequently fails because developers forget
+to add the comment to new files, allowing untyped or error-prone code to
+continue entering the codebase.</p>
+<h3 id="how-the-combined-approach-works">How the Combined Approach
+Works</h3>
+<p>The combination of <code>checkJs</code> and
+<code>// @ts-nocheck</code> flips the default behavior of the compiler
+across the repository through a three-step implementation:</p>
+<ol type="1">
+<li><strong>Enable Global Checking:</strong> Set
+<code>"allowJs": true</code> and <code>"checkJs": true</code> in the
+project's <code>tsconfig.json</code>. This instructs the TypeScript
+compiler to analyze and type-check every JavaScript file it
+encounters.</li>
+<li><strong>Bulk Opt-Out Existing Files:</strong> Run an automated
+script across the codebase that prepends <code>// @ts-nocheck</code> to
+the very first line of every existing <code>.js</code> and
+<code>.jsx</code> file.</li>
+<li><strong>Establish a Clean Baseline:</strong> The TypeScript compiler
+now runs across the entire project with zero reported errors, enabling
+TypeScript to be added to continuous integration (CI) pipelines
+immediately.</li>
+</ol>
+<h3 id="core-benefits-in-phased-migrations">Core Benefits in Phased
+Migrations</h3>
+<p><strong>Automatic Enforcement on New Code</strong><br />
+Because <code>checkJs</code> is enabled at the compiler level, any newly
+created JavaScript or TypeScript file is type-checked automatically. A
+developer must actively go out of their way to add
+<code>// @ts-nocheck</code> to bypass type checks, preventing technical
+debt from growing during the migration phase.</p>
+<p><strong>Granular, Low-Risk Refactoring</strong><br />
+Legacy files can be upgraded one at a time. A developer simply removes
+the <code>// @ts-nocheck</code> line from a target file, addresses the
+reported errors (either through JSDoc annotations or by converting the
+file extension to <code>.ts</code>), and submits a focused, easily
+reviewable pull request.</p>
+<p><strong>Measurable Progress Metrics</strong><br />
+This strategy provides engineering teams with an exact metric for
+migration progress. By running a simple search or script to count the
+remaining instances of <code>// @ts-nocheck</code> across the
+repository, teams can track their burndown rate over time until every
+file is migrated and the directive is completely eliminated.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/check-js-and-ts-nocheck-in-type-script-migrations';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

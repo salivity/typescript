@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why TypeScript Allows Returning Values in Void Functions - typescript</title>
+    <meta name="description" content="This article explains why TypeScript permits functions assigned to a void return type, such as VoidFunction, to return a value without producing a compilation error. While this behavior often surprises developers, it is an intentional design choice rooted">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-type-script-allows-returning-values-in-void-functions">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why TypeScript Allows Returning Values in Void Functions - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-type-script-allows-returning-values-in-void-functions" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains why TypeScript permits functions assigned to a void return type, such as VoidFunction, to return a value without producing a compilation error. While this behavior often surprises developers, it is an intentional design choice rooted" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-typescript-allows-returning-values-in-void-functions">Why
+TypeScript Allows Returning Values in Void Functions</h1>
+<p>This article explains why TypeScript permits functions assigned to a
+<code>void</code> return type, such as <code>VoidFunction</code>, to
+return a value without producing a compilation error. While this
+behavior often surprises developers, it is an intentional design choice
+rooted in callback substitutability and practical JavaScript
+interoperability. Understanding how TypeScript treats <code>void</code>
+in function type signatures versus direct implementations clarifies why
+this happens and how it keeps standard JavaScript idioms ergonomic.</p>
+<h2 id="the-difference-between-declarations-and-function-types">The
+Difference Between Declarations and Function Types</h2>
+<p>To understand this behavior, you must distinguish between a direct
+function declaration and a function assigned to a type alias or
+interface.</p>
+<p>When you declare a function with an explicit <code>void</code> return
+type, TypeScript strictly enforces that nothing is returned:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler Error: Type &#39;number&#39; is not assignable to type &#39;void&#39;.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">directFunction</span>()<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>However, when working with function types like
+<code>VoidFunction</code> (defined as <code>() =&gt; void</code>),
+TypeScript permits the implementation to return a value:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VoidFunction <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// No error</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> callback<span class="op">:</span> VoidFunction <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dv">42</span><span class="op">;</span></span></code></pre></div>
+<h2 id="the-principle-of-substitutability">The Principle of
+Substitutability</h2>
+<p>TypeScript's type system relies on substitutability. When a type
+definition specifies a return type of <code>void</code>, it signifies
+that the caller will ignore the return value, not that the function is
+forbidden from returning one.</p>
+<p>A function returning a value fulfills the contract of a function
+whose return value is ignored. The caller guarantees it will not consume
+or rely on any returned data:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> run <span class="op">=</span> (fn<span class="op">:</span> VoidFunction) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fn</span>()<span class="op">;</span> <span class="co">// The caller does nothing with the result</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">run</span>(() <span class="kw">=&gt;</span> <span class="st">&quot;ignored value&quot;</span>)<span class="op">;</span> <span class="co">// Safe to execute</span></span></code></pre></div>
+<p>If TypeScript prohibited returning a value here, it would reject
+valid implementations where the returned value causes no runtime side
+effects for the caller.</p>
+<h2 id="practical-javascript-compatibility">Practical JavaScript
+Compatibility</h2>
+<p>The primary motivation for this design is seamless integration with
+standard JavaScript APIs. Many built-in array and collection methods
+return values, even when executed purely for side effects.</p>
+<p>Consider <code>Array.prototype.push</code>, which returns the new
+length of the array:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> source <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> target<span class="op">:</span> <span class="dt">number</span>[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// forEach expects: (value: number) =&gt; void</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>source<span class="op">.</span><span class="fu">forEach</span>(item <span class="kw">=&gt;</span> target<span class="op">.</span><span class="fu">push</span>(item))<span class="op">;</span></span></code></pre></div>
+<p>In the example above, <code>target.push(item)</code> evaluates to a
+<code>number</code>. Because the callback in <code>forEach</code>
+expects a return type of <code>void</code>, a strict ban on returning
+values would cause this code to fail compilation. Developers would be
+forced to write verbose blocks:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Necessary if void strictly forbade returning values:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>source<span class="op">.</span><span class="fu">forEach</span>(item <span class="kw">=&gt;</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  target<span class="op">.</span><span class="fu">push</span>(item)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>By allowing <code>void</code> callback signatures to accept values,
+TypeScript preserves standard shorthand arrow function syntax.</p>
+<h2 id="type-safety-is-still-preserved">Type Safety Is Still
+Preserved</h2>
+<p>Although the function can return a value internally, TypeScript
+prevents the caller from using that value. The return value is typed as
+<code>void</code>, stopping downstream code from treating it as anything
+else:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VoidFunction <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> getValue<span class="op">:</span> VoidFunction <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">getValue</span>()<span class="op">;</span> <span class="co">// Type of &#39;result&#39; is void</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler Error: Operator &#39;+&#39; cannot be applied to types &#39;void&#39; and &#39;number&#39;.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(result <span class="op">+</span> <span class="dv">1</span>)<span class="op">;</span></span></code></pre></div>
+<p>The compiler guarantees safety at the call site by blocking access to
+the returned data, ensuring the implementation details do not leak into
+consumer code.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-type-script-allows-returning-values-in-void-functions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

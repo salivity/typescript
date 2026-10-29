@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Extend Third-Party Libraries in TypeScript - typescript</title>
+    <meta name="description" content="Module augmentation in TypeScript is a powerful feature that allows developers to expand existing type definitions from external packages without modifying their underlying source code. By leveraging TypeScript&#39;s declaration merging capabilities, you can">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-extend-third-party-libraries-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Extend Third-Party Libraries in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-extend-third-party-libraries-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Module augmentation in TypeScript is a powerful feature that allows developers to expand existing type definitions from external packages without modifying their underlying source code. By leveraging TypeScript&#39;s declaration merging capabilities, you can" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-extend-third-party-libraries-in-typescript">How to Extend
+Third-Party Libraries in TypeScript</h1>
+<p>Module augmentation in TypeScript is a powerful feature that allows
+developers to expand existing type definitions from external packages
+without modifying their underlying source code. By leveraging
+TypeScript's declaration merging capabilities, you can introduce new
+properties, methods, or interfaces to imported modules, ensuring full
+type safety and auto-completion across your project. This article
+explains how module augmentation works, the mechanics behind it, and how
+to implement it correctly with practical examples.</p>
+<h2 id="understanding-module-augmentation">Understanding Module
+Augmentation</h2>
+<p>TypeScript uses declaration merging to combine multiple declarations
+with the same name into a single definition. When applied to external
+modules, this is referred to as module augmentation.</p>
+<p>In third-party libraries, type definitions are often fixed and might
+not account for runtime extensions, custom plugins, or middleware
+configurations. Module augmentation bridges this gap by letting you
+redeclare an existing module in your own project files and add the
+missing types directly to that module's scope.</p>
+<h2 id="how-module-augmentation-works">How Module Augmentation
+Works</h2>
+<p>To augment an external library, you must follow two fundamental
+rules:</p>
+<ol type="1">
+<li><strong>The file must be a module:</strong> The file performing the
+augmentation must contain at least one top-level <code>import</code> or
+<code>export</code> statement. If it does not, TypeScript treats the
+file as an ambient global script, which replaces rather than augments
+the target module.</li>
+<li><strong>Use the <code>declare module</code> syntax:</strong> You
+specify the exact package name inside a
+<code>declare module "package-name"</code> block and define the
+interfaces or types you want to merge.</li>
+</ol>
+<h2 id="step-by-step-implementation">Step-by-Step Implementation</h2>
+<p>A common scenario is extending the <code>Request</code> object in
+Express to include custom user authentication data added by
+middleware.</p>
+<h3 id="1-identify-the-target-interface">1. Identify the Target
+Interface</h3>
+<p>In Express, incoming HTTP requests use the <code>Request</code>
+interface located inside the <code>express</code> or
+<code>express-serve-static-core</code> package.</p>
+<h3 id="2-create-a-declaration-file">2. Create a Declaration File</h3>
+<p>Create a type declaration file in your project, such as
+<code>src/types/express.d.ts</code>. Ensure this file is included in
+your <code>tsconfig.json</code> under the <code>include</code>
+array.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/types/express.d.ts</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&#39;express&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Augment the &#39;express-serve-static-core&#39; or &#39;express&#39; module</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;express-serve-static-core&#39;</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">interface</span> Request {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    user<span class="op">?:</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      role<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-use-the-augmented-properties">3. Use the Augmented
+Properties</h3>
+<p>Once declared, TypeScript automatically merges your new definitions
+with the original ones. You can access the new fields with complete type
+checking and IDE support:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> express<span class="op">,</span> { Request<span class="op">,</span> Response } <span class="im">from</span> <span class="st">&#39;express&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> app <span class="op">=</span> <span class="fu">express</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">use</span>((req<span class="op">:</span> Request<span class="op">,</span> res<span class="op">:</span> Response<span class="op">,</span> next) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  req<span class="op">.</span><span class="at">user</span> <span class="op">=</span> { id<span class="op">:</span> <span class="st">&#39;12345&#39;</span><span class="op">,</span> role<span class="op">:</span> <span class="st">&#39;admin&#39;</span> }<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/profile&#39;</span><span class="op">,</span> (req<span class="op">:</span> Request<span class="op">,</span> res<span class="op">:</span> Response) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (req<span class="op">.</span><span class="at">user</span>) {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`User ID: </span><span class="sc">${</span>req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">id</span><span class="sc">}</span><span class="vs">, Role: </span><span class="sc">${</span>req<span class="op">.</span><span class="at">user</span><span class="op">.</span><span class="at">role</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">status</span>(<span class="dv">401</span>)<span class="op">.</span><span class="fu">send</span>(<span class="st">&#39;Unauthorized&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="augmenting-class-methods-and-functions">Augmenting Class Methods
+and Functions</h2>
+<p>Module augmentation is not limited to interfaces. You can also
+declare additional methods on existing classes or namespaces.</p>
+<p>For instance, if you add a plugin method to a library like
+<code>dayjs</code> or <code>lodash</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&#39;lodash&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&#39;lodash&#39;</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">interface</span> LoDashStatic {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">customHelper</span>(input<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This notifies the TypeScript compiler that
+<code>_.customHelper</code> exists, preventing compilation errors when
+you attach and invoke custom runtime functionality.</p>
+<h2 id="key-considerations">Key Considerations</h2>
+<ul>
+<li><strong>Importing Before Augmenting:</strong> Always import the
+module you intend to augment. Omitting the import statement causes
+TypeScript to shadow the entire module instead of extending it, breaking
+the library's original types.</li>
+<li><strong>Ambient vs. Module Scope:</strong> If your
+<code>.d.ts</code> file has no other imports or exports, add an empty
+<code>export {}</code> at the top or bottom to force TypeScript to treat
+the file as a module.</li>
+<li><strong>Compiler Configuration:</strong> Verify that your
+<code>tsconfig.json</code> specifies <code>"typeRoots"</code> or
+includes the directory where your declaration files reside. If
+TypeScript cannot locate your custom declaration files, the augmentation
+will not take effect.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-to-extend-third-party-libraries-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

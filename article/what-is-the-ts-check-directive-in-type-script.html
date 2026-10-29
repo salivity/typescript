@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the ts-check Directive in TypeScript? - typescript</title>
+    <meta name="description" content="The // @ts-check directive is a special comment used in JavaScript files to enable TypeScript-powered type checking without converting the file to TypeScript syntax. This article explains what the directive does, why it is useful for JavaScript developmen">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-the-ts-check-directive-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the ts-check Directive in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-the-ts-check-directive-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The // @ts-check directive is a special comment used in JavaScript files to enable TypeScript-powered type checking without converting the file to TypeScript syntax. This article explains what the directive does, why it is useful for JavaScript developmen" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-ts-check-directive-in-typescript">What Is the
+ts-check Directive in TypeScript?</h1>
+<p>The <code>// @ts-check</code> directive is a special comment used in
+JavaScript files to enable TypeScript-powered type checking without
+converting the file to TypeScript syntax. This article explains what the
+directive does, why it is useful for JavaScript development, and the
+exact rules for where it must be placed within a file.</p>
+<h2 id="what-is-the-ts-check-directive">What Is the ts-check
+Directive?</h2>
+<p>The <code>// @ts-check</code> directive instructs the TypeScript
+language server and compiler to perform static type analysis on a
+standard JavaScript (<code>.js</code> or <code>.jsx</code>) file.
+Normally, TypeScript ignores regular JavaScript files unless the
+<code>checkJs</code> option is enabled globally in a
+<code>tsconfig.json</code> or <code>jsconfig.json</code> configuration
+file.</p>
+<p>By adding <code>// @ts-check</code> to a single file, developers can
+opt into type safety on a file-by-file basis. When enabled, the editor
+highlights common programming errors, such as:</p>
+<ul>
+<li>Calling functions with the wrong number or type of arguments.</li>
+<li>Accessing non-existent properties on objects.</li>
+<li>Type mismatches during variable assignments.</li>
+<li>Syntax errors and typos in variable names.</li>
+</ul>
+<p>To define custom types or enforce specific signatures in a checked
+JavaScript file, developers can use JSDoc annotations such as
+<code>@type</code>, <code>@param</code>, <code>@returns</code>, and
+<code>@typedef</code>. TypeScript parses these annotations to infer and
+validate types in the same way it evaluates native TypeScript code.</p>
+<h2 id="where-is-the-ts-check-directive-placed">Where Is the ts-check
+Directive Placed?</h2>
+<p>The <code>// @ts-check</code> directive must be placed at the very
+top of the JavaScript file, before any executable code or
+statements.</p>
+<p>For the directive to be recognized by the compiler:</p>
+<ol type="1">
+<li><strong>Top of the File:</strong> It should ideally be the first
+line of the file.</li>
+<li><strong>Preceding Code:</strong> It must appear before any
+executable JavaScript code (such as <code>import</code>,
+<code>require</code>, variable declarations, or function
+definitions).</li>
+<li><strong>Exceptions:</strong> It can follow an operating system
+shebang line (e.g., <code>#!/usr/bin/env node</code>) or standard
+top-level license and copyright comments, provided no actual JavaScript
+execution logic precedes it.</li>
+</ol>
+<h3 id="placement-example">Placement Example</h3>
+<p>Here is the correct way to place the directive in a JavaScript
+file:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// @ts-check</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"> * Calculates the total price including tax.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@param</span><span class="co"> </span><span class="cv">{number}</span><span class="co"> price </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@param</span><span class="co"> </span><span class="cv">{number}</span><span class="co"> taxRate </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@returns</span><span class="co"> {number}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">calculateTotal</span>(price<span class="op">,</span> taxRate) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> price <span class="op">+</span> (price <span class="op">*</span> taxRate)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript will flag an error here: Argument of type &#39;string&#39; is not assignable to parameter of type &#39;number&#39;.</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">calculateTotal</span>(<span class="st">&quot;100&quot;</span><span class="op">,</span> <span class="fl">0.05</span>)<span class="op">;</span></span></code></pre></div>
+<p>If the directive is placed after any executable statements, the
+TypeScript engine will simply ignore it, treating the file as unchecked
+standard JavaScript.</p>
+<h2 id="disabling-type-checking">Disabling Type Checking</h2>
+<p>If a project has the <code>checkJs</code> flag enabled globally in
+its configuration file, every JavaScript file is checked by default. In
+this scenario, developers can use the opposite directive,
+<code>// @ts-nocheck</code>, placed at the very top of a file, to
+suppress type-checking for that specific file.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-the-ts-check-directive-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handling Unexported Types in TypeScript Declarations - typescript</title>
+    <meta name="description" content="When compiling projects with declaration emit enabled, TypeScript must generate .d.ts files that fully describe a library&#39;s public API surface without breaking consumer code. When an exported function, class, or variable depends on an un-exported type, th">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/handling-unexported-types-in-type-script-declarations">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Handling Unexported Types in TypeScript Declarations - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/handling-unexported-types-in-type-script-declarations" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When compiling projects with declaration emit enabled, TypeScript must generate .d.ts files that fully describe a library&#39;s public API surface without breaking consumer code. When an exported function, class, or variable depends on an un-exported type, th" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="handling-unexported-types-in-typescript-declarations">Handling
+Unexported Types in TypeScript Declarations</h1>
+<p>When compiling projects with declaration emit enabled, TypeScript
+must generate <code>.d.ts</code> files that fully describe a library's
+public API surface without breaking consumer code. When an exported
+function, class, or variable depends on an un-exported type, the
+compiler must resolve how to represent that dependency in the generated
+output. This article explains how TypeScript handles these un-exported
+dependencies, the common errors it triggers, the fallback mechanisms it
+employs, and how modern compiler features address the problem.</p>
+<h2 id="the-core-challenge-of-un-exported-types">The Core Challenge of
+Un-exported Types</h2>
+<p>When TypeScript generates <code>.d.ts</code> files using the
+<code>declaration</code> compiler flag, it writes the public interface
+of your application or library so downstream consumers can type-check
+against it. If an exported API references an internal type that is not
+exported, TypeScript cannot simply write that type name into the
+declaration file; doing so would result in a declaration file
+referencing a symbol that downstream consumers cannot resolve.</p>
+<p>For example, consider an exported function returning an internal
+interface:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> InternalConfig {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  retries<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">createConfig</span>()<span class="op">:</span> InternalConfig {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> { retries<span class="op">:</span> <span class="dv">3</span> }<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because <code>createConfig</code> is exported but
+<code>InternalConfig</code> is not, TypeScript must evaluate whether it
+can safely emit the declaration or if it must halt compilation with an
+error.</p>
+<h2 id="compiler-errors-ts4023-and-ts2742">Compiler Errors: TS4023 and
+TS2742</h2>
+<p>In many scenarios where an un-exported type cannot be safely resolved
+or referenced, TypeScript fails the build with one of two primary
+compiler errors:</p>
+<ol type="1">
+<li><p><strong>TS4023: "Exported variable '[name]' has or is using name
+'[type]' from external module '[path]' but cannot be
+named."</strong><br />
+This occurs when an exported symbol relies on a type from an external
+package or another file that has not been explicitly
+re-exported.</p></li>
+<li><p><strong>TS2742: "The inferred type of '[name]' cannot be named
+without a reference to '[path]'."</strong><br />
+This happens frequently in monorepos or multi-package projects where an
+inferred return type references a dependency not directly referenced or
+exported in the consuming project's entry point.</p></li>
+</ol>
+<p>When these errors trigger, the compiler refuses to emit declarations
+to prevent publishing broken <code>.d.ts</code> files that consumers
+cannot parse.</p>
+<h2 id="structural-inlining">Structural Inlining</h2>
+<p>If the un-exported dependency is a simple object type, type alias, or
+interface defined in the same file, TypeScript often circumvents the
+naming restriction by inlining the structure directly into the emitted
+<code>.d.ts</code> file.</p>
+<p>Using the earlier <code>createConfig</code> example, TypeScript will
+bypass the un-exported name and emit:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">declare</span> <span class="kw">function</span> <span class="fu">createConfig</span>()<span class="op">:</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  retries<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>By expanding the shape structurally, TypeScript eliminates the
+reference to the private symbol entirely. However, structural inlining
+has limitations: it does not work cleanly with recursive types, private
+class members, nominal types, or interfaces that depend on complex
+inheritance chains.</p>
+<h2 id="dynamic-import-type-emission">Dynamic <code>import()</code> Type
+Emission</h2>
+<p>When an un-exported type resides in another file or an external
+package, TypeScript cannot always inline the structure. Instead, the
+compiler generates an inline dynamic import type directly within the
+<code>.d.ts</code> output:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">declare</span> <span class="kw">function</span> <span class="fu">fetchSettings</span>()<span class="op">:</span> <span class="im">import</span>(<span class="st">&quot;./internal&quot;</span>)<span class="op">.</span><span class="at">Settings</span><span class="op">;</span></span></code></pre></div>
+<p>This mechanism allows the emitted declaration to reference the
+correct type definition without requiring the author to manually export
+the symbol from the public module boundary. Downstream tools and IDEs
+use this path to resolve the shape behind the scenes.</p>
+<h2 id="isolated-declarations---isolateddeclarations">Isolated
+Declarations (<code>--isolatedDeclarations</code>)</h2>
+<p>Prior to TypeScript 5.5, the compiler performed extensive type
+inference across files to resolve and inline these hidden dependencies,
+which caused significant performance overhead and unpredictable
+declaration files.</p>
+<p>With the introduction of the <code>--isolatedDeclarations</code>
+flag, TypeScript alters how it handles these scenarios by requiring
+developers to be explicit:</p>
+<ul>
+<li>Functions and exports that reference un-exported or complex inferred
+types must have explicit type annotations.</li>
+<li>If a type must appear in a public signature, it must be
+exported.</li>
+</ul>
+<p>Under isolated declaration mode, the compiler refuses to guess or
+silently inline hidden types, ensuring that all dependencies required by
+declaration files are explicitly tracked, exported, and cleanly
+generated.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/handling-unexported-types-in-type-script-declarations';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

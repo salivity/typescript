@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript WebRTC PeerConnection Type Safety - typescript</title>
+    <meta name="description" content="TypeScript ensures type safety across WebRTC peer connections and data channels by providing compile-time validation, strict structural typings via standard DOM libraries, and exhaustive event contracts. By statically checking configuration objects, signa">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-web-rtc-peer-connection-type-safety">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript WebRTC PeerConnection Type Safety - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-web-rtc-peer-connection-type-safety" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript ensures type safety across WebRTC peer connections and data channels by providing compile-time validation, strict structural typings via standard DOM libraries, and exhaustive event contracts. By statically checking configuration objects, signa" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-webrtc-peerconnection-type-safety">TypeScript WebRTC
+PeerConnection Type Safety</h1>
+<p>TypeScript ensures type safety across WebRTC peer connections and
+data channels by providing compile-time validation, strict structural
+typings via standard DOM libraries, and exhaustive event contracts. By
+statically checking configuration objects, signaling state transitions,
+and data channel payloads, TypeScript eliminates common runtime
+exceptions associated with asynchronous peer-to-peer media and data
+streaming.</p>
+<h3 id="standard-dom-library-definitions">Standard DOM Library
+Definitions</h3>
+<p>TypeScript natively includes robust WebRTC interface declarations
+within its standard library (<code>lib.dom.d.ts</code>). Core classes
+such as <code>RTCPeerConnection</code>, <code>RTCDataChannel</code>,
+<code>RTCSessionDescription</code>, and <code>RTCIceCandidate</code> are
+strictly typed out of the box.</p>
+<p>When instantiating a peer connection, TypeScript enforces the
+<code>RTCConfiguration</code> interface. This prevents syntax and
+configuration errors by enforcing correct structures for properties such
+as <code>iceServers</code>, <code>iceTransportPolicy</code>, and
+<code>bundlePolicy</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config<span class="op">:</span> <span class="bu">RTCConfiguration</span> <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  iceServers<span class="op">:</span> [{ urls<span class="op">:</span> <span class="st">&quot;stun:stun.l.google.com:19302&quot;</span> }]<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  iceCandidatePoolSize<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> peerConnection <span class="op">=</span> <span class="kw">new</span> <span class="bu">RTCPeerConnection</span>(config)<span class="op">;</span></span></code></pre></div>
+<h3 id="signaling-and-session-description-safety">Signaling and Session
+Description Safety</h3>
+<p>WebRTC session negotiation relies on specific state objects during
+the offer/answer exchange. TypeScript enforces type safety during
+negotiation by constraining parameters for
+<code>setLocalDescription()</code> and
+<code>setRemoteDescription()</code> to
+<code>RTCSessionDescriptionInit</code>.</p>
+<p>This interface guarantees that the session description object
+contains a valid <code>type</code> (restricted via string literal unions
+to <code>"offer" | "answer" | "pranswer" | "rollback"</code>) and an
+optional SDP string. TypeScript prevents invalid state assignments
+before the asynchronous calls reach the browser engine.</p>
+<h3 id="type-safe-event-handling">Type-Safe Event Handling</h3>
+<p>WebRTC is heavily event-driven. TypeScript maps standard WebRTC
+events to their corresponding strongly-typed event interfaces. When
+listening to events via <code>addEventListener</code> or property
+setters (such as <code>onicecandidate</code> or
+<code>ondatachannel</code>), TypeScript provides the exact payload
+type:</p>
+<ul>
+<li><code>RTCPeerConnectionIceEvent</code>: Guarantees access to
+<code>event.candidate</code>, which is typed as
+<code>RTCIceCandidate | null</code>. This forces developers to handle
+the <code>null</code> candidate that signals the end of ICE
+gathering.</li>
+<li><code>RTCDataChannelEvent</code>: Provides access to
+<code>event.channel</code>, typed specifically as an
+<code>RTCDataChannel</code> instance, ensuring that newly negotiated
+channels are not treated as generic events.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>peerConnection<span class="op">.</span><span class="at">onicecandidate</span> <span class="op">=</span> (event<span class="op">:</span> RTCPeerConnectionIceEvent) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">candidate</span>) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TypeScript knows event.candidate is RTCIceCandidate</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sendToSignalingServer</span>(<span class="bu">event</span><span class="op">.</span><span class="at">candidate</span><span class="op">.</span><span class="fu">toJSON</span>())<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// End of ICE gathering phase</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>peerConnection<span class="op">.</span><span class="at">ondatachannel</span> <span class="op">=</span> (event<span class="op">:</span> RTCDataChannelEvent) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> channel<span class="op">:</span> RTCDataChannel <span class="op">=</span> <span class="bu">event</span><span class="op">.</span><span class="at">channel</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setupChannel</span>(channel)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="data-channel-constraints-and-custom-protocols">Data Channel
+Constraints and Custom Protocols</h3>
+<p>The native <code>RTCDataChannel.send()</code> method is strictly
+typed to accept only supported browser data representations:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">send</span>(data<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="bu">Blob</span> <span class="op">|</span> <span class="bu">ArrayBuffer</span> <span class="op">|</span> <span class="bu">ArrayBufferView</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span></code></pre></div>
+<p>Attempting to pass unsupported types—such as raw JavaScript objects
+or numbers—triggers immediate compile-time errors.</p>
+<p>Because the native WebRTC API only transmits raw binary or text data,
+TypeScript achieves application-level safety over data channels through
+discriminated unions and type guards. Developers define an explicit
+protocol contract for outgoing and incoming messages:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> ChatMessage {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&quot;chat&quot;</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  text<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  timestamp<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> FileOfferMessage {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&quot;file-offer&quot;</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  fileName<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  fileSize<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PeerMessage <span class="op">=</span> ChatMessage <span class="op">|</span> FileOfferMessage<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sendMessage</span>(channel<span class="op">:</span> RTCDataChannel<span class="op">,</span> message<span class="op">:</span> PeerMessage)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  channel<span class="op">.</span><span class="fu">send</span>(<span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(message))<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>channel<span class="op">.</span><span class="at">onmessage</span> <span class="op">=</span> (event<span class="op">:</span> <span class="bu">MessageEvent</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> data <span class="op">=</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">parse</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span>) <span class="im">as</span> PeerMessage<span class="op">;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (data<span class="op">.</span><span class="at">type</span>) {</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;chat&quot;</span><span class="op">:</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`</span><span class="sc">${</span>data<span class="op">.</span><span class="at">text</span><span class="sc">}</span><span class="vs"> at </span><span class="sc">${</span>data<span class="op">.</span><span class="at">timestamp</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;file-offer&quot;</span><span class="op">:</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Receiving </span><span class="sc">${</span>data<span class="op">.</span><span class="at">fileName</span><span class="sc">}</span><span class="vs"> (</span><span class="sc">${</span>data<span class="op">.</span><span class="at">fileSize</span><span class="sc">}</span><span class="vs"> bytes)`</span>)<span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Using discriminated unions ensures exhaustive pattern matching. If a
+new message type is added to the protocol, the TypeScript compiler can
+identify any unhandled cases across data channel handlers.</p>
+<h3 id="strict-null-checking-and-lifecycle-states">Strict Null Checking
+and Lifecycle States</h3>
+<p>WebRTC objects frequently undergo lifecycle changes where properties
+can be <code>null</code> or <code>undefined</code>. Under TypeScript's
+<code>strictNullChecks</code> mode, nullable values like
+<code>peerConnection.currentLocalDescription</code> or an uninitialized
+<code>RTCDataChannel</code> cannot be accessed without explicit guards.
+This ensures that operations like sending data only occur once the
+channel's <code>readyState</code> reaches <code>"open"</code>.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-web-rtc-peer-connection-type-safety';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

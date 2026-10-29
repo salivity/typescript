@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why TypeScript Requires .js Extensions in ESM Imports - typescript</title>
+    <meta name="description" content="When configuring TypeScript to target modern ECMAScript Modules (ESM), developers are often surprised to find they must use .js extensions in their import paths—even when importing .ts files. This requirement stems from TypeScript&#39;s core architectural dec">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-type-script-requires-js-extensions-in-esm-imports">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why TypeScript Requires .js Extensions in ESM Imports - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-type-script-requires-js-extensions-in-esm-imports" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When configuring TypeScript to target modern ECMAScript Modules (ESM), developers are often surprised to find they must use .js extensions in their import paths—even when importing .ts files. This requirement stems from TypeScript&#39;s core architectural dec" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-typescript-requires-js-extensions-in-esm-imports">Why
+TypeScript Requires .js Extensions in ESM Imports</h1>
+<p>When configuring TypeScript to target modern ECMAScript Modules
+(ESM), developers are often surprised to find they must use
+<code>.js</code> extensions in their import paths—even when importing
+<code>.ts</code> files. This requirement stems from TypeScript's core
+architectural decision not to rewrite module specifiers, combined with
+the strict resolution algorithms of native ECMAScript and Node.js module
+loaders. This guide explains why this rule exists, how the TypeScript
+compiler handles it under the hood, and how to manage it across
+different module configurations.</p>
+<h2 id="typescripts-non-goal-specifier-rewriting">TypeScript's Non-Goal:
+Specifier Rewriting</h2>
+<p>The primary reason for this behavior is a fundamental design
+principle of the TypeScript compiler: TypeScript does not rewrite import
+or export specifiers.</p>
+<p>When you write an import statement such as:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ts"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { add } <span class="im">from</span> <span class="st">&quot;./math.js&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript emits that specifier identically into the compiled
+JavaScript:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { add } <span class="im">from</span> <span class="st">&quot;./math.js&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>If TypeScript allowed you to write
+<code>import { add } from "./math.ts"</code>, it would compile to
+<code>import { add } from "./math.ts"</code>. In a standard JavaScript
+runtime like Node.js or a modern web browser, attempting to execute code
+importing a <code>.ts</code> file directly will fail with a module
+resolution error because runtime environments only evaluate JavaScript
+files.</p>
+<p>TypeScript intentionally avoids translating <code>./math</code> or
+<code>./math.ts</code> into <code>./math.js</code> during compilation
+because doing so would require deep, contextual knowledge of the runtime
+environment, the file system, build plugins, and how external bundlers
+or loaders interpret paths. To avoid generating unexpected output,
+TypeScript leaves paths untouched.</p>
+<h2 id="native-ecmascript-modules-require-explicit-paths">Native
+ECMAScript Modules Require Explicit Paths</h2>
+<p>In traditional CommonJS (<code>require("./math")</code>) and legacy
+bundler setups, the module resolver performed implicit lookup. If a file
+extension was missing, the resolver would probe the file system,
+checking for <code>./math.js</code>, <code>./math.json</code>, or
+<code>./math/index.js</code>.</p>
+<p>Native ESM in browsers and modern Node.js (via
+<code>"type": "module"</code>) abandoned this automatic file extension
+probing. Under the native ECMAScript specification:</p>
+<ul>
+<li>Relative module specifiers must be fully specified URLs or path
+references.</li>
+<li>Specifiers must include the exact runtime file extension
+(<code>.js</code>, <code>.mjs</code>, etc.).</li>
+<li>Directory imports (such as omitting <code>/index.js</code>) are not
+supported by default.</li>
+</ul>
+<p>Because native Node.js ESM demands explicit extensions to resolve
+files, and because TypeScript outputs files with <code>.js</code>
+extensions, your source code must explicitly reference the eventual
+runtime extension: <code>.js</code>.</p>
+<h2 id="how-typescript-maps-js-to-ts-at-compile-time">How TypeScript
+Maps <code>.js</code> to <code>.ts</code> at Compile Time</h2>
+<p>When you use modern resolution settings—specifically
+<code>"moduleResolution": "node16"</code> or
+<code>"moduleResolution": "nodenext"</code> in
+<code>tsconfig.json</code>—the TypeScript compiler is aware of Node's
+ESM resolution requirements.</p>
+<p>When it encounters:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ts"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { utility } <span class="im">from</span> <span class="st">&quot;./utility.js&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript's internal resolver performs a reverse lookup:</p>
+<ol type="1">
+<li>It sees the reference to <code>./utility.js</code>.</li>
+<li>It looks on the disk for <code>./utility.ts</code>,
+<code>./utility.tsx</code>, or <code>./utility.d.ts</code> in the same
+directory.</li>
+<li>If found, it uses the TypeScript source file for type checking and
+IntelliSense, while preserving <code>./utility.js</code> in the compiled
+emission.</li>
+</ol>
+<h2 id="bundlers-vs-native-nodejs">Bundlers vs. Native Node.js</h2>
+<p>The requirement to write <code>.js</code> extensions depends on your
+<code>moduleResolution</code> setting in <code>tsconfig.json</code>:</p>
+<ul>
+<li><strong><code>Node16</code> / <code>NodeNext</code></strong>:
+Enforces strict Node.js ESM rules. You must provide <code>.js</code> (or
+<code>.mjs</code> / <code>.cjs</code>) extensions on relative
+paths.</li>
+<li><strong><code>Bundler</code></strong>: Designed for tools like Vite,
+Webpack, or esbuild. Because these bundlers handle extension resolution
+and file packing at build time, you can omit the <code>.js</code>
+extension without TypeScript raising an error, provided
+<code>"moduleResolution": "bundler"</code> is enabled.</li>
+</ul>
+<p>In short, requiring <code>.js</code> extensions allows TypeScript to
+align directly with web standards and Node.js ESM mechanics without
+introducing specifier-rewriting side effects during compilation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-type-script-requires-js-extensions-in-esm-imports';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

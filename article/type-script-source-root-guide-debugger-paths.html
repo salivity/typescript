@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript sourceRoot Guide: Debugger Paths - typescript</title>
+    <meta name="description" content="The sourceRoot option in TypeScript specifies the base path or URL where a debugger should search for original .ts source files instead of relying on default relative paths. When compiling TypeScript with source maps enabled, this setting alters the metad">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-source-root-guide-debugger-paths">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript sourceRoot Guide: Debugger Paths - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-source-root-guide-debugger-paths" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The sourceRoot option in TypeScript specifies the base path or URL where a debugger should search for original .ts source files instead of relying on default relative paths. When compiling TypeScript with source maps enabled, this setting alters the metad" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-sourceroot-guide-debugger-paths">TypeScript
+sourceRoot Guide: Debugger Paths</h1>
+<p>The <code>sourceRoot</code> option in TypeScript specifies the base
+path or URL where a debugger should search for original <code>.ts</code>
+source files instead of relying on default relative paths. When
+compiling TypeScript with source maps enabled, this setting alters the
+metadata inside generated <code>.js.map</code> files, allowing debuggers
+in browsers, IDEs, and runtimes like Node.js to accurately reconstruct
+directory structures and map executed JavaScript lines back to their
+corresponding TypeScript source lines across different runtime
+environments.</p>
+<h2 id="how-sourceroot-modifies-source-maps">How <code>sourceRoot</code>
+Modifies Source Maps</h2>
+<p>When TypeScript compiles code with <code>"sourceMap": true</code>, it
+produces a JSON source map file containing:</p>
+<ul>
+<li><code>sources</code>: An array of relative paths to the original
+source files (for example,
+<code>["main.ts", "utils/math.ts"]</code>).</li>
+<li><code>sourceRoot</code>: A string prepended to every path in the
+<code>sources</code> array.</li>
+</ul>
+<p>By default, <code>sourceRoot</code> is empty, causing debuggers to
+resolve file locations relative to the directory containing the
+<code>.js.map</code> file. When you set <code>sourceRoot</code> in
+<code>tsconfig.json</code>, the compiler writes that value directly into
+the <code>"sourceRoot"</code> field of the output map:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES6&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="st">&quot;commonjs&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sourceMap&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist&quot;</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sourceRoot&quot;</span><span class="fu">:</span> <span class="st">&quot;http://localhost:8080/sources/&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The resulting <code>.js.map</code> output will include:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;file&quot;</span><span class="fu">:</span> <span class="st">&quot;main.js&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sourceRoot&quot;</span><span class="fu">:</span> <span class="st">&quot;http://localhost:8080/sources/&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;main.ts&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;mappings&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="how-debuggers-resolve-paths">How Debuggers Resolve Paths</h2>
+<p>When a debugger (such as Chrome DevTools, Edge DevTools, or VS Code)
+evaluates a source map, it performs path concatenation:</p>
+<p><code>resolved_source_path = sourceRoot + sources[i]</code></p>
+<p>If <code>sourceRoot</code> is set to
+<code>http://localhost:8080/sources/</code> and <code>sources[0]</code>
+is <code>main.ts</code>, the debugger requests
+<code>http://localhost:8080/sources/main.ts</code>.</p>
+<p>If <code>sourceRoot</code> is an absolute filesystem path like
+<code>/app/src/</code>, the debugger looks for files at
+<code>/app/src/main.ts</code>.</p>
+<p>If <code>sourceRoot</code> is a relative path like
+<code>../src/</code>, the debugger resolves the path relative to the
+hosting URL or filesystem location of the <code>.js.map</code> file
+itself.</p>
+<h2 id="common-scenarios-for-using-sourceroot">Common Scenarios for
+Using <code>sourceRoot</code></h2>
+<h3 id="1-hosting-source-files-on-a-dedicated-url-or-cdn">1. Hosting
+Source Files on a Dedicated URL or CDN</h3>
+<p>In production or staging web applications, source maps may be
+deployed with your compiled JavaScript, but the original source code may
+be hosted on a separate internal server or behind an authenticated CDN.
+Setting <code>sourceRoot</code> to an absolute URL directs browser
+developer tools to fetch original sources from that remote server.</p>
+<h3 id="2-remote-and-containerized-debugging">2. Remote and
+Containerized Debugging</h3>
+<p>When executing TypeScript in a Docker container or a remote virtual
+machine, the file paths inside the running container (such as
+<code>/var/app/src</code>) often differ from the local paths on your
+development machine (such as <code>C:\projects\app\src</code> or
+<code>/Users/dev/app/src</code>). Setting <code>sourceRoot</code>
+ensures that the runtime debugger points to the correct internal
+container path, which can then be matched with host path mappings in
+your IDE's launch configuration.</p>
+<h3 id="3-decoupling-output-layouts-from-source-layouts">3. Decoupling
+Output Layouts from Source Layouts</h3>
+<p>Complex build pipelines that move <code>.js</code> and
+<code>.js.map</code> files to heavily nested or flattened distribution
+directories can cause standard relative path calculations to fail.
+Setting <code>sourceRoot</code> explicitly establishes an unambiguous
+base path that survives file rearrangement.</p>
+<h2 id="sourceroot-vs-maproot"><code>sourceRoot</code> vs.
+<code>mapRoot</code></h2>
+<p>It is important not to confuse <code>sourceRoot</code> with
+<code>mapRoot</code>:</p>
+<ul>
+<li><strong><code>sourceRoot</code></strong>: Defines where the debugger
+looks for original <strong><code>.ts</code> source files</strong>.</li>
+<li><strong><code>mapRoot</code></strong>: Defines where the debugger
+looks for <strong><code>.js.map</code> source map files</strong> when
+the <code>//# sourceMappingURL=</code> comment is parsed in compiled
+JavaScript.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-source-root-guide-debugger-paths';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

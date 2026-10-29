@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why instanceof Fails With TypeScript Interfaces - typescript</title>
+    <meta name="description" content="The JavaScript instanceof operator evaluates whether an object&#39;s prototype chain contains the prototype property of a constructor function. When developers attempt to use instanceof to validate TypeScript interfaces, the code fails either at compile time">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-instanceof-fails-with-type-script-interfaces">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why instanceof Fails With TypeScript Interfaces - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-instanceof-fails-with-type-script-interfaces" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The JavaScript instanceof operator evaluates whether an object&#39;s prototype chain contains the prototype property of a constructor function. When developers attempt to use instanceof to validate TypeScript interfaces, the code fails either at compile time" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-instanceof-fails-with-typescript-interfaces">Why instanceof
+Fails With TypeScript Interfaces</h1>
+<p>The JavaScript <code>instanceof</code> operator evaluates whether an
+object's prototype chain contains the prototype property of a
+constructor function. When developers attempt to use
+<code>instanceof</code> to validate TypeScript interfaces, the code
+fails either at compile time or during runtime. This article explains
+the underlying mechanism of TypeScript's type erasure, why
+<code>instanceof</code> requires runtime values, and the standard
+patterns developers use to validate interface structures at runtime.</p>
+<h3 id="understanding-type-erasure">Understanding Type Erasure</h3>
+<p>TypeScript is a syntactic superset of JavaScript that adds static
+typing. However, JavaScript engines do not natively understand
+TypeScript syntax. To run in a browser or Node.js environment,
+TypeScript code must pass through a compiler (like <code>tsc</code> or
+Babel) that strips away all type annotations.</p>
+<p>This process is known as <strong>type erasure</strong>. Interfaces,
+type aliases, and abstract method signatures exist purely for
+compile-time verification. When TypeScript compiles to JavaScript, every
+<code>interface</code> declaration is completely eliminated. Nothing is
+generated in the output JavaScript file to represent the interface.</p>
+<h3 id="how-instanceof-operates-at-runtime">How <code>instanceof</code>
+Operates at Runtime</h3>
+<p>The <code>instanceof</code> operator is a native JavaScript operator,
+not a TypeScript-exclusive feature. It requires a specific syntax:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>object <span class="kw">instanceof</span> ConstructorFunction</span></code></pre></div>
+<p>During execution, <code>instanceof</code> reads the
+<code>.prototype</code> property of the entity on the right-hand side
+and walks the prototype chain of the object on the left-hand side to
+find a match.</p>
+<p>Because TypeScript interfaces do not compile into JavaScript objects
+or constructor functions, using an interface with
+<code>instanceof</code> creates a fundamental conflict:</p>
+<ol type="1">
+<li><strong>At Compile Time:</strong> The TypeScript compiler detects
+that you are treating a type as a runtime value and flags error
+<code>TS2693: 'User' only refers to a type, but is being used as a value here.</code></li>
+<li><strong>At Runtime (if bypassed):</strong> If you bypass the
+compiler checks, the JavaScript engine throws a
+<code>ReferenceError: User is not defined</code> because no variable,
+class, or function named <code>User</code> exists in the execution
+environment.</li>
+</ol>
+<h3 id="interfaces-vs-classes">Interfaces vs. Classes</h3>
+<p>Unlike interfaces, TypeScript <code>class</code> declarations
+generate actual JavaScript code. When you define a class:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserAccount {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">public</span> name<span class="op">:</span> <span class="dt">string</span>) {}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The compiler produces a corresponding JavaScript constructor
+function. Because <code>UserAccount</code> exists in memory as a
+function with a prototype at runtime,
+<code>instanceof UserAccount</code> works properly:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> account <span class="op">=</span> <span class="kw">new</span> <span class="fu">UserAccount</span>(<span class="st">&quot;Alex&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(account <span class="kw">instanceof</span> UserAccount)<span class="op">;</span> <span class="co">// true</span></span></code></pre></div>
+<h3 id="alternatives-for-validating-interfaces-at-runtime">Alternatives
+for Validating Interfaces at Runtime</h3>
+<p>Since <code>instanceof</code> cannot verify interfaces, alternative
+techniques are used to inspect and validate shapes at runtime.</p>
+<h4 id="1-user-defined-type-guards">1. User-Defined Type Guards</h4>
+<p>Custom type guards allow you to check properties manually using the
+<code>in</code> operator or <code>typeof</code> checks while narrowing
+the type within TypeScript:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> User {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">isUser</span>(obj<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> obj <span class="kw">is</span> User {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> obj <span class="op">===</span> <span class="st">&quot;object&quot;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    obj <span class="op">!==</span> <span class="kw">null</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> obj<span class="op">.</span><span class="at">id</span> <span class="op">===</span> <span class="st">&quot;string&quot;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> obj<span class="op">.</span><span class="at">name</span> <span class="op">===</span> <span class="st">&quot;string&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">isUser</span>(data)) {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(data<span class="op">.</span><span class="at">name</span>)<span class="op">;</span> <span class="co">// Safely typed as User</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="2-discriminated-unions">2. Discriminated Unions</h4>
+<p>If you need to differentiate between several related interfaces, add
+a literal property to act as a tag:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> SuccessResponse {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  status<span class="op">:</span> <span class="st">&quot;success&quot;</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  data<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> ErrorResponse {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  status<span class="op">:</span> <span class="st">&quot;error&quot;</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  message<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ApiResponse <span class="op">=</span> SuccessResponse <span class="op">|</span> ErrorResponse<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleResponse</span>(response<span class="op">:</span> ApiResponse) {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (response<span class="op">.</span><span class="at">status</span> <span class="op">===</span> <span class="st">&quot;success&quot;</span>) {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(response<span class="op">.</span><span class="at">data</span>)<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(response<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="3-schema-validation-libraries">3. Schema Validation
+Libraries</h4>
+<p>When handling external data like API responses, validation libraries
+such as Zod or Yup define schemas that exist at runtime and can infer
+TypeScript types automatically:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { z } <span class="im">from</span> <span class="st">&quot;zod&quot;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> UserSchema <span class="op">=</span> z<span class="op">.</span><span class="fu">object</span>({</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> z<span class="op">.</span><span class="at">infer</span><span class="op">&lt;</span><span class="kw">typeof</span> UserSchema<span class="op">&gt;;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> UserSchema<span class="op">.</span><span class="fu">safeParse</span>(data)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (result<span class="op">.</span><span class="at">success</span>) {</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> user<span class="op">:</span> User <span class="op">=</span> result<span class="op">.</span><span class="at">data</span><span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In summary, <code>instanceof</code> fails on TypeScript interfaces
+because interfaces are removed during compilation and provide no runtime
+constructor for JavaScript to inspect. To perform runtime assertions,
+rely on classes, type guards, or dedicated schema validation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-instanceof-fails-with-type-script-interfaces';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

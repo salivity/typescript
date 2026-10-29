@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Stage 3 Decorator Context Explained - typescript</title>
+    <meta name="description" content="Modern TypeScript (version 5.0 and later) natively implements the TC39 Stage 3 decorators proposal, moving away from the legacy experimental decorators model. A fundamental component of this updated standard is the decorator context object, which is passe">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-stage-3-decorator-context-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Stage 3 Decorator Context Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-stage-3-decorator-context-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Modern TypeScript (version 5.0 and later) natively implements the TC39 Stage 3 decorators proposal, moving away from the legacy experimental decorators model. A fundamental component of this updated standard is the decorator context object, which is passe" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-stage-3-decorator-context-explained">TypeScript Stage
+3 Decorator Context Explained</h1>
+<p>Modern TypeScript (version 5.0 and later) natively implements the
+TC39 Stage 3 decorators proposal, moving away from the legacy
+experimental decorators model. A fundamental component of this updated
+standard is the decorator context object, which is passed as the second
+argument to every decorator function. This object provides structured
+metadata about the decorated entity, offers programmatic access to
+inspect or mutate values, and provides lifecycle hooks to run
+initialization logic.</p>
+<h2 id="the-role-of-the-context-object">The Role of the Context
+Object</h2>
+<p>In the Stage 3 implementation, decorators accept two arguments: the
+entity being decorated (or <code>undefined</code> for class fields) and
+the context object. The context object carries runtime and compile-time
+information about the target, eliminating the need to rely on external
+reflection libraries like <code>reflect-metadata</code> for basic
+reflection tasks.</p>
+<p>TypeScript models this via specialized interfaces based on the target
+type, including <code>ClassDecoratorContext</code>,
+<code>ClassMethodDecoratorContext</code>,
+<code>ClassFieldDecoratorContext</code>,
+<code>ClassGetterDecoratorContext</code>,
+<code>ClassSetterDecoratorContext</code>, and
+<code>ClassAccessorDecoratorContext</code>.</p>
+<h2 id="core-properties-of-the-context-object">Core Properties of the
+Context Object</h2>
+<p>Regardless of the specific element being decorated, the context
+object exposes a consistent set of properties:</p>
+<h3 id="1-kind">1. <code>kind</code></h3>
+<p>A string literal indicating the type of declaration being decorated.
+Possible values are:</p>
+<ul>
+<li><code>"class"</code></li>
+<li><code>"method"</code></li>
+<li><code>"getter"</code></li>
+<li><code>"setter"</code></li>
+<li><code>"field"</code></li>
+<li><code>"accessor"</code></li>
+</ul>
+<p>This allows generic decorators to validate whether they are being
+applied to an appropriate target.</p>
+<h3 id="2-name">2. <code>name</code></h3>
+<p>The name of the decorated member, represented as a
+<code>string</code> or <code>symbol</code>. For a class decorator, this
+represents the class name or <code>undefined</code> if the class is
+anonymous.</p>
+<h3 id="3-static">3. <code>static</code></h3>
+<p>A boolean value indicating whether the member is static
+(<code>true</code>) or belongs to instances of the class
+(<code>false</code>). This property is <code>undefined</code> on class
+decorators.</p>
+<h3 id="4-private">4. <code>private</code></h3>
+<p>A boolean flag indicating whether the member is a private class
+member defined with the <code>#</code> syntax (e.g.,
+<code>#password</code>). This property is <code>undefined</code> on
+class decorators.</p>
+<h3 id="5-access">5. <code>access</code></h3>
+<p>An object providing direct accessor functions to read or write the
+member's value, respecting privacy boundaries. It contains:</p>
+<ul>
+<li><code>get(object)</code>: A function that retrieves the value of the
+member from the provided instance.</li>
+<li><code>set(object, value)</code>: A function that sets the value of
+the member on the provided instance (available for fields, setters, and
+auto-accessors).</li>
+</ul>
+<p>This allows decorators to read and modify private members
+(<code>#field</code>) without violating language privacy rules.</p>
+<h3 id="6-addinitializer">6. <code>addInitializer</code></h3>
+<p>A method that accepts a callback function to be executed during the
+initialization lifecycle.</p>
+<ul>
+<li>For classes, the callback runs after the class definition is fully
+evaluated.</li>
+<li>For static members, it runs during class definition evaluation.</li>
+<li>For instance members, it runs when an instance of the class is
+constructed (before field initializers run).</li>
+</ul>
+<h3 id="7-metadata">7. <code>metadata</code></h3>
+<p>An optional plain JavaScript object shared across all decorators
+applied to the same class and its members. It allows decorators to read,
+write, and share arbitrary metadata throughout the declaration
+lifecycle.</p>
+<h2 id="example-usage">Example Usage</h2>
+<p>The following example demonstrates how the context object is utilized
+inside a method decorator to inspect target details and attach an
+initialization hook:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">logExecution</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> <span class="bu">Function</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  context<span class="op">:</span> ClassMethodDecoratorContext</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> methodName <span class="op">=</span> <span class="bu">String</span>(context<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  context<span class="op">.</span><span class="fu">addInitializer</span>(<span class="kw">function</span> () {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Initialized method </span><span class="sc">${</span>methodName<span class="sc">}</span><span class="vs"> on instance`</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">function</span> (<span class="kw">this</span><span class="op">:</span> <span class="dt">any</span><span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Executing </span><span class="sc">${</span>methodName<span class="sc">}</span><span class="vs"> (Static: </span><span class="sc">${</span>context<span class="op">.</span><span class="at">static</span><span class="sc">}</span><span class="vs">, Private: </span><span class="sc">${</span>context<span class="op">.</span><span class="at">private</span><span class="sc">}</span><span class="vs">)`</span>)<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> target<span class="op">.</span><span class="fu">apply</span>(<span class="kw">this</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserService {</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  @logExecution</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fetchUser</span>(id<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> { id<span class="op">,</span> role<span class="op">:</span> <span class="st">&quot;member&quot;</span> }<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The Stage 3 decorator context standardizes introspection and code
+execution hooks natively, providing safe, strongly typed access to
+member metadata within modern TypeScript applications.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-stage-3-decorator-context-explained';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

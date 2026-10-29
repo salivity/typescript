@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optional Chaining vs Non-Null Assertion in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript provides two distinct operators for working with potentially null or undefined values: the optional chaining operator (?.) and the non-null assertion operator (!.). While they may look similar, they serve entirely different purposes. Optional c">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/optional-chaining-vs-non-null-assertion-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optional Chaining vs Non-Null Assertion in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/optional-chaining-vs-non-null-assertion-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides two distinct operators for working with potentially null or undefined values: the optional chaining operator (?.) and the non-null assertion operator (!.). While they may look similar, they serve entirely different purposes. Optional c" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="optional-chaining-vs-non-null-assertion-in-typescript">Optional
+Chaining vs Non-Null Assertion in TypeScript</h1>
+<p>TypeScript provides two distinct operators for working with
+potentially null or undefined values: the optional chaining operator
+(<code>?.</code>) and the non-null assertion operator (<code>!.</code>).
+While they may look similar, they serve entirely different purposes.
+Optional chaining adds runtime safety by safely short-circuiting
+property access to <code>undefined</code> if an object does not exist.
+In contrast, the non-null assertion operator is purely a compile-time
+directive that tells the TypeScript compiler to assume a value is
+neither <code>null</code> nor <code>undefined</code>, offering zero
+protection at runtime.</p>
+<h2 id="what-is-optional-chaining-">What Is Optional Chaining
+(<code>?.</code>)?</h2>
+<p>Optional chaining is a standard JavaScript feature (introduced in
+ECMAScript 2020) fully supported by TypeScript. It allows you to safely
+read the value of a property located deep within a chain of connected
+objects without explicitly validating that each reference in the chain
+is valid.</p>
+<p>When you use <code>?.</code>, JavaScript checks if the reference
+immediately before the operator is <code>null</code> or
+<code>undefined</code>. If it is, the evaluation short-circuits and
+evaluates to <code>undefined</code>, rather than throwing a runtime
+<code>TypeError</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  profile<span class="op">?:</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user<span class="op">:</span> User <span class="op">=</span> {}<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Safely evaluates to undefined at runtime; no error thrown</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> user<span class="op">.</span><span class="at">profile</span><span class="op">?.</span><span class="at">name</span><span class="op">;</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(userName)<span class="op">;</span> <span class="co">// undefined</span></span></code></pre></div>
+<p>When compiled to older JavaScript targets, TypeScript transpiles this
+into an explicit conditional check (such as a ternary operator) that
+verifies the existence of the value at runtime.</p>
+<h2 id="what-is-non-null-assertion-">What Is Non-Null Assertion
+(<code>!.</code>)?</h2>
+<p>The non-null assertion operator is exclusive to TypeScript and has no
+presence in native JavaScript. It is a post-fix expression that informs
+the TypeScript type checker that an operand is definitely not
+<code>null</code> or <code>undefined</code> in contexts where the
+compiler cannot detect it automatically.</p>
+<p>Using <code>!.</code> does not emit any runtime checks. It simply
+suppresses TypeScript's strict null-checking errors
+(<code>Object is possibly 'null' or 'undefined'</code>).</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  profile<span class="op">?:</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user<span class="op">:</span> User <span class="op">=</span> {}<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript allows this, but it will throw a runtime TypeError!</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeError: Cannot read properties of undefined (reading &#39;name&#39;)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> user<span class="op">.</span><span class="at">profile</span><span class="op">!.</span><span class="at">name</span><span class="op">;</span> </span></code></pre></div>
+<p>Because TypeScript strips this operator during compilation, the
+generated JavaScript code executes direct property access
+(<code>user.profile.name</code>). If the value turns out to be
+<code>null</code> or <code>undefined</code> during execution, your
+application will crash.</p>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Optional Chaining (<code>?.</code>)</th>
+<th style="text-align: left;">Non-Null Assertion (<code>!.</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Runtime Impact</strong></td>
+<td style="text-align: left;">Yes. Checks for nullish values and
+short-circuits.</td>
+<td style="text-align: left;">None. Stripped entirely during
+compilation.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Type Safety</strong></td>
+<td style="text-align: left;">High. Handles missing data safely at
+runtime.</td>
+<td style="text-align: left;">Low. Bypasses the compiler's safety
+checks.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Return Value</strong></td>
+<td style="text-align: left;">Returns the value or
+<code>undefined</code>.</td>
+<td style="text-align: left;">Assumes the defined type directly.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>JavaScript Standard</strong></td>
+<td style="text-align: left;">Supported natively in modern
+JavaScript.</td>
+<td style="text-align: left;">TypeScript-only syntax.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="when-to-use-each-operator">When to Use Each Operator</h2>
+<p>Use <strong>optional chaining (<code>?.</code>)</strong>
+whenever:</p>
+<ul>
+<li>You are dealing with external data (such as API responses) that
+might omit properties.</li>
+<li>An object or method is genuinely optional in your data model.</li>
+<li>You want to prevent runtime errors without writing verbose
+<code>if</code> statements.</li>
+</ul>
+<p>Use <strong>non-null assertion (<code>!.</code>)</strong> only
+when:</p>
+<ul>
+<li>You know with absolute certainty that a value exists, but
+TypeScript's static analysis cannot infer it (for example, fetching a
+known DOM element via
+<code>document.getElementById('app')!</code>).</li>
+<li>You are working with frameworks where properties are initialized via
+dependency injection or lifecycle methods after the constructor
+runs.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/optional-chaining-vs-non-null-assertion-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Augmenting ProcessEnv in TypeScript - typescript</title>
+    <meta name="description" content="Declaring global augmentations to the ProcessEnv interface in TypeScript allows developers to enforce strong typing, eliminate runtime undefined uncertainty, and provide autocomplete for process.env variables across a Node.js application. This article cov">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/augmenting-process-env-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Augmenting ProcessEnv in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/augmenting-process-env-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Declaring global augmentations to the ProcessEnv interface in TypeScript allows developers to enforce strong typing, eliminate runtime undefined uncertainty, and provide autocomplete for process.env variables across a Node.js application. This article cov" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="augmenting-processenv-in-typescript">Augmenting ProcessEnv in
+TypeScript</h1>
+<p>Declaring global augmentations to the <code>ProcessEnv</code>
+interface in TypeScript allows developers to enforce strong typing,
+eliminate runtime <code>undefined</code> uncertainty, and provide
+autocomplete for <code>process.env</code> variables across a Node.js
+application. This article covers the primary strategies for augmenting
+<code>ProcessEnv</code>, including ambient declaration files,
+module-scoped global declarations, and schema-driven type inference.</p>
+<h3 id="1-the-ambient-declaration-file-pure-script">1. The Ambient
+Declaration File (Pure Script)</h3>
+<p>The simplest approach is to define an ambient declaration file (such
+as <code>environment.d.ts</code>) that contains no top-level
+<code>import</code> or <code>export</code> statements. TypeScript treats
+files without import/export statements as ambient scripts, meaning any
+namespace declared inside them directly merges into the global
+scope.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// environment.d.ts</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">namespace</span> <span class="dt">NodeJS</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">interface</span> ProcessEnv {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    NODE_ENV<span class="op">:</span> <span class="st">&#39;development&#39;</span> <span class="op">|</span> <span class="st">&#39;production&#39;</span> <span class="op">|</span> <span class="st">&#39;test&#39;</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    PORT<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    DATABASE_URL<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>For this to work, ensure the declaration file is captured by your
+<code>tsconfig.json</code> within the <code>include</code> or
+<code>files</code> array.</p>
+<h3 id="2-module-augmentation-using-declare-global">2. Module
+Augmentation Using <code>declare global</code></h3>
+<p>If your declaration file needs to import external types or exists
+inside an existing module file (a file with <code>import</code> or
+<code>export</code> statements), you must wrap the declaration in a
+<code>declare global</code> block. Without this, TypeScript will scope
+the <code>NodeJS</code> namespace locally to that file rather than
+merging it with the global environment.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/types/env.d.ts</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SomeCustomType } <span class="im">from</span> <span class="st">&#39;./custom-types&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="bu">global</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="im">namespace</span> <span class="dt">NodeJS</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">interface</span> ProcessEnv {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      NODE_ENV<span class="op">:</span> <span class="st">&#39;development&#39;</span> <span class="op">|</span> <span class="st">&#39;production&#39;</span> <span class="op">|</span> <span class="st">&#39;test&#39;</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      CUSTOM_CONFIG<span class="op">:</span> SomeCustomType<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      API_KEY<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> {}<span class="op">;</span></span></code></pre></div>
+<p>The empty <code>export {};</code> ensures the file is treated as a
+module if it does not already contain exports.</p>
+<h3 id="3-schema-driven-augmentation">3. Schema-Driven Augmentation</h3>
+<p>To avoid maintaining duplicate types between runtime validation
+schemas and TypeScript interfaces, you can combine schema validation
+libraries (such as Zod) with module augmentation. This ensures that the
+types applied to <code>process.env</code> match runtime validations
+exactly.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// src/env.ts</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { z } <span class="im">from</span> <span class="st">&#39;zod&#39;</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> envSchema <span class="op">=</span> z<span class="op">.</span><span class="fu">object</span>({</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  NODE_ENV<span class="op">:</span> z<span class="op">.</span><span class="fu">enum</span>([<span class="st">&#39;development&#39;</span><span class="op">,</span> <span class="st">&#39;production&#39;</span><span class="op">,</span> <span class="st">&#39;test&#39;</span>])<span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  PORT<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">.</span><span class="fu">transform</span>(<span class="bu">Number</span>)<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  DATABASE_URL<span class="op">:</span> z<span class="op">.</span><span class="fu">string</span>()<span class="op">.</span><span class="fu">url</span>()<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate at runtime</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>envSchema<span class="op">.</span><span class="fu">parse</span>(<span class="bu">process</span><span class="op">.</span><span class="at">env</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Augment ProcessEnv with the inferred schema output</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="bu">global</span> {</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="im">namespace</span> <span class="dt">NodeJS</span> {</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">interface</span> ProcessEnv <span class="kw">extends</span> z<span class="op">.</span><span class="at">infer</span><span class="op">&lt;</span><span class="kw">typeof</span> envSchema<span class="op">&gt;</span> {}</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="important-considerations">Important Considerations</h3>
+<ul>
+<li><strong>Type Merging vs. Overriding:</strong> By default,
+TypeScript's <code>@types/node</code> defines <code>ProcessEnv</code> as
+having an index signature
+<code>[key: string]: string | undefined</code>. Augmenting specific
+properties overrides the index signature for those keys, allowing you to
+mark specific variables as non-optional strings.</li>
+<li><strong>Primitive Constraints:</strong> In standard Node.js runtime
+behavior, all values in <code>process.env</code> are either
+<code>string</code> or <code>undefined</code>. Unless you explicitly
+mutate <code>process.env</code> at runtime with parsed non-string
+values, types assigned to <code>ProcessEnv</code> should strictly remain
+strings or union literals of strings.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/augmenting-process-env-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

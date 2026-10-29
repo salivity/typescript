@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is TypeScript and How Does It Relate to JavaScript? - typescript</title>
+    <meta name="description" content="TypeScript is a statically typed superset of JavaScript developed by Microsoft to help developers catch errors early, write maintainable code, and build large-scale applications with confidence. While JavaScript serves as the universal runtime language of">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-type-script-and-how-does-it-relate-to-java-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is TypeScript and How Does It Relate to JavaScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-type-script-and-how-does-it-relate-to-java-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript is a statically typed superset of JavaScript developed by Microsoft to help developers catch errors early, write maintainable code, and build large-scale applications with confidence. While JavaScript serves as the universal runtime language of" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-typescript-and-how-does-it-relate-to-javascript">What Is
+TypeScript and How Does It Relate to JavaScript?</h1>
+<p>TypeScript is a statically typed superset of JavaScript developed by
+Microsoft to help developers catch errors early, write maintainable
+code, and build large-scale applications with confidence. While
+JavaScript serves as the universal runtime language of the web, its
+dynamic typing can lead to subtle runtime bugs as codebases grow in size
+and complexity. TypeScript addresses this challenge by introducing
+compile-time type checking, robust tooling, and modern language
+features, all while compiling down to standard, clean JavaScript that
+runs anywhere JavaScript does.</p>
+<h2 id="understanding-javascript-and-its-limitations">Understanding
+JavaScript and Its Limitations</h2>
+<p>JavaScript was originally built in 1995 to add simple interactive
+features to web pages. Over the decades, it evolved from a lightweight
+scripting tool into one of the most widely used programming languages in
+the world, powering front-end frameworks, back-end servers through
+Node.js, and mobile applications.</p>
+<p>Despite this ubiquity, JavaScript remains a dynamically typed,
+interpreted language. Types are determined at runtime rather than during
+development. This flexibility allows for rapid prototyping, but it also
+means that basic errors—such as referencing a misspelled property name
+or passing an unexpected <code>undefined</code> argument to a
+function—often surface only when the code actually runs in production.
+In enterprise codebases with hundreds of files and dozens of
+contributors, managing these hidden edge cases requires extensive
+automated test suites and defensive programming practices.</p>
+<h2 id="what-is-typescript">What Is TypeScript?</h2>
+<p>TypeScript is an open-source programming language created by
+Microsoft and launched in 2012 under the guidance of Anders Hejlsberg.
+It is designed to bring predictability and structure to
+application-scale JavaScript development.</p>
+<p>At its core, TypeScript provides a type system that analyzes code as
+you write it. It inspects variables, function signatures, interfaces,
+and objects to ensure that data flows through an application as
+intended. If a function expects a numeric ID and receives an object,
+TypeScript flags the mismatch immediately within your code editor,
+preventing the bug from ever reaching the compilation or execution
+phase.</p>
+<h2 id="the-superset-relationship">The Superset Relationship</h2>
+<p>The relationship between TypeScript and JavaScript is formally
+defined as a <strong>strict syntactical superset</strong>. This
+architectural choice provides several distinct advantages:</p>
+<ul>
+<li><strong>Valid JavaScript is Valid TypeScript:</strong> Any standard
+<code>.js</code> file can be renamed to <code>.ts</code> and recognized
+immediately by the TypeScript compiler. Developers do not need to
+rewrite existing logic to adopt the language.</li>
+<li><strong>Gradual Adoption:</strong> TypeScript can be introduced
+progressively into existing projects. Teams can type critical modules
+first while leaving legacy sections loosely typed, using the
+<code>any</code> escape hatch when necessary.</li>
+<li><strong>Zero Runtime Overhead:</strong> Browsers and runtimes like
+Node.js do not execute TypeScript directly. Instead, the TypeScript
+compiler (<code>tsc</code>) strips away all type annotations,
+interfaces, and declarations during a process called transpilation,
+leaving behind pure JavaScript. Because types exist solely at build
+time, TypeScript adds no performance penalty to production
+execution.</li>
+</ul>
+<h2 id="key-differences-between-typescript-and-javascript">Key
+Differences Between TypeScript and JavaScript</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>JavaScript</th>
+<th>TypeScript</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Type System</td>
+<td>Dynamic (checked at runtime)</td>
+<td>Static (checked at compile time)</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>Runs directly in browsers and runtimes</td>
+<td>Must be compiled/transpiled to JavaScript</td>
+</tr>
+<tr>
+<td>Tooling &amp; Autocomplete</td>
+<td>Basic editor inference</td>
+<td>Deep autocompletion and instant refactoring</td>
+</tr>
+<tr>
+<td>Error Detection</td>
+<td>Discovered during execution or automated testing</td>
+<td>Discovered instantly during development</td>
+</tr>
+<tr>
+<td>Learning Curve</td>
+<td>Low barrier to entry</td>
+<td>Requires learning static types and configurations</td>
+</tr>
+</tbody>
+</table>
+<h2 id="core-features-typescript-adds-to-javascript">Core Features
+TypeScript Adds to JavaScript</h2>
+<p>TypeScript extends standard JavaScript syntax with several constructs
+that make codebases self-documenting and resilient:</p>
+<h3 id="static-type-annotations">Static Type Annotations</h3>
+<p>Developers can explicitly declare the shapes of variables, return
+values, and parameters. This eliminates ambiguity about what data a
+function expects or returns.</p>
+<h3 id="interfaces-and-type-aliases">Interfaces and Type Aliases</h3>
+<p>TypeScript allows developers to define custom contracts for objects.
+Interfaces make complex data structures predictable across different
+layers of an application, such as mapping API responses directly to UI
+components.</p>
+<h3 id="enums-and-tuples">Enums and Tuples</h3>
+<p>TypeScript introduces fixed-length arrays with specific element types
+(tuples) and named sets of numeric or string constants (enums), making
+intent clearer than using arbitrary strings or numbers.</p>
+<h3 id="generics">Generics</h3>
+<p>Generics allow developers to create reusable components, functions,
+and classes that work across a variety of types while retaining full
+type safety, rather than collapsing values down to unknown types.</p>
+<h2 id="when-to-choose-typescript-over-plain-javascript">When to Choose
+TypeScript Over Plain JavaScript</h2>
+<p>While TypeScript offers substantial benefits, it introduces a
+compilation step and an initial learning curve.</p>
+<p>Plain JavaScript remains an excellent choice for lightweight utility
+scripts, simple landing pages, quick prototypes, or beginners learning
+programming fundamentals without the cognitive overhead of type
+theory.</p>
+<p>TypeScript is standard practice for large commercial applications,
+distributed teams, public libraries, and systems where data integrity
+and long-term maintainability are paramount. By turning standard
+JavaScript into a statically checked language, TypeScript combines the
+universal reach of the web ecosystem with the stability required for
+enterprise software engineering.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-type-script-and-how-does-it-relate-to-java-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

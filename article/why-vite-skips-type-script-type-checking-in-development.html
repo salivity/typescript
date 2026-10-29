@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Vite Skips TypeScript Type Checking in Development - typescript</title>
+    <meta name="description" content="Vite achieves its signature lightning-fast development experience largely by decoupling code transpilation from TypeScript type checking. Rather than relying on the standard TypeScript compiler to validate types and emit JavaScript, Vite uses esbuild to s">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-vite-skips-type-script-type-checking-in-development">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Vite Skips TypeScript Type Checking in Development - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-vite-skips-type-script-type-checking-in-development" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Vite achieves its signature lightning-fast development experience largely by decoupling code transpilation from TypeScript type checking. Rather than relying on the standard TypeScript compiler to validate types and emit JavaScript, Vite uses esbuild to s" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-vite-skips-typescript-type-checking-in-development">Why Vite
+Skips TypeScript Type Checking in Development</h1>
+<p>Vite achieves its signature lightning-fast development experience
+largely by decoupling code transpilation from TypeScript type checking.
+Rather than relying on the standard TypeScript compiler to validate
+types and emit JavaScript, Vite uses esbuild to strip out type
+annotations without analyzing the type system. This article examines why
+Vite adopts this architecture, how it prioritizes development speed, and
+how developers can still ensure type safety in their workflows.</p>
+<h2 id="the-performance-cost-of-full-type-checking">The Performance Cost
+of Full Type Checking</h2>
+<p>The standard TypeScript compiler (<code>tsc</code>) performs two
+major tasks: type checking and transpilation (converting TypeScript into
+plain JavaScript). While transpilation is computationally
+straightforward, type checking requires constructing and traversing an
+entire Abstract Syntax Tree (AST) across the project to resolve
+dependencies, check interfaces, and infer types.</p>
+<p>In medium-to-large codebases, full type checking can take several
+seconds or even minutes. If Vite waited for <code>tsc</code> to validate
+types on every file save, Hot Module Replacement (HMR) would slow down
+drastically, eliminating the instantaneous feedback loop that makes Vite
+compelling.</p>
+<h2 id="fast-transpilation-with-esbuild">Fast Transpilation with
+esbuild</h2>
+<p>To maximize speed, Vite delegates the transformation of TypeScript
+files to <strong>esbuild</strong>, a Go-based bundler and transpiler
+that runs 10 to 100 times faster than Node-based tools.</p>
+<p>esbuild operates strictly as an isolated transpiler. It reads
+TypeScript files individually and strips away type annotations, enums,
+and type-only imports to output plain JavaScript. Because esbuild treats
+each file in isolation and ignores cross-file type relationships, it
+cannot perform type checking. Vite trades semantic type validation
+during compilation for near-instantaneous build and reload speeds.</p>
+<h2 id="separation-of-concerns">Separation of Concerns</h2>
+<p>Vite's design reflects a clean separation between compilation and
+static analysis:</p>
+<ol type="1">
+<li><strong>Compilation is purely for the browser:</strong> At runtime,
+the browser only executes JavaScript. Types have zero impact on the
+resulting runtime code, so validating them is unnecessary just to render
+changes during development.</li>
+<li><strong>Type checking belongs in the editor and CI:</strong> Modern
+code editors like Visual Studio Code run the TypeScript Language Server
+in the background, providing real-time linting, inline error
+highlighting, and autocompletion while you write code. Duplicating this
+work in the dev server adds overhead without adding value.</li>
+</ol>
+<h2 id="how-to-handle-type-checking-in-vite-projects">How to Handle Type
+Checking in Vite Projects</h2>
+<p>Because Vite intentionally bypasses type checking in the development
+server, developers rely on complementary tools to maintain type
+safety:</p>
+<ul>
+<li><strong>Production Builds:</strong> The default Vite application
+templates configure the build script as
+<code>tsc --noEmit &amp;&amp; vite build</code>. This ensures that a
+production build will fail if any type errors exist.</li>
+<li><strong>Continuous Integration (CI):</strong> Running
+<code>tsc --noEmit</code> in a CI/CD pipeline acts as a quality gate
+before code is merged or deployed.</li>
+<li><strong>Browser Overlay Plugins:</strong> Developers who prefer
+visible browser overlays for type errors during development can use
+community plugins like <code>vite-plugin-checker</code>. This plugin
+runs <code>tsc</code> in a separate worker thread, preserving fast HMR
+speeds while displaying errors in the browser.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-vite-skips-type-script-type-checking-in-development';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

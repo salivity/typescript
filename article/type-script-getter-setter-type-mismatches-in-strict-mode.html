@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Getter Setter Type Mismatches in Strict Mode - typescript</title>
+    <meta name="description" content="This article explores how TypeScript manages divergent types between getters and setters, particularly under strict compiler settings. Historically, TypeScript required identical types for both accessors, but modern versions allow asymmetric types to supp">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-getter-setter-type-mismatches-in-strict-mode">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Getter Setter Type Mismatches in Strict Mode - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-getter-setter-type-mismatches-in-strict-mode" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript manages divergent types between getters and setters, particularly under strict compiler settings. Historically, TypeScript required identical types for both accessors, but modern versions allow asymmetric types to supp" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-getter-setter-type-mismatches-in-strict-mode">TypeScript
+Getter Setter Type Mismatches in Strict Mode</h1>
+<p>This article explores how TypeScript manages divergent types between
+getters and setters, particularly under strict compiler settings.
+Historically, TypeScript required identical types for both accessors,
+but modern versions allow asymmetric types to support common JavaScript
+patterns. Below, you will learn the core rules governing accessor type
+compatibility, why strict mode enforces them, and how to properly handle
+mismatch scenarios in your codebase.</p>
+<hr />
+<h3 id="the-fundamental-rule-getter-must-be-assignable-to-setter">The
+Fundamental Rule: Getter Must Be Assignable to Setter</h3>
+<p>In TypeScript 4.3 and later, getters and setters are permitted to
+have different types, but with a critical condition: <strong>the return
+type of the getter must be assignable to the parameter type of the
+setter.</strong></p>
+<p>This rule applies universally across TypeScript and is rigorously
+enforced under <code>strict</code> mode (specifically with
+<code>strictNullChecks</code> enabled).</p>
+<p>The rule exists to ensure that self-assignment remains type-safe:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>instance<span class="op">.</span><span class="at">property</span> <span class="op">=</span> instance<span class="op">.</span><span class="at">property</span><span class="op">;</span></span></code></pre></div>
+<p>If the getter returned a type that the setter could not accept, this
+common and standard operation would break type safety at runtime.</p>
+<hr />
+<h3 id="valid-scenario-setter-accepts-a-wider-type">Valid Scenario:
+Setter Accepts a Wider Type</h3>
+<p>A common design pattern involves writing a value using multiple
+formats (e.g., a string or a number) while reading the value always
+yields a normalized, specific format. This is completely valid in strict
+mode because the getter's return type satisfies the setter's parameter
+type.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dimension {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> _value<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Getter returns a specific type</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">value</span>()<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">_value</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Setter accepts a wider type</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">value</span>(val<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">string</span>) {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">typeof</span> val <span class="op">===</span> <span class="st">&quot;string&quot;</span>) {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">_value</span> <span class="op">=</span> <span class="pp">parseFloat</span>(val)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">_value</span> <span class="op">=</span> val<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> box <span class="op">=</span> <span class="kw">new</span> <span class="fu">Dimension</span>()<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>box<span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="st">&quot;42px&quot;</span><span class="op">;</span> <span class="co">// OK: string is allowed for writing</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>box<span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>     <span class="co">// OK: number is allowed for writing</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> current<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> box<span class="op">.</span><span class="at">value</span><span class="op">;</span> <span class="co">// OK: reading always produces a number</span></span></code></pre></div>
+<p>Here, the getter type (<code>number</code>) is assignable to the
+setter parameter type (<code>number | string</code>), so TypeScript
+allows it without error.</p>
+<hr />
+<h3
+id="invalid-scenario-getter-returns-a-wider-or-incompatible-type">Invalid
+Scenario: Getter Returns a Wider or Incompatible Type</h3>
+<p>If the getter returns a type that is wider than, or incompatible
+with, the setter's expected type, TypeScript issues a compilation error
+in strict mode.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Configuration {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> _timeout<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">undefined</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Error: The return type of a &#39;get&#39; accessor must be assignable to its &#39;set&#39; accessor type.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">timeout</span>()<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">undefined</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">_timeout</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">set</span> <span class="fu">timeout</span>(value<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">_timeout</span> <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In this case, reading <code>timeout</code> might return
+<code>undefined</code>, but setting <code>timeout</code> only accepts
+<code>number</code>. Because <code>number | undefined</code> is not
+assignable to <code>number</code>, TypeScript rejects the
+implementation.</p>
+<hr />
+<h3 id="strict-mode-nuances">Strict Mode Nuances</h3>
+<p>When <code>strict</code> (or <code>strictNullChecks</code>) is
+disabled, TypeScript becomes lenient with <code>null</code> and
+<code>undefined</code>, which can mask accessor incompatibilities.
+However, with strict checks active:</p>
+<ol type="1">
+<li><strong><code>strictNullChecks</code></strong>: Ensures that
+optional or nullable properties in getters are strictly accounted for in
+setter parameters.</li>
+<li><strong>Contextual Typing</strong>: If a setter does not specify an
+explicit parameter type, TypeScript infers its type directly from the
+getter's return type. If you want divergent types, you must explicitly
+annotate the setter's parameter.</li>
+<li><strong>Interfaces and Type Aliases</strong>: Interfaces also
+support divergent accessors through property signatures that separate
+reading and writing using separate getter/setter syntax or intersecting
+types.</li>
+</ol>
+<h3 id="resolving-type-mismatch-errors">Resolving Type Mismatch
+Errors</h3>
+<p>To resolve getter/setter compatibility errors in strict mode:</p>
+<ul>
+<li><strong>Widen the setter parameter</strong>: Allow the setter to
+accept all types that the getter can return, along with any additional
+input formats.</li>
+<li><strong>Narrow the getter return value</strong>: Ensure the getter
+guarantees a return type that satisfies the constraints of the
+setter.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-getter-setter-type-mismatches-in-strict-mode';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidFunction vs () =&gt; void in TypeScript - typescript</title>
+    <meta name="description" content="This article examines the difference between the VoidFunction type and the () =&gt; void type annotation in TypeScript. While both denote a function that takes no parameters and returns no usable value, they differ in origin, environment availability, and sy">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/void-function-vs-void-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="VoidFunction vs () =&gt; void in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/void-function-vs-void-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines the difference between the VoidFunction type and the () =&gt; void type annotation in TypeScript. While both denote a function that takes no parameters and returns no usable value, they differ in origin, environment availability, and sy" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="voidfunction-vs---void-in-typescript">VoidFunction vs () =&gt;
+void in TypeScript</h1>
+<p>This article examines the difference between the
+<code>VoidFunction</code> type and the <code>() =&gt; void</code> type
+annotation in TypeScript. While both denote a function that takes no
+parameters and returns no usable value, they differ in origin,
+environment availability, and syntactic convention. Understanding these
+nuances helps developers write cleaner, more portable TypeScript code
+across diverse execution environments.</p>
+<h3 id="definitions-and-origin">Definitions and Origin</h3>
+<p>The type syntax <code>() =&gt; void</code> is a native TypeScript
+function type literal. It explicitly specifies a function signature that
+accepts zero arguments and yields a return type of <code>void</code>.
+Because it is built directly into the TypeScript language syntax, it is
+universally available in all TypeScript projects without requiring
+specific library imports or compiler configurations.</p>
+<p><code>VoidFunction</code>, on the other hand, is a predefined global
+interface that originates from the Document Object Model (DOM) type
+definitions (<code>lib.dom.d.ts</code>). In TypeScript's DOM library, it
+is defined as:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> VoidFunction {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    ()<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because it is defined within the DOM library,
+<code>VoidFunction</code> is historically associated with browser APIs,
+such as standard callbacks and timers.</p>
+<h3 id="environment-and-portability-differences">Environment and
+Portability Differences</h3>
+<p>The primary technical difference between the two lies in
+environmental availability:</p>
+<ul>
+<li><strong>Universal Support (<code>() =&gt; void</code>):</strong>
+Because it is part of the core language grammar, it works consistently
+in browser environments, Node.js applications, Web Workers, and isolated
+serverless contexts without relying on <code>lib</code> compiler
+options.</li>
+<li><strong>DOM Dependency (<code>VoidFunction</code>):</strong> If a
+project's <code>tsconfig.json</code> specifies <code>"lib"</code>
+settings that omit <code>"DOM"</code> (common in strict Node.js backend
+services or shared libraries), the <code>VoidFunction</code> identifier
+will result in a compiler error
+(<code>Cannot find name 'VoidFunction'</code>) unless manually
+declared.</li>
+</ul>
+<h3 id="structural-compatibility">Structural Compatibility</h3>
+<p>In terms of type checking, <code>VoidFunction</code> and
+<code>() =&gt; void</code> are structurally identical. A function typed
+as <code>() =&gt; void</code> can be assigned to a variable of type
+<code>VoidFunction</code>, and vice versa:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> standardFn<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">void</span> <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Standard&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> domFn<span class="op">:</span> VoidFunction <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;DOM&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>standardFn <span class="op">=</span> domFn<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>domFn <span class="op">=</span> standardFn<span class="op">;</span> <span class="co">// Valid</span></span></code></pre></div>
+<p>Both types adhere to TypeScript’s standard <code>void</code> return
+behavior. A callback declared to return <code>void</code> does not force
+the implementation to return <code>undefined</code>; rather, it
+indicates that the caller will ignore any returned value. Consequently,
+a function returning a string or number can still be assigned to both
+types safely.</p>
+<h3 id="readability-and-conventions">Readability and Conventions</h3>
+<p><code>VoidFunction</code> is sometimes preferred for readability when
+declaring props in UI frameworks (such as React component click handlers
+or cleanup functions) because it eliminates punctuation and communicates
+intent concisely.</p>
+<p>However, <code>() =&gt; void</code> is overwhelmingly favored in
+idiomatic TypeScript because it is universally portable, immediately
+recognizes standard function syntax, and easily scales when parameters
+need to be added later (e.g., transitioning to
+<code>(error?: Error) =&gt; void</code>).</p>
+<h3 id="summary">Summary</h3>
+<p>Use <code>() =&gt; void</code> for standard, portable TypeScript
+development across both frontend and backend platforms. Reserve
+<code>VoidFunction</code> only for browser-specific applications where
+the DOM library is guaranteed and named type aliases are preferred for
+brevity.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/void-function-vs-void-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

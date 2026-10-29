@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ts-node vs tsc: Key Differences in TypeScript - typescript</title>
+    <meta name="description" content="When developing applications with TypeScript, you must transform your code into JavaScript before the Node.js runtime can execute it. Developers primarily rely on two tools to handle this process: the official TypeScript compiler (tsc) and the execution u">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/ts-node-vs-tsc-key-differences-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ts-node vs tsc: Key Differences in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/ts-node-vs-tsc-key-differences-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When developing applications with TypeScript, you must transform your code into JavaScript before the Node.js runtime can execute it. Developers primarily rely on two tools to handle this process: the official TypeScript compiler (tsc) and the execution u" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="ts-node-vs-tsc-key-differences-in-typescript">ts-node vs tsc:
+Key Differences in TypeScript</h1>
+<p>When developing applications with TypeScript, you must transform your
+code into JavaScript before the Node.js runtime can execute it.
+Developers primarily rely on two tools to handle this process: the
+official TypeScript compiler (<code>tsc</code>) and the execution
+utility <code>ts-node</code>. While <code>tsc</code> compiles TypeScript
+into static JavaScript files on disk, <code>ts-node</code> compiles and
+executes code on the fly in memory. Understanding the differences in how
+these tools operate, their performance characteristics, and their
+intended environments is essential for optimizing your development and
+deployment workflows.</p>
+<h2 id="what-is-tsc">What is tsc?</h2>
+<p>The TypeScript Compiler (<code>tsc</code>) is the official
+command-line tool provided by the TypeScript team. It acts as an
+Ahead-Of-Time (AOT) compiler that performs two primary tasks:</p>
+<ol type="1">
+<li><strong>Type Checking:</strong> Analyzes your code against your type
+definitions and configuration (<code>tsconfig.json</code>) to catch
+static errors.</li>
+<li><strong>Transpilation:</strong> Converts <code>.ts</code> files into
+standard <code>.js</code> files (along with optional source maps and
+<code>.d.ts</code> declaration files) and writes them to a designated
+output directory (such as <code>dist</code> or <code>build</code>).</li>
+</ol>
+<p>Once <code>tsc</code> finishes compilation, you execute the resulting
+JavaScript directly using the standard Node.js binary:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tsc</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> dist/index.js</span></code></pre></div>
+<h2 id="what-is-ts-node">What is ts-node?</h2>
+<p><code>ts-node</code> is a TypeScript execution engine and wrapper
+around Node.js. Instead of producing output files on your disk, it
+intercepts the Node.js module loading system, compiles TypeScript files
+in memory (Just-In-Time), and passes the resulting JavaScript directly
+to the V8 engine for immediate execution.</p>
+<p>You run TypeScript files with a single command:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ts-node</span> src/index.ts</span></code></pre></div>
+<h2 id="key-differences">Key Differences</h2>
+<h3 id="1-build-output">1. Build Output</h3>
+<ul>
+<li><strong><code>tsc</code>:</strong> Emits permanent JavaScript files
+to your disk. You can inspect the generated output, distribute it as an
+npm package, or package it into a container.</li>
+<li><strong><code>ts-node</code>:</strong> Emits nothing to the disk.
+All transformations happen in memory, leaving your project directory
+clean.</li>
+</ul>
+<h3 id="2-runtime-performance-and-startup-time">2. Runtime Performance
+and Startup Time</h3>
+<ul>
+<li><strong><code>tsc</code>:</strong> Running compiled JavaScript via
+<code>node dist/index.js</code> has zero compilation overhead at
+runtime. The application starts immediately and runs with native Node.js
+performance.</li>
+<li><strong><code>ts-node</code>:</strong> Every time you launch an
+application or script with <code>ts-node</code>, it must compile your
+project and its dependencies into memory before execution begins. This
+results in significantly slower startup times, especially in
+medium-to-large codebases.</li>
+</ul>
+<h3 id="3-type-checking-behavior">3. Type Checking Behavior</h3>
+<ul>
+<li><strong><code>tsc</code>:</strong> Always performs full static type
+checking during the build step. If there are type errors, compilation
+can be configured to fail, preventing invalid code from being
+deployed.</li>
+<li><strong><code>ts-node</code>:</strong> Performs type checking by
+default, but it is common practice to disable it via the
+<code>--transpile-only</code> flag or using <code>@swc/register</code>
+to reduce startup delays during rapid local development.</li>
+</ul>
+<h3 id="4-memory-footprint">4. Memory Footprint</h3>
+<ul>
+<li><strong><code>tsc</code>:</strong> Because the compilation step is
+decoupled from execution, the runtime memory footprint is limited
+entirely to what your application requires.</li>
+<li><strong><code>ts-node</code>:</strong> Requires additional memory at
+runtime to host the TypeScript compiler service alongside the executing
+application.</li>
+</ul>
+<h2 id="when-to-use-each-tool">When to Use Each Tool</h2>
+<h3 id="use-ts-node-for">Use <code>ts-node</code> for:</h3>
+<ul>
+<li><strong>Local Development:</strong> Running local servers alongside
+file watchers like <code>nodemon</code> for rapid iteration.</li>
+<li><strong>Automation Scripts:</strong> Executing internal utilities,
+migration scripts, or seed files written in TypeScript without needing a
+manual pre-build step.</li>
+<li><strong>REPL and Testing:</strong> Prototyping code snippets in the
+terminal or executing test runners directly against source files.</li>
+</ul>
+<h3 id="use-tsc-for">Use <code>tsc</code> for:</h3>
+<ul>
+<li><strong>Production Deployments:</strong> Building production-ready
+artifacts for servers, serverless functions, or Docker images.</li>
+<li><strong>CI/CD Pipelines:</strong> Validating type safety across your
+entire codebase before merging or deploying code.</li>
+<li><strong>Library Publishing:</strong> Generating distributable
+JavaScript files and <code>.d.ts</code> declaration files for
+third-party consumption.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/ts-node-vs-tsc-key-differences-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

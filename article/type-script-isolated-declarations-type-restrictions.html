@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript isolatedDeclarations Type Restrictions - typescript</title>
+    <meta name="description" content="TypeScript&#39;s isolatedDeclarations compiler option requires all exported declarations to be easily statically analyzable without full type checking, allowing single-file transpilers to generate declaration (.d.ts) files. Because tools cannot traverse impor">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-isolated-declarations-type-restrictions">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript isolatedDeclarations Type Restrictions - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-isolated-declarations-type-restrictions" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript&#39;s isolatedDeclarations compiler option requires all exported declarations to be easily statically analyzable without full type checking, allowing single-file transpilers to generate declaration (.d.ts) files. Because tools cannot traverse impor" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-isolateddeclarations-type-restrictions">TypeScript
+isolatedDeclarations Type Restrictions</h1>
+<p>TypeScript's <code>isolatedDeclarations</code> compiler option
+requires all exported declarations to be easily statically analyzable
+without full type checking, allowing single-file transpilers to generate
+declaration (<code>.d.ts</code>) files. Because tools cannot traverse
+imports or perform complex type inference on an isolated file, this mode
+imposes strict restrictions on exported signatures, requiring explicit
+type annotations wherever the type cannot be trivially determined.</p>
+<h2 id="explicit-return-types-on-exported-functions">Explicit Return
+Types on Exported Functions</h2>
+<p>Any exported function, generator, or method must include an explicit
+return type annotation. TypeScript will not infer the return type from
+the function body, even if the body consists of a simple
+<code>return</code> statement:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error under isolatedDeclarations</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">add</span>(a<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">add</span>(a<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This restriction applies to:</p>
+<ul>
+<li>Standard function declarations</li>
+<li>Arrow functions assigned to exported variables</li>
+<li>Public and protected class methods</li>
+<li>Getter and setter accessors</li>
+</ul>
+<h2 id="explicit-parameter-annotations">Explicit Parameter
+Annotations</h2>
+<p>Parameters of exported functions and methods must have explicit type
+annotations. TypeScript will not infer parameter types from default
+parameter values if the inference is complex or if the parameter is a
+destructured object:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> greet <span class="op">=</span> (name <span class="op">=</span> <span class="st">&quot;World&quot;</span>) <span class="kw">=&gt;</span> <span class="vs">`Hello, </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> greet <span class="op">=</span> (name<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;World&quot;</span>)<span class="op">:</span> <span class="dt">string</span> <span class="kw">=&gt;</span> <span class="vs">`Hello, </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>Untyped rest parameters are also prohibited on exported
+signatures.</p>
+<h2 id="variable-and-constant-exports">Variable and Constant
+Exports</h2>
+<p>Exported variables and constants must have explicit type annotations
+unless they are initialized with a trivial, literal expression.</p>
+<p>Trivial expressions that do not require annotations include:</p>
+<ul>
+<li>Primitive literals: strings, numbers, booleans, <code>null</code>,
+and <code>undefined</code></li>
+<li>Simple <code>as const</code> expressions on literal values</li>
+<li>Simple object and array literals consisting only of trivial
+expressions</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed without annotations</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> COUNT <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> NAME <span class="op">=</span> <span class="st">&quot;Alice&quot;</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> FLAGS <span class="op">=</span> [<span class="kw">true</span><span class="op">,</span> <span class="kw">false</span>] <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Complex expressions require annotations</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> computed <span class="op">=</span> <span class="fu">calculateValue</span>()<span class="op">;</span> </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> computed<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="fu">calculateValue</span>()<span class="op">;</span></span></code></pre></div>
+<p>If an exported constant is initialized by calling a function,
+instantiating a class, or referencing another variable whose type cannot
+be verified in isolation, it must have an explicit type annotation.</p>
+<h2 id="public-and-protected-class-members">Public and Protected Class
+Members</h2>
+<p>Classes follow the same boundary rules as top-level declarations.
+Public and protected fields must have explicit type annotations unless
+assigned a trivial literal:</p>
+<ul>
+<li><strong>Fields</strong>: Public and protected fields must have type
+annotations if initialized with complex expressions or left
+uninitialized in the declaration.</li>
+<li><strong>Private Members</strong>: Fields marked with
+<code>#private</code> or the <code>private</code> keyword do not require
+type annotations because they do not appear in the public
+<code>.d.ts</code> output.</li>
+<li><strong>Methods</strong>: Public and protected methods require
+explicit parameter and return types.</li>
+</ul>
+<h2 id="restrictions-on-internal-and-unexported-types">Restrictions on
+Internal and Unexported Types</h2>
+<p>When assigning a type annotation to an exported declaration, the
+referenced type must also be exported. <code>isolatedDeclarations</code>
+prevents an exported signature from referencing a type alias or
+interface that cannot be included in the generated declaration file.</p>
+<h2 id="computed-property-names">Computed Property Names</h2>
+<p>Classes and objects with computed property keys cannot use arbitrary
+expressions for key names. The property name must be a trivial literal
+or a well-known symbol (such as <code>Symbol.iterator</code>). Computed
+properties generated from complex runtime expressions will trigger an
+error unless explicitly resolved or typed.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-isolated-declarations-type-restrictions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

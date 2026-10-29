@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Bitwise Operations and Numeric Literals - typescript</title>
+    <meta name="description" content="TypeScript provides robust static typing for JavaScript, yet its handling of numerical literals and bitwise operations comes with specific behaviors and limitations. This article explains how TypeScript defines numerical literal types, why it broadens tho">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-bitwise-operations-and-numeric-literals">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Bitwise Operations and Numeric Literals - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-bitwise-operations-and-numeric-literals" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides robust static typing for JavaScript, yet its handling of numerical literals and bitwise operations comes with specific behaviors and limitations. This article explains how TypeScript defines numerical literal types, why it broadens tho" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-bitwise-operations-and-numeric-literals">TypeScript
+Bitwise Operations and Numeric Literals</h1>
+<p>TypeScript provides robust static typing for JavaScript, yet its
+handling of numerical literals and bitwise operations comes with
+specific behaviors and limitations. This article explains how TypeScript
+defines numerical literal types, why it broadens those literals to
+primitive types during bitwise operations, and how it enforces type
+safety across 32-bit integers and <code>bigint</code> values.</p>
+<h2 id="numerical-literal-types-in-typescript">Numerical Literal Types
+in TypeScript</h2>
+<p>TypeScript allows specific numbers to act as distinct types known as
+numeric literal types. When you declare a constant with a numeric value
+using <code>const</code>, TypeScript infers the exact literal value
+rather than the broad <code>number</code> primitive:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> exactFive <span class="op">=</span> <span class="dv">5</span><span class="op">;</span> <span class="co">// Type: 5</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> genericNumber <span class="op">=</span> <span class="dv">5</span><span class="op">;</span> <span class="co">// Type: number</span></span></code></pre></div>
+<p>You can also use numeric literals in union types to enforce
+restricted sets of numbers, such as HTTP status codes or custom
+identifiers:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Port <span class="op">=</span> <span class="dv">80</span> <span class="op">|</span> <span class="dv">443</span> <span class="op">|</span> <span class="dv">8080</span><span class="op">;</span></span></code></pre></div>
+<p>Despite supporting literal types, the TypeScript type system does not
+include a built-in compile-time arithmetic engine. TypeScript does not
+calculate numeric values at the type level during operations.</p>
+<h2 id="how-typescript-handles-bitwise-operations">How TypeScript
+Handles Bitwise Operations</h2>
+<p>JavaScript supports several bitwise operators: <code>&amp;</code>
+(AND), <code>|</code> (OR), <code>^</code> (XOR), <code>~</code> (NOT),
+<code>&lt;&lt;</code> (left shift), <code>&gt;&gt;</code>
+(sign-propagating right shift), and <code>&gt;&gt;&gt;</code> (zero-fill
+right shift).</p>
+<p>In runtime JavaScript, bitwise operators convert their operands into
+32-bit integers (signed for most operators, unsigned for
+<code>&gt;&gt;&gt;</code>), perform the operation, and return a standard
+number.</p>
+<h3 id="1-type-widening-to-number">1. Type Widening to
+<code>number</code></h3>
+<p>Because TypeScript does not compute mathematical expressions at
+compile time, applying a bitwise operator to numeric literals results in
+type widening. The resulting value is typed as the broad primitive
+<code>number</code>, not a narrowed literal type:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> a <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// Type: 1</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> b <span class="op">=</span> <span class="dv">2</span><span class="op">;</span> <span class="co">// Type: 2</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> a <span class="op">|</span> b<span class="op">;</span> <span class="co">// Type: number (runtime value is 3)</span></span></code></pre></div>
+<p>Even if the operands are strictly typed as literals, TypeScript
+cannot determine the literal output type of <code>a | b</code> without
+explicit type casting.</p>
+<h3 id="2-operand-compatibility-and-safety">2. Operand Compatibility and
+Safety</h3>
+<p>TypeScript enforces that operands of bitwise operators belong to
+valid numeric categories: <code>number</code>, <code>bigint</code>, or
+<code>any</code>.</p>
+<p>TypeScript strictly forbids mixing <code>number</code> and
+<code>bigint</code> in bitwise operations, mirroring runtime JavaScript
+restrictions:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> num <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> big <span class="op">=</span> <span class="dv">2</span>n<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Cannot mix BigInt and other types, use explicit conversions.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> invalid <span class="op">=</span> num <span class="op">&amp;</span> big<span class="op">;</span> </span></code></pre></div>
+<p>When both operands are <code>bigint</code>, the resulting type is
+<code>bigint</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> bigA <span class="op">=</span> <span class="dv">1</span>n<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> bigB <span class="op">=</span> <span class="dv">2</span>n<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> bigResult <span class="op">=</span> bigA <span class="op">&amp;</span> bigB<span class="op">;</span> <span class="co">// Type: bigint</span></span></code></pre></div>
+<p>Additionally, TypeScript disallows the zero-fill right shift operator
+(<code>&gt;&gt;&gt;</code>) on <code>bigint</code> types, as JavaScript
+does not support unsigned 64-bit representations via this operator:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> big <span class="op">=</span> <span class="dv">10</span>n<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Operator &#39;&gt;&gt;&gt;&#39; cannot be applied to type &#39;bigint&#39;.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> shifted <span class="op">=</span> big <span class="op">&gt;&gt;&gt;</span> <span class="dv">1</span>n<span class="op">;</span> </span></code></pre></div>
+<h2 id="bitwise-flags-and-numeric-enums">Bitwise Flags and Numeric
+Enums</h2>
+<p>A common use case for bitwise operations is managing bitmasks and
+flags using numeric enums:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> FileAccess {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  None <span class="op">=</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  Read <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">,</span>    <span class="co">// 1</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Write <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">,</span>   <span class="co">// 2</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  Execute <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">,</span> <span class="co">// 4</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>While TypeScript computes constant enum member values at compile time
+during emit, expressions that combine enum members with bitwise
+operators at runtime lose their specific enum typing:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> permissions <span class="op">=</span> FileAccess<span class="op">.</span><span class="at">Read</span> <span class="op">|</span> FileAccess<span class="op">.</span><span class="at">Write</span><span class="op">;</span> <span class="co">// Type: number</span></span></code></pre></div>
+<p>Because <code>permissions</code> widens to <code>number</code>, it
+cannot be passed directly into functions expecting the specific
+<code>FileAccess</code> enum without a type assertion:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">checkAccess</span>(access<span class="op">:</span> FileAccess) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Fails if strict type checks are required without casting</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">checkAccess</span>(permissions <span class="im">as</span> FileAccess)<span class="op">;</span></span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><strong>Numeric Literals:</strong> TypeScript can represent exact
+numbers as types, but operations strip this specificity.</li>
+<li><strong>Type Widening:</strong> Bitwise operations performed on
+numeric literals always evaluate to the generic <code>number</code> or
+<code>bigint</code> type.</li>
+<li><strong>Strict Separation:</strong> TypeScript disallows mixing
+<code>number</code> and <code>bigint</code> in bitwise expressions and
+prevents <code>&gt;&gt;&gt;</code> on <code>bigint</code>.</li>
+<li><strong>Bitmasks:</strong> Enums used in bitwise expressions widen
+to <code>number</code>, requiring explicit assertions if you need to
+retain the original enum type.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-bitwise-operations-and-numeric-literals';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

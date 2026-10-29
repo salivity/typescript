@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Awaited Type: Resolving Nested Promises - typescript</title>
+    <meta name="description" content="The Awaited&lt;T&gt; utility type in TypeScript, introduced in version 4.5, recursively unwraps the resolved value of a Promise or PromiseLike object. When working with asynchronous JavaScript and TypeScript, operations often produce nested promise chains—such">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-awaited-type-resolving-nested-promises">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Awaited Type: Resolving Nested Promises - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-awaited-type-resolving-nested-promises" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Awaited&lt;T&gt; utility type in TypeScript, introduced in version 4.5, recursively unwraps the resolved value of a Promise or PromiseLike object. When working with asynchronous JavaScript and TypeScript, operations often produce nested promise chains—such" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-awaited-type-resolving-nested-promises">TypeScript
+Awaited Type: Resolving Nested Promises</h1>
+<p>The <code>Awaited&lt;T&gt;</code> utility type in TypeScript,
+introduced in version 4.5, recursively unwraps the resolved value of a
+<code>Promise</code> or <code>PromiseLike</code> object. When working
+with asynchronous JavaScript and TypeScript, operations often produce
+nested promise chains—such as
+<code>Promise&lt;Promise&lt;T&gt;&gt;</code>—either through functional
+composition, dynamic imports, or deeply chained <code>.then()</code>
+calls. <code>Awaited&lt;T&gt;</code> solves the issue of type ambiguity
+by accurately mirroring how the JavaScript runtime flattens promises via
+the <code>await</code> keyword, ensuring that the inferred type is
+always the underlying value rather than an unresolved intermediate
+promise wrapper.</p>
+<h3 id="the-problem-of-nested-promises">The Problem of Nested
+Promises</h3>
+<p>In JavaScript, native <code>Promise</code> resolution inherently
+flattens nested promises at runtime. Calling <code>await</code> on a
+<code>Promise&lt;Promise&lt;string&gt;&gt;</code> returns a
+<code>string</code>, not a <code>Promise&lt;string&gt;</code>.</p>
+<p>Prior to TypeScript 4.5, modeling this behavior statically was
+problematic. Basic conditional types that extracted types from promises
+generally looked like this:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UnwrapPromise<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="kw">infer</span> U<span class="op">&gt;</span> <span class="op">?</span> U <span class="op">:</span> T<span class="op">;</span></span></code></pre></div>
+<p>This shallow approach works for a single layer of unwrapping
+(<code>UnwrapPromise&lt;Promise&lt;string&gt;&gt;</code> yields
+<code>string</code>). However, it fails when encountering nested
+promises or custom "thenable" structures:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Evaluates to Promise&lt;string&gt;, not string</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Nested <span class="op">=</span> UnwrapPromise<span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;&gt;&gt;;</span></span></code></pre></div>
+<p>Attempting to recursively unwrap nested promises with custom utility
+types frequently caused issues with circular constraints,
+<code>PromiseLike</code> interoperability, and overly complex
+conditional logic.</p>
+<h3 id="how-awaitedt-solves-recursive-resolution">How
+<code>Awaited&lt;T&gt;</code> Solves Recursive Resolution</h3>
+<p>The <code>Awaited&lt;T&gt;</code> utility type models the exact
+recursive unwrapping semantics of <code>await</code> and
+<code>Promise.all</code> in the ECMAScript specification. Regardless of
+how deeply wrapped a promise chain is, <code>Awaited&lt;T&gt;</code>
+recursively evaluates down to the non-promise leaf value.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeepPromise <span class="op">=</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;&gt;&gt;;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Evaluates directly to number</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ResolvedNumber <span class="op">=</span> Awaited<span class="op">&lt;</span>DeepPromise<span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="significance-in-asynchronous-architecture">Significance in
+Asynchronous Architecture</h3>
+<ol type="1">
+<li><p><strong>Accurate Return Type Inference in Async
+Pipelines</strong><br />
+In complex architectures, asynchronous functions are frequently composed
+or piped. When utility libraries or framework wrappers return promises
+that might themselves resolve to another promise,
+<code>Awaited&lt;T&gt;</code> ensures that the final consumer receives
+the flattened, actual runtime type rather than a nested
+signature.</p></li>
+<li><p><strong>Full Compatibility with "Thenables"</strong><br />
+JavaScript treats any object with a <code>.then()</code> method as a
+promise (a "thenable"). Custom implementations or third-party libraries
+(such as database query builders or ORMs) often implement their own
+<code>PromiseLike</code> interfaces. <code>Awaited&lt;T&gt;</code>
+handles standard native promises and custom thenables interchangeably,
+flattening them recursively.</p></li>
+<li><p><strong>Improved Generic Typing for Promise APIs</strong><br />
+Native methods such as <code>Promise.all</code>,
+<code>Promise.race</code>, and <code>Promise.allSettled</code> rely
+internally on <code>Awaited&lt;T&gt;</code>. When passing an array of
+heterogeneous or nested promises to <code>Promise.all</code>, TypeScript
+leverages <code>Awaited&lt;T&gt;</code> to produce accurate tuple types
+that reflect the exact values available once the entire chain
+resolves.</p></li>
+</ol>
+<p>By eliminating manual and error-prone recursive conditional types,
+<code>Awaited&lt;T&gt;</code> aligns TypeScript's static type checker
+directly with JavaScript's runtime unwrapping semantics across all
+promise-based patterns.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-awaited-type-resolving-nested-promises';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

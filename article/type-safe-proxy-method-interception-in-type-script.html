@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type-Safe Proxy Method Interception in TypeScript - typescript</title>
+    <meta name="description" content="This article explains how to build a type-safe Proxy wrapper in TypeScript that intercepts object method calls while preserving exact parameter types, return types, and IDE autocompletion. By leveraging TypeScript generics, conditional types, and standard">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-safe-proxy-method-interception-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type-Safe Proxy Method Interception in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-safe-proxy-method-interception-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to build a type-safe Proxy wrapper in TypeScript that intercepts object method calls while preserving exact parameter types, return types, and IDE autocompletion. By leveraging TypeScript generics, conditional types, and standard" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-safe-proxy-method-interception-in-typescript">Type-Safe
+Proxy Method Interception in TypeScript</h1>
+<p>This article explains how to build a type-safe <code>Proxy</code>
+wrapper in TypeScript that intercepts object method calls while
+preserving exact parameter types, return types, and IDE autocompletion.
+By leveraging TypeScript generics, conditional types, and standard ES6
+<code>Proxy</code> handlers, you can cleanly intercept, log, or mutate
+method execution without degrading the target instance to
+<code>any</code> or breaking <code>this</code> context bindings.</p>
+<h3 id="the-challenge-with-standard-proxies">The Challenge with Standard
+Proxies</h3>
+<p>By default, wrapping an object with
+<code>new Proxy(target, handler)</code> returns the original type
+<code>T</code>, but TypeScript's built-in type definitions do not
+validate dynamic modifications made inside proxy traps. When
+intercepting method invocations via the <code>get</code> trap, returning
+a modified function often introduces type discrepancies, loses generic
+method constraints, or breaks method context if <code>this</code> is
+unbound.</p>
+<p>To solve this, the proxy factory must enforce two guarantees:</p>
+<ol type="1">
+<li>The return type must exactly mirror the target's interface
+<code>T</code>.</li>
+<li>The interception logic must be strongly typed against the target's
+callable keys.</li>
+</ol>
+<h3 id="defining-the-method-interceptor-types">Defining the Method
+Interceptor Types</h3>
+<p>First, create utility types to extract only method keys from a given
+object and specify the signature of the interceptor callback:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MethodNames<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K] <span class="kw">extends</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> <span class="dt">any</span> <span class="op">?</span> K <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}[<span class="kw">keyof</span> T]<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MethodArgs<span class="op">&lt;</span>T<span class="op">,</span> K <span class="kw">extends</span> MethodNames<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="op">=</span> T[K] <span class="kw">extends</span> (<span class="op">...</span>args<span class="op">:</span> <span class="kw">infer</span> A) <span class="kw">=&gt;</span> <span class="dt">any</span> <span class="op">?</span> A <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MethodReturn<span class="op">&lt;</span>T<span class="op">,</span> K <span class="kw">extends</span> MethodNames<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span> <span class="op">=</span> T[K] <span class="kw">extends</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> <span class="kw">infer</span> R <span class="op">?</span> R <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> MethodInterceptor<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">&gt;</span> <span class="op">=</span> <span class="op">&lt;</span>K <span class="kw">extends</span> MethodNames<span class="op">&lt;</span>T<span class="op">&gt;&gt;</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  methodName<span class="op">:</span> K<span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  originalMethod<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> MethodArgs<span class="op">&lt;</span>T<span class="op">,</span> K<span class="op">&gt;</span>) <span class="kw">=&gt;</span> MethodReturn<span class="op">&lt;</span>T<span class="op">,</span> K<span class="op">&gt;,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  args<span class="op">:</span> MethodArgs<span class="op">&lt;</span>T<span class="op">,</span> K<span class="op">&gt;,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> T</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>) <span class="kw">=&gt;</span> MethodReturn<span class="op">&lt;</span>T<span class="op">,</span> K<span class="op">&gt;;</span></span></code></pre></div>
+<ul>
+<li><code>MethodNames&lt;T&gt;</code> filters out non-function
+properties from <code>T</code>.</li>
+<li><code>MethodArgs&lt;T, K&gt;</code> and
+<code>MethodReturn&lt;T, K&gt;</code> preserve the precise arguments and
+return types for each respective method.</li>
+<li><code>MethodInterceptor&lt;T&gt;</code> ensures that the
+interception hook receives the correct arguments and returns the
+expected type for the intercepted method.</li>
+</ul>
+<h3 id="implementing-the-typed-proxy-factory">Implementing the Typed
+Proxy Factory</h3>
+<p>With the types in place, implement the proxy wrapper function. The
+<code>get</code> trap identifies whether the requested property is a
+function. If it is, the trap returns a wrapped function that routes
+execution through the typed interceptor while maintaining correct
+<code>this</code> binding:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">createMethodProxy</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">&gt;</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  interceptor<span class="op">:</span> MethodInterceptor<span class="op">&lt;</span>T<span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> T {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Proxy</span>(target<span class="op">,</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">get</span>(obj<span class="op">,</span> prop<span class="op">,</span> receiver) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> originalValue <span class="op">=</span> <span class="bu">Reflect</span><span class="op">.</span><span class="fu">get</span>(obj<span class="op">,</span> prop<span class="op">,</span> receiver)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="kw">typeof</span> originalValue <span class="op">===</span> <span class="st">&#39;function&#39;</span>) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> methodName <span class="op">=</span> prop <span class="im">as</span> MethodNames<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>          <span class="kw">const</span> boundMethod <span class="op">=</span> originalValue<span class="op">.</span><span class="fu">bind</span>(obj)<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>          <span class="cf">return</span> <span class="fu">interceptor</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            methodName<span class="op">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            boundMethod<span class="op">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            args <span class="im">as</span> MethodArgs<span class="op">&lt;</span>T<span class="op">,</span> <span class="kw">typeof</span> methodName<span class="op">&gt;,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            obj</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>          )<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        }<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> originalValue<span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Using <code>Reflect.get(obj, prop, receiver)</code> ensures inherited
+properties and getters on the prototype chain resolve correctly. Calling
+<code>originalValue.bind(obj)</code> guarantees that internal references
+to <code>this</code> inside class methods remain bound to the actual
+target instance rather than the proxy handler.</p>
+<h3 id="practical-usage-example">Practical Usage Example</h3>
+<p>Consider a service class handling database operations:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserService {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">private</span> prefix<span class="op">:</span> <span class="dt">string</span>) {}</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">getUser</span>(id<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> { id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> name<span class="op">:</span> <span class="dt">string</span> } {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> { id<span class="op">,</span> name<span class="op">:</span> <span class="vs">`</span><span class="sc">${</span><span class="kw">this</span><span class="op">.</span><span class="at">prefix</span><span class="sc">}</span><span class="vs">_User_</span><span class="sc">${</span>id<span class="sc">}</span><span class="vs">`</span> }<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveUser</span>(user<span class="op">:</span> { id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> name<span class="op">:</span> <span class="dt">string</span> })<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> service <span class="op">=</span> <span class="kw">new</span> <span class="fu">UserService</span>(<span class="st">&quot;Prod&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> proxiedService <span class="op">=</span> <span class="fu">createMethodProxy</span>(service<span class="op">,</span> (methodName<span class="op">,</span> originalMethod<span class="op">,</span> args) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Executing </span><span class="sc">${</span><span class="bu">String</span>(methodName)<span class="sc">}</span><span class="vs"> with arguments:`</span><span class="op">,</span> args)<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> startTime <span class="op">=</span> <span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>()<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> result <span class="op">=</span> <span class="fu">originalMethod</span>(<span class="op">...</span>args)<span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> <span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>() <span class="op">-</span> startTime<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`</span><span class="sc">${</span><span class="bu">String</span>(methodName)<span class="sc">}</span><span class="vs"> completed in </span><span class="sc">${</span>duration<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">ms`</span>)<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="type-verification">Type Verification</h3>
+<p>When calling methods on <code>proxiedService</code>, full type safety
+is retained:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct call: Fully typed autocompletion, no type errors</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> proxiedService<span class="op">.</span><span class="fu">getUser</span>(<span class="dv">101</span>)<span class="op">;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript Error: Argument of type &#39;string&#39; is not assignable to parameter of type &#39;number&#39;.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>proxiedService<span class="op">.</span><span class="fu">getUser</span>(<span class="st">&quot;invalid_id&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Return type is recognized as { id: number; name: string }</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">name</span>)<span class="op">;</span></span></code></pre></div>
+<p>This pattern preserves all method signatures, parameter validations,
+and return values without requiring manual type assertions at call
+sites.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-safe-proxy-method-interception-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

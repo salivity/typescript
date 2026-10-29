@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript allowArbitraryExtensions in Bundling Pipelines - typescript</title>
+    <meta name="description" content="The allowArbitraryExtensions compiler option, introduced in TypeScript 5.0, enables TypeScript to type-check imports of non-JavaScript and non-TypeScript assets—such as CSS, SVG, WebAssembly, and HTML files—without sacrificing strict per-file type safety.">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-allow-arbitrary-extensions-in-bundling-pipelines">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript allowArbitraryExtensions in Bundling Pipelines - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-allow-arbitrary-extensions-in-bundling-pipelines" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The allowArbitraryExtensions compiler option, introduced in TypeScript 5.0, enables TypeScript to type-check imports of non-JavaScript and non-TypeScript assets—such as CSS, SVG, WebAssembly, and HTML files—without sacrificing strict per-file type safety." />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-allowarbitraryextensions-in-bundling-pipelines">TypeScript
+allowArbitraryExtensions in Bundling Pipelines</h1>
+<p>The <code>allowArbitraryExtensions</code> compiler option, introduced
+in TypeScript 5.0, enables TypeScript to type-check imports of
+non-JavaScript and non-TypeScript assets—such as CSS, SVG, WebAssembly,
+and HTML files—without sacrificing strict per-file type safety. When
+modern bundling pipelines like Vite, Webpack, or esbuild handle these
+assets at build time, <code>allowArbitraryExtensions</code> allows
+developers to provide dedicated, file-specific declaration files for
+every imported asset instead of relying on generic ambient
+definitions.</p>
+<h3 id="the-bundler-asset-import-problem">The Bundler Asset Import
+Problem</h3>
+<p>Modern bundlers allow JavaScript and TypeScript files to import
+non-script assets directly:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> styles <span class="im">from</span> <span class="st">&quot;./Button.module.css&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> icon <span class="im">from</span> <span class="st">&quot;./logo.svg&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>Historically, TypeScript did not recognize arbitrary file extensions
+as import specifiers. To silence compiler errors, developers typically
+defined global wildcard declarations:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&quot;*.module.css&quot;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> classes<span class="op">:</span> { [key<span class="op">:</span> <span class="dt">string</span>]<span class="op">:</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> classes<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>While this prevents compiler errors, it introduces significant
+drawbacks. Wildcard ambient declarations cannot provide specific typings
+for individual files. A typo in a CSS class name like
+<code>styles.btnPrmary</code> passes compilation, even if
+<code>Button.module.css</code> does not contain that class.</p>
+<h3 id="how-allowarbitraryextensions-solves-the-problem">How
+allowArbitraryExtensions Solves the Problem</h3>
+<p>When <code>"allowArbitraryExtensions": true</code> is enabled in
+<code>tsconfig.json</code>, TypeScript changes how it resolves imports
+containing non-standard file extensions.</p>
+<p>Instead of rejecting the file extension or matching it exclusively
+against a generic wildcard declaration, the compiler looks for a
+declaration file that appends <code>.d.&lt;extension&gt;.ts</code> to
+the base filename.</p>
+<p>For example, when resolving:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> styles <span class="im">from</span> <span class="st">&quot;./Button.module.css&quot;</span><span class="op">;</span></span></code></pre></div>
+<p>TypeScript searches for a corresponding declaration file located
+at:</p>
+<pre class="text"><code>./Button.module.d.css.ts</code></pre>
+<p>Inside <code>Button.module.d.css.ts</code>, you can provide exact
+typings for that specific file:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">const</span> styles<span class="op">:</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  btnPrimary<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  btnSecondary<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> styles<span class="op">;</span></span></code></pre></div>
+<p>If you attempt to access an undefined class name, TypeScript flags it
+as a compile-time error.</p>
+<h3 id="integration-with-build-and-bundling-tools">Integration with
+Build and Bundling Tools</h3>
+<p>The <code>allowArbitraryExtensions</code> flag directly complements
+the automated generation tools often embedded in bundler pipelines.</p>
+<ol type="1">
+<li><strong>Automated Typings for Assets</strong>: Tools like
+<code>typed-css-modules</code> or custom build plugins can watch asset
+files (like CSS Modules, GraphQL queries, or translation JSON) and
+automatically generate their corresponding
+<code>.d.&lt;ext&gt;.ts</code> declaration files next to them.</li>
+<li><strong>Bundler Resolution Compatibility</strong>: This option is
+typically paired with <code>"moduleResolution": "bundler"</code> (or
+<code>"node16"</code>/<code>"nodenext"</code>). It informs TypeScript
+that an external tool will handle the final bundling and module
+execution, while TypeScript's sole responsibility is checking the
+types.</li>
+<li><strong>No Emit Obligation</strong>: TypeScript does not attempt to
+compile or emit code for files with arbitrary extensions. It only checks
+the usage against the <code>.d.&lt;ext&gt;.ts</code> definition,
+delegating asset transformation and bundling entirely to the
+bundler.</li>
+</ol>
+<h3 id="configuration-requirements">Configuration Requirements</h3>
+<p>To use arbitrary extensions in a project, update the
+<code>tsconfig.json</code> compiler options:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;moduleResolution&quot;</span><span class="fu">:</span> <span class="st">&quot;bundler&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;allowArbitraryExtensions&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;noEmit&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>By bridging the gap between bundler-specific import syntax and strict
+static analysis, <code>allowArbitraryExtensions</code> gives bundling
+pipelines full type safety across heterogeneous file types.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-allow-arbitrary-extensions-in-bundling-pipelines';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
