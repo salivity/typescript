@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Type Predicate Function Signatures - typescript</title>
+    <meta name="description" content="In TypeScript, a type predicate function is a custom type guard used to narrow down the type of an object within conditional blocks. Its return type takes the explicit form parameterName is Type, signaling to the compiler that if the function returns true">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-type-predicate-function-signatures">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Type Predicate Function Signatures - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-type-predicate-function-signatures" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, a type predicate function is a custom type guard used to narrow down the type of an object within conditional blocks. Its return type takes the explicit form parameterName is Type, signaling to the compiler that if the function returns true" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-type-predicate-function-signatures">TypeScript Type
+Predicate Function Signatures</h1>
+<p>In TypeScript, a type predicate function is a custom type guard used
+to narrow down the type of an object within conditional blocks. Its
+return type takes the explicit form <code>parameterName is Type</code>,
+signaling to the compiler that if the function returns
+<code>true</code>, the tested variable matches the specified type. This
+article breaks down the exact syntax, structural rules, and practical
+implementation of type predicate function signatures in TypeScript.</p>
+<h3 id="the-basic-function-signature">The Basic Function Signature</h3>
+<p>The signature of a type predicate function mirrors a standard
+boolean-returning function, with the exception of the return type
+annotation. Instead of returning <code>boolean</code>, the return type
+is written as <code>parameterName is TargetType</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">isFish</span>(pet<span class="op">:</span> Fish <span class="op">|</span> Bird)<span class="op">:</span> pet <span class="kw">is</span> Fish {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (pet <span class="im">as</span> Fish)<span class="op">.</span><span class="at">swim</span> <span class="op">!==</span> <span class="kw">undefined</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In this signature:</p>
+<ul>
+<li><code>pet</code> is the name of the parameter being evaluated.</li>
+<li><code>pet is Fish</code> is the type predicate.</li>
+<li>The function must return a standard runtime boolean
+(<code>true</code> or <code>false</code>).</li>
+</ul>
+<h3 id="core-rules-for-the-signature">Core Rules for the Signature</h3>
+<p>To construct a valid type predicate signature in TypeScript, three
+core conditions must be met:</p>
+<ol type="1">
+<li><strong>Parameter Reference</strong>: The identifier on the left of
+<code>is</code> must match the exact name of a parameter declared in the
+function's parameter list.</li>
+<li><strong>Target Type</strong>: The type on the right of
+<code>is</code> must be a valid TypeScript type (an interface, union,
+primitive, or class).</li>
+<li><strong>Boolean Return</strong>: The runtime body of the function
+must return a boolean expression. If it returns <code>true</code>,
+TypeScript narrows the parameter to the specified type in the calling
+scope; if <code>false</code>, it narrows it to the remaining alternative
+types.</li>
+</ol>
+<h3 id="alternative-function-forms">Alternative Function Forms</h3>
+<p>Type predicates can also be defined using arrow functions, interface
+method signatures, and class methods.</p>
+<h4 id="arrow-functions">Arrow Functions</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> isString <span class="op">=</span> (value<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> value <span class="kw">is</span> <span class="dt">string</span> <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">typeof</span> value <span class="op">===</span> <span class="st">&quot;string&quot;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h4 id="interfaces-and-type-aliases">Interfaces and Type Aliases</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TypeGuard<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> (value<span class="op">:</span> <span class="dt">unknown</span>) <span class="kw">=&gt;</span> value <span class="kw">is</span> T<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Validator {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">isValidUser</span>(input<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> input <span class="kw">is</span> User<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="class-methods">Class Methods</h4>
+<p>When checking instances within object-oriented patterns, classes can
+use <code>this is Type</code> as the predicate:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FileSystemNode {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">isFile</span>()<span class="op">:</span> <span class="kw">this</span> <span class="kw">is</span> FileNode {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">this</span> <span class="kw">instanceof</span> FileNode<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="compiler-behavior">Compiler Behavior</h3>
+<p>When a type predicate function is called within a conditional
+statement like an <code>if</code> block, TypeScript's control flow
+analysis automatically narrows the variable's type based on the
+result:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processValue</span>(val<span class="op">:</span> <span class="dt">unknown</span>) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">isString</span>(val)) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// &#39;val&#39; is strictly typed as &#39;string&#39; inside this block</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(val<span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// &#39;val&#39; remains &#39;unknown&#39; (or any remaining union types)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Using <code>value is Type</code> bridges runtime condition checks
+with static type safety, preventing unnecessary manual type assertions
+(<code>as Type</code>) across your codebase.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-type-predicate-function-signatures';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

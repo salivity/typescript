@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is SWC and How It Accelerates TypeScript - typescript</title>
+    <meta name="description" content="This article explores SWC (Speedy Web Compiler), a next-generation compilation tool built in Rust that transforms modern web development performance. You will learn what SWC is, why traditional TypeScript compilation creates workflow bottlenecks, and the">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-swc-and-how-it-accelerates-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is SWC and How It Accelerates TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-swc-and-how-it-accelerates-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores SWC (Speedy Web Compiler), a next-generation compilation tool built in Rust that transforms modern web development performance. You will learn what SWC is, why traditional TypeScript compilation creates workflow bottlenecks, and the" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-swc-and-how-it-accelerates-typescript">What Is SWC and
+How It Accelerates TypeScript</h1>
+<p>This article explores SWC (Speedy Web Compiler), a next-generation
+compilation tool built in Rust that transforms modern web development
+performance. You will learn what SWC is, why traditional TypeScript
+compilation creates workflow bottlenecks, and the core architectural
+mechanisms—including native execution, multithreading, and isolated type
+stripping—that allow SWC to compile TypeScript significantly faster than
+traditional tools.</p>
+<h2 id="what-is-swc">What Is SWC?</h2>
+<p>SWC stands for Speedy Web Compiler. It is an extensible, Rust-based
+platform designed for both compilation and bundling. In the modern web
+development ecosystem, it acts as a direct, high-performance alternative
+to tools like Babel and the TypeScript compiler (<code>tsc</code>).</p>
+<p>SWC can parse, transform, and output modern JavaScript and TypeScript
+into browser-compatible JavaScript. Today, it powers the compilation
+layer of major frameworks and tools, including Next.js, Parcel, and
+Deno.</p>
+<h2 id="the-traditional-typescript-bottleneck">The Traditional
+TypeScript Bottleneck</h2>
+<p>The standard TypeScript compiler (<code>tsc</code>) is written in
+JavaScript and executes on Node.js via the V8 engine. While this makes
+<code>tsc</code> highly portable, it introduces two primary performance
+limitations:</p>
+<ol type="1">
+<li><strong>V8 and Garbage Collection Overhead:</strong> As a high-level
+interpreted/JIT-compiled language, JavaScript incurs execution overhead
+and pauses for garbage collection during memory-heavy tasks.</li>
+<li><strong>Coupled Type Checking and Code Generation:</strong> By
+default, <code>tsc</code> analyzes your entire type graph to ensure type
+correctness before emitting code. As codebases scale to thousands of
+files, this coupled process significantly slows down continuous
+integration (CI) builds and local development reloads.</li>
+</ol>
+<h2 id="how-swc-accelerates-typescript-transpilation">How SWC
+Accelerates TypeScript Transpilation</h2>
+<p>SWC dramatically reduces compile times by rethinking how TypeScript
+is transformed into JavaScript. It achieves speeds up to 20 to 70 times
+faster than Babel or single-core <code>tsc</code> through several key
+mechanisms:</p>
+<h3 id="1-native-execution-via-rust">1. Native Execution via Rust</h3>
+<p>Because SWC is written in Rust, it compiles down to native machine
+code. It does not run on a virtual machine and has no garbage collector.
+Memory management is determined at compile time, leading to lower memory
+consumption, zero garbage collection interruptions, and predictable,
+near-instant execution.</p>
+<h3 id="2-built-in-multithreading">2. Built-in Multithreading</h3>
+<p>The official TypeScript compiler is predominantly single-threaded
+because JavaScript runs on a single event loop. SWC leverages Rust's
+fearless concurrency model. By using libraries like Rayon, SWC splits
+parsing, AST (Abstract Syntax Tree) transformation, and code generation
+across all available CPU cores. If a project contains hundreds of
+TypeScript files, SWC processes them concurrently.</p>
+<h3 id="3-decoupling-transpilation-from-type-checking">3. Decoupling
+Transpilation from Type Checking</h3>
+<p>SWC accelerates builds by treating TypeScript files as syntax rather
+than a semantic type graph. It removes types—a process called type
+stripping—and compiles modern syntax down to target ECMAScript standards
+without validating whether the types are logically correct.</p>
+<p>Because it does not build or resolve the type dependency tree,
+transpile operations become embarrassingly parallel and localized to
+single files. Developers run <code>tsc --noEmit</code> separately for
+type safety in CI pipelines or rely on their code editor's language
+server for real-time type feedback.</p>
+<h3 id="4-efficient-ast-transformations">4. Efficient AST
+Transformations</h3>
+<p>AST operations are the most computationally intensive phase of
+transpilation. SWC uses highly optimized data structures and parsers
+written specifically for speed. Generating, traversing, and mutating AST
+nodes in Rust incurs a fraction of the cache misses and heap allocations
+that occur when performing identical operations across JavaScript
+objects.</p>
+<h2 id="summary-of-benefits">Summary of Benefits</h2>
+<p>By replacing standard transpilers with SWC, development teams
+achieve:</p>
+<ul>
+<li><strong>Instant Hot Module Replacement (HMR):</strong> Local
+development servers reflect changes immediately, even in massive
+codebases.</li>
+<li><strong>Faster CI/CD Pipelines:</strong> Production build times drop
+from minutes to seconds.</li>
+<li><strong>Broad Ecosystem Compatibility:</strong> SWC integrates
+easily with Webpack, Jest, Vite, and Rollup, offering a drop-in speed
+improvement with minimal configuration.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-swc-and-how-it-accelerates-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

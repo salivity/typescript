@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 3 Decorators vs TypeScript Experimental Decorators - typescript</title>
+    <meta name="description" content="JavaScript decorators have evolved from a legacy TypeScript-specific implementation into an official ECMAScript standard currently at Stage 3. While both versions allow developers to annotate and modify classes and their members, modern Stage 3 decorators">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/stage-3-decorators-vs-type-script-experimental-decorators">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stage 3 Decorators vs TypeScript Experimental Decorators - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/stage-3-decorators-vs-type-script-experimental-decorators" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="JavaScript decorators have evolved from a legacy TypeScript-specific implementation into an official ECMAScript standard currently at Stage 3. While both versions allow developers to annotate and modify classes and their members, modern Stage 3 decorators" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="stage-3-decorators-vs-typescript-experimental-decorators">Stage
+3 Decorators vs TypeScript Experimental Decorators</h1>
+<p>JavaScript decorators have evolved from a legacy TypeScript-specific
+implementation into an official ECMAScript standard currently at Stage
+3. While both versions allow developers to annotate and modify classes
+and their members, modern Stage 3 decorators introduce a completely
+redesigned API, replace property descriptors with a dedicated context
+object, alter how return values manipulate targets, and drop native
+support for parameter decorators while adding native support for private
+class elements.</p>
+<h3 id="the-decorator-signature-and-context-object">The Decorator
+Signature and Context Object</h3>
+<p>The most fundamental structural difference lies in the arguments
+passed to the decorator functions.</p>
+<p><strong>Experimental Decorators:</strong> In the legacy
+implementation (enabled via
+<code>"experimentalDecorators": true</code>), the signature varied
+heavily based on the target member:</p>
+<ul>
+<li><strong>Classes:</strong> Received the constructor function
+<code>(target)</code>.</li>
+<li><strong>Methods and Accessors:</strong> Received
+<code>(target, propertyKey, descriptor)</code>.</li>
+<li><strong>Fields:</strong> Received
+<code>(target, propertyKey)</code>.</li>
+<li><strong>Parameters:</strong> Received
+<code>(target, propertyKey, parameterIndex)</code>.</li>
+</ul>
+<p>Legacy decorators relied heavily on mutating the target prototype or
+modifying the provided <code>PropertyDescriptor</code>.</p>
+<p><strong>Stage 3 Decorators:</strong> Modern decorators standardize
+the function signature across all member types to exactly two
+parameters: <code>(value, context)</code>.</p>
+<ul>
+<li><code>value</code>: The element being decorated (e.g., the method,
+class, getter, setter, or <code>undefined</code> for fields).</li>
+<li><code>context</code>: A standardized <code>DecoratorContext</code>
+object providing metadata about the target:
+<ul>
+<li><code>kind</code>: Specifies the type of decorated member
+(<code>"class"</code>, <code>"method"</code>, <code>"getter"</code>,
+<code>"setter"</code>, <code>"field"</code>, or
+<code>"accessor"</code>).</li>
+<li><code>name</code>: The name of the member (string, symbol, or
+private identifier).</li>
+<li><code>static</code>: Boolean indicating whether the member is
+static.</li>
+<li><code>private</code>: Boolean indicating whether the member is a
+private class element (e.g., <code>#myField</code>).</li>
+<li><code>access</code>: An object with <code>get</code> and
+<code>set</code> methods to dynamically read or assign the value.</li>
+<li><code>addInitializer</code>: A hook to schedule initialization logic
+relative to class creation or instance construction.</li>
+</ul></li>
+</ul>
+<h3 id="return-values-and-target-transformation">Return Values and
+Target Transformation</h3>
+<p>Legacy and modern decorators fundamentally differ in how they apply
+changes back to the class.</p>
+<ul>
+<li><strong>Experimental:</strong> Method and accessor decorators
+modified the member by returning a modified
+<code>PropertyDescriptor</code>. Class decorators returned a new
+constructor class or sub-class.</li>
+<li><strong>Stage 3:</strong> Decorators rarely interact with property
+descriptors directly. Instead, they transform targets by returning a new
+value of the same type:
+<ul>
+<li>A method decorator returns a new function that replaces the original
+method.</li>
+<li>A class decorator returns a new constructor function.</li>
+<li>A field decorator returns an initializer function:
+<code>(initialValue) =&gt; modifiedValue</code>. This allows modern
+decorators to manipulate field values at construction time, a capability
+that legacy field decorators lacked without hacky prototype
+definitions.</li>
+</ul></li>
+</ul>
+<h3 id="auto-accessor-decorators">Auto-Accessor Decorators</h3>
+<p>Stage 3 introduces a new class member syntax known as auto-accessors,
+written as:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Example {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  accessor value <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>An <code>accessor</code> keyword automatically generates a private
+backing storage field along with getter and setter pairs. Modern
+decorators can target accessors (<code>kind: "accessor"</code>),
+accepting an object with <code>{ get, set }</code> and returning an
+object overriding either access method or providing a custom
+initializer. Experimental decorators have no concept of
+auto-accessors.</p>
+<h3 id="parameter-decorators">Parameter Decorators</h3>
+<p>A major structural departure in Stage 3 is the removal of parameter
+decorators.</p>
+<ul>
+<li><strong>Experimental:</strong> Supported decorating individual
+parameters of methods or constructors, commonly used by dependency
+injection frameworks (e.g., <code>@Inject()</code>).</li>
+<li><strong>Stage 3:</strong> Does not include parameter decorators in
+the core specification. Parameter decoration has been split into a
+separate, future TC39 proposal.</li>
+</ul>
+<h3 id="private-identifiers-and-encapsulation">Private Identifiers and
+Encapsulation</h3>
+<p>Experimental decorators were designed before native private class
+fields (<code>#field</code>) were integrated into ECMAScript.
+Consequently, legacy decorators can only operate on public or
+TypeScript-level <code>private</code> properties (which compile to
+regular public properties).</p>
+<p>Stage 3 decorators natively support true ECMAScript private
+identifiers. The <code>context.private</code> boolean denotes whether an
+element is private, and the <code>context.access</code> functions allow
+the decorator to safely read and write to private fields without
+violating class encapsulation.</p>
+<h3 id="metadata-reflection">Metadata Reflection</h3>
+<ul>
+<li><strong>Experimental:</strong> Relied on the external
+<code>reflect-metadata</code> polyfill and the TypeScript compiler flag
+<code>"emitDecoratorMetadata": true</code> to infer and store type
+signatures at runtime.</li>
+<li><strong>Stage 3:</strong> The standard includes a built-in metadata
+proposal. The <code>DecoratorContext</code> contains a
+<code>metadata</code> property (a plain JavaScript object shared across
+all decorators in the class hierarchy), establishing a native platform
+standard for storing and retrieving runtime reflection data without
+external shims.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/stage-3-decorators-vs-type-script-experimental-decorators';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

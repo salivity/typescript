@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Void Return Type Discard-Value Semantic - typescript</title>
+    <meta name="description" content="This article explains the discard-value semantic of the void return type in TypeScript, detailing how and why TypeScript allows functions that return values to satisfy void-returning callback types. You will learn the mechanical differences between declar">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-void-return-type-discard-value-semantic">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Void Return Type Discard-Value Semantic - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-void-return-type-discard-value-semantic" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the discard-value semantic of the void return type in TypeScript, detailing how and why TypeScript allows functions that return values to satisfy void-returning callback types. You will learn the mechanical differences between declar" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-void-return-type-discard-value-semantic">TypeScript
+Void Return Type Discard-Value Semantic</h1>
+<p>This article explains the discard-value semantic of the
+<code>void</code> return type in TypeScript, detailing how and why
+TypeScript allows functions that return values to satisfy void-returning
+callback types. You will learn the mechanical differences between
+declaring a function directly with a <code>void</code> return type
+versus using a <code>void</code> return type in callback signatures, how
+this behavior facilitates idiomatic JavaScript patterns, and how it
+contrasts with the strict <code>undefined</code> return type.</p>
+<h2 id="what-is-the-discard-value-semantic">What is the Discard-Value
+Semantic?</h2>
+<p>In TypeScript, when a function type specifies a return type of
+<code>void</code> (such as <code>() =&gt; void</code>), it indicates
+that the caller will not inspect or rely on the return value of that
+function. This is known as the <strong>discard-value semantic</strong>.
+It does not mean the function <em>must</em> return
+<code>undefined</code>; rather, it signifies that whatever value the
+function returns will be ignored and treated as unusable by the
+caller.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VoidCallback <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: The function returns a number, but the caller discards it</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> runCallback<span class="op">:</span> VoidCallback <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="dv">42</span><span class="op">;</span> </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;void&#39; is not assignable to type &#39;number&#39;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript prevents the caller from using the returned value</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="fu">runCallback</span>()<span class="op">;</span> </span></code></pre></div>
+<h2 id="function-declarations-vs-callback-types">Function Declarations
+vs. Callback Types</h2>
+<p>The discard-value semantic applies strictly to context-dependent
+function types, such as callback signatures or interface method
+declarations. It behaves differently when directly annotating a literal
+function declaration.</p>
+<h3 id="literal-function-declarations">Literal Function
+Declarations</h3>
+<p>When a function declaration or expression is explicitly annotated
+with a <code>: void</code> return type at its definition site,
+TypeScript enforces that it must not return a value (other than
+<code>undefined</code> or an empty <code>return</code> statement).</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;number&#39; is not assignable to type &#39;void&#39;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">directFunction</span>()<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="contextual-and-callback-signatures">Contextual and Callback
+Signatures</h3>
+<p>When <code>void</code> appears in a function type definition, any
+function returning any type can be assigned to it:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Processor {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  process<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> p<span class="op">:</span> Processor <span class="op">=</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Completely valid despite returning a boolean</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  process<span class="op">:</span> () <span class="kw">=&gt;</span> <span class="kw">true</span><span class="op">,</span> </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h2 id="why-typescript-uses-discard-value-semantics">Why TypeScript Uses
+Discard-Value Semantics</h2>
+<p>This design choice allows TypeScript to remain compatible with
+standard JavaScript idioms, particularly high-order array methods and
+event handling.</p>
+<p>Consider <code>Array.prototype.forEach</code>. The TypeScript
+definition for <code>forEach</code> expects a callback returning
+<code>void</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">forEach</span>(callbackfn<span class="op">:</span> (value<span class="op">:</span> T<span class="op">,</span> index<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> array<span class="op">:</span> T[]) <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">,</span> thisArg<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span></code></pre></div>
+<p>In JavaScript, it is common to use shorthand arrow functions with
+methods that happen to return a value:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numbers <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> targetArray<span class="op">:</span> <span class="dt">number</span>[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Array.prototype.push returns the new length of the array (a number)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>numbers<span class="op">.</span><span class="fu">forEach</span>(num <span class="kw">=&gt;</span> targetArray<span class="op">.</span><span class="fu">push</span>(num))<span class="op">;</span></span></code></pre></div>
+<p>If <code>void</code> meant "must return nothing," the code above
+would produce a type error because <code>targetArray.push()</code>
+returns a <code>number</code>. Because <code>() =&gt; void</code> uses
+discard-value semantics, TypeScript permits this code while still
+ensuring that nothing inside <code>forEach</code> attempts to use the
+value returned by <code>push</code>.</p>
+<h2 id="difference-between-void-and-undefined">Difference Between
+<code>void</code> and <code>undefined</code></h2>
+<p>If you genuinely want to restrict a callback to returning nothing or
+specifically <code>undefined</code>, you must explicitly annotate the
+return type as <code>undefined</code> rather than <code>void</code>.</p>
+<ul>
+<li><strong><code>() =&gt; void</code></strong>: Accepts a function
+returning <em>any</em> type, but marks the resulting value as
+unobservable (<code>void</code>).</li>
+<li><strong><code>() =&gt; undefined</code></strong>: Strictly requires
+that the function returns literal <code>undefined</code> or executes a
+bare <code>return</code>.</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> StrictCallback <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dt">undefined</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;number&#39; is not assignable to type &#39;undefined&#39;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> invalid<span class="op">:</span> StrictCallback <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="dv">42</span><span class="op">;</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> valid<span class="op">:</span> StrictCallback <span class="op">=</span> () <span class="kw">=&gt;</span> <span class="kw">undefined</span><span class="op">;</span></span></code></pre></div>
+<p>Understanding this semantic prevents confusion when functions
+returning concrete data seamlessly satisfy interfaces and callbacks
+typed with <code>void</code>.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-void-return-type-discard-value-semantic';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Never Type and Dead Code Branches - typescript</title>
+    <meta name="description" content="The never type in TypeScript represents values that can never occur, serving as the foundational mechanism for identifying unreachable code and ensuring exhaustive type checking. By leveraging control flow analysis, TypeScript automatically narrows types">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-never-type-and-dead-code-branches">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Never Type and Dead Code Branches - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-never-type-and-dead-code-branches" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The never type in TypeScript represents values that can never occur, serving as the foundational mechanism for identifying unreachable code and ensuring exhaustive type checking. By leveraging control flow analysis, TypeScript automatically narrows types" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-never-type-and-dead-code-branches">TypeScript Never
+Type and Dead Code Branches</h1>
+<p>The <code>never</code> type in TypeScript represents values that can
+never occur, serving as the foundational mechanism for identifying
+unreachable code and ensuring exhaustive type checking. By leveraging
+control flow analysis, TypeScript automatically narrows types through
+conditional blocks; when all possible variants of a type have been
+accounted for, any remaining code paths are assigned the
+<code>never</code> type. This article explores how the compiler uses
+<code>never</code> to detect dead code branches, enforce exhaustiveness,
+and prevent runtime errors before code reaches production.</p>
+<h3 id="the-role-of-the-bottom-type">The Role of the Bottom Type</h3>
+<p>In type theory, <code>never</code> is the bottom type, meaning it is
+a subtype of every other type, but no type is a subtype of
+<code>never</code> (except <code>never</code> itself). Consequently, no
+runtime value can satisfy a variable of type <code>never</code>.
+Functions that never return—such as those containing infinite loops or
+functions that unconditionally throw exceptions—have a return type of
+<code>never</code>.</p>
+<p>When analyzing control flow, TypeScript applies this concept to
+identify execution paths that cannot logically execute under normal
+conditions.</p>
+<h3 id="type-narrowing-and-dead-code-identification">Type Narrowing and
+Dead Code Identification</h3>
+<p>TypeScript uses control flow analysis to narrow variable types
+sequentially through conditionals, such as <code>if</code>,
+<code>else</code>, and <code>switch</code> statements. When a union type
+is completely exhausted across these conditions, the compiler narrows
+the variable in the final unreachable branch down to
+<code>never</code>.</p>
+<p>Consider the following example:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Status <span class="op">=</span> <span class="st">&quot;success&quot;</span> <span class="op">|</span> <span class="st">&quot;failure&quot;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleStatus</span>(status<span class="op">:</span> Status) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (status <span class="op">===</span> <span class="st">&quot;success&quot;</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// status is narrowed to &quot;success&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;Operation succeeded&quot;</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (status <span class="op">===</span> <span class="st">&quot;failure&quot;</span>) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// status is narrowed to &quot;failure&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;Operation failed&quot;</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// status is narrowed to never</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> status<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the <code>else</code> block, all valid states of
+<code>status</code> have been checked. Because there are no remaining
+valid values, TypeScript assigns <code>never</code> to
+<code>status</code>. If a developer writes logic inside this block, the
+compiler treats it as dead code because the branch cannot be reached
+given the defined types.</p>
+<h3 id="exhaustive-type-checking">Exhaustive Type Checking</h3>
+<p>The most common practical application of <code>never</code>
+representing dead branches is exhaustive checking in pattern matching.
+Developers can intentionally assign a narrowed variable to a
+<code>never</code>-typed variable in a fallback branch. If a new member
+is later added to the union type without updating the conditional
+branches, the fallback branch stops being dead code, causing a
+compile-time error.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Shape <span class="op">=</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;circle&quot;</span><span class="op">;</span> radius<span class="op">:</span> <span class="dt">number</span> }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { kind<span class="op">:</span> <span class="st">&quot;square&quot;</span><span class="op">;</span> side<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getArea</span>(shape<span class="op">:</span> Shape)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (shape<span class="op">.</span><span class="at">kind</span>) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;circle&quot;</span><span class="op">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">radius</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;square&quot;</span><span class="op">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> shape<span class="op">.</span><span class="at">side</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="co">// If all branches are handled, shape is of type never</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> _exhaustiveCheck<span class="op">:</span> <span class="dt">never</span> <span class="op">=</span> shape<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> _exhaustiveCheck<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If a new variant, such as
+<code>{ kind: "triangle"; base: number; height: number }</code>, is
+added to the <code>Shape</code> union, <code>shape</code> in the
+<code>default</code> block ceases to be dead code. Its type becomes
+<code>triangle</code> instead of <code>never</code>. Because a variable
+of type <code>triangle</code> cannot be assigned to type
+<code>never</code>, TypeScript immediately raises a type error, alerting
+the developer to handle the missing case.</p>
+<h3 id="compiler-level-dead-code-elimination">Compiler-Level Dead Code
+Elimination</h3>
+<p>When TypeScript's <code>allowUnreachableCode</code> compiler option
+is set to <code>false</code>, the compiler directly flags statements
+following <code>never</code> results or within <code>never</code>
+branches as errors. This integration ensures that dead code resulting
+from impossible conditions or unhandled states is highlighted
+immediately during compilation, preventing dead or misleading logic from
+persisting in the codebase.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-never-type-and-dead-code-branches';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

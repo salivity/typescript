@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Type Guard for Record of Specific Types - typescript</title>
+    <meta name="description" content="Validating unknown runtime data into a strongly-typed dictionary is a common challenge in TypeScript development. This article demonstrates how to create a reusable custom type guard to verify that an unknown value is a valid Record&lt;K, V&gt; with specific ke">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-type-guard-for-record-of-specific-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Type Guard for Record of Specific Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-type-guard-for-record-of-specific-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Validating unknown runtime data into a strongly-typed dictionary is a common challenge in TypeScript development. This article demonstrates how to create a reusable custom type guard to verify that an unknown value is a valid Record&lt;K, V&gt; with specific ke" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-type-guard-for-record-of-specific-types">TypeScript
+Type Guard for Record of Specific Types</h1>
+<p>Validating unknown runtime data into a strongly-typed dictionary is a
+common challenge in TypeScript development. This article demonstrates
+how to create a reusable custom type guard to verify that an
+<code>unknown</code> value is a valid <code>Record&lt;K, V&gt;</code>
+with specific key and value types, ensuring safe access without relying
+on unsafe type assertions.</p>
+<h2 id="the-challenge">The Challenge</h2>
+<p>In TypeScript, <code>Record&lt;K, V&gt;</code> defines an object
+where property keys are of type <code>K</code> and property values are
+of type <code>V</code>. Because TypeScript types are erased at compile
+time, runtime verification is necessary when consuming data from
+external sources like APIs or configuration files. An incoming
+<code>unknown</code> value might be <code>null</code>, an array, a
+primitive, or an object containing invalid value types.</p>
+<h2 id="implementing-the-type-guard">Implementing the Type Guard</h2>
+<p>To reliably identify a record, you must verify three things at
+runtime:</p>
+<ol type="1">
+<li>The value is a non-null object and not an array.</li>
+<li>Every key meets your key constraint (if validating specific
+keys).</li>
+<li>Every corresponding value satisfies your value constraint.</li>
+</ol>
+<p>Here is a generic, reusable type guard implementation:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">function</span> <span class="fu">isRecord</span><span class="op">&lt;</span>K <span class="kw">extends</span> PropertyKey<span class="op">,</span> V<span class="op">&gt;</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> <span class="dt">unknown</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  isValidValue<span class="op">:</span> (v<span class="op">:</span> <span class="dt">unknown</span>) <span class="kw">=&gt;</span> v <span class="kw">is</span> V<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  isValidKey<span class="op">?:</span> (k<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> k <span class="kw">is</span> K <span class="op">&amp;</span> <span class="dt">string</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> value <span class="kw">is</span> <span class="bu">Record</span><span class="op">&lt;</span>K<span class="op">,</span> V<span class="op">&gt;</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Verify the target is a non-null, non-array object</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">typeof</span> value <span class="op">!==</span> <span class="st">&quot;object&quot;</span> <span class="op">||</span> value <span class="op">===</span> <span class="kw">null</span> <span class="op">||</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(value)) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. Iterate through all enumerable string keys</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">const</span> [key<span class="op">,</span> val] <span class="kw">of</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">entries</span>(value)) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate key if a key guard is provided</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (isValidKey <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu">isValidKey</span>(key)) {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate value using the provided value guard</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span><span class="fu">isValidValue</span>(val)) {</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="example-usage">Example Usage</h2>
+<h3 id="1-validating-a-record-of-primitive-values">1. Validating a
+Record of Primitive Values</h3>
+<p>To check if an unknown input is a
+<code>Record&lt;string, number&gt;</code> (such as an inventory
+counter):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> isNumber <span class="op">=</span> (val<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> val <span class="kw">is</span> <span class="dt">number</span> <span class="kw">=&gt;</span> <span class="kw">typeof</span> val <span class="op">===</span> <span class="st">&quot;number&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> data<span class="op">:</span> <span class="dt">unknown</span> <span class="op">=</span> { apples<span class="op">:</span> <span class="dv">5</span><span class="op">,</span> oranges<span class="op">:</span> <span class="dv">10</span> }<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">isRecord</span>(data<span class="op">,</span> isNumber)) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// data is typed as Record&lt;PropertyKey, number&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(data<span class="op">.</span><span class="at">apples</span><span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>))<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="2-validating-a-record-of-complex-objects">2. Validating a Record
+of Complex Objects</h3>
+<p>You can compose the <code>isRecord</code> guard with custom type
+guards for more complex data structures:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  active<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">isUserProfile</span>(val<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> val <span class="kw">is</span> UserProfile {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> (</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> val <span class="op">===</span> <span class="st">&quot;object&quot;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    val <span class="op">!==</span> <span class="kw">null</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> (val <span class="im">as</span> UserProfile)<span class="op">.</span><span class="at">id</span> <span class="op">===</span> <span class="st">&quot;string&quot;</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typeof</span> (val <span class="im">as</span> UserProfile)<span class="op">.</span><span class="at">active</span> <span class="op">===</span> <span class="st">&quot;boolean&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> input<span class="op">:</span> <span class="dt">unknown</span> <span class="op">=</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">parse</span>(<span class="st">&#39;{&quot;admin&quot;: {&quot;id&quot;: &quot;1&quot;, &quot;active&quot;: true}}&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">isRecord</span>(input<span class="op">,</span> isUserProfile)) {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// input is typed as Record&lt;PropertyKey, UserProfile&gt;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(input[<span class="st">&quot;admin&quot;</span>]<span class="op">.</span><span class="at">active</span>)<span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-validating-specific-keys">3. Validating Specific Keys</h3>
+<p>If keys must match a specific union rather than arbitrary strings,
+provide the optional key validator:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SupportedLanguage <span class="op">=</span> <span class="st">&quot;en&quot;</span> <span class="op">|</span> <span class="st">&quot;es&quot;</span> <span class="op">|</span> <span class="st">&quot;fr&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> isSupportedLanguage <span class="op">=</span> (k<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> k <span class="kw">is</span> SupportedLanguage <span class="kw">=&gt;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [<span class="st">&quot;en&quot;</span><span class="op">,</span> <span class="st">&quot;es&quot;</span><span class="op">,</span> <span class="st">&quot;fr&quot;</span>]<span class="op">.</span><span class="fu">includes</span>(k)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> translations<span class="op">:</span> <span class="dt">unknown</span> <span class="op">=</span> { en<span class="op">:</span> <span class="st">&quot;Hello&quot;</span><span class="op">,</span> es<span class="op">:</span> <span class="st">&quot;Hola&quot;</span> }<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">isRecord</span>(translations<span class="op">,</span> (v)<span class="op">:</span> v <span class="kw">is</span> <span class="dt">string</span> <span class="kw">=&gt;</span> <span class="kw">typeof</span> v <span class="op">===</span> <span class="st">&quot;string&quot;</span><span class="op">,</span> isSupportedLanguage)) {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// translations is typed as Record&lt;SupportedLanguage, string&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(translations<span class="op">.</span><span class="at">en</span><span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By passing modular predicate functions into <code>isRecord</code>,
+you establish a strict runtime boundary that allows the TypeScript
+compiler to narrow arbitrary values to verified
+<code>Record&lt;K, V&gt;</code> structures.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-type-guard-for-record-of-specific-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

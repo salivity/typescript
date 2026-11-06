@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enforce Even Length Tuples in TypeScript - typescript</title>
+    <meta name="description" content="This article explains how to restrict function parameters to tuples with an even number of elements using TypeScript&#39;s type system. By leveraging recursive conditional types, you can inspect the length of a tuple at compile time and cause a type error whe">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/enforce-even-length-tuples-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Enforce Even Length Tuples in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/enforce-even-length-tuples-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to restrict function parameters to tuples with an even number of elements using TypeScript&#39;s type system. By leveraging recursive conditional types, you can inspect the length of a tuple at compile time and cause a type error whe" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="enforce-even-length-tuples-in-typescript">Enforce Even Length
+Tuples in TypeScript</h1>
+<p>This article explains how to restrict function parameters to tuples
+with an even number of elements using TypeScript's type system. By
+leveraging recursive conditional types, you can inspect the length of a
+tuple at compile time and cause a type error whenever an odd number of
+items is passed to a function.</p>
+<h2 id="creating-the-recursive-helper-type">Creating the Recursive
+Helper Type</h2>
+<p>TypeScript does not have a native mathematical operator to check for
+parity (modulo) on tuple lengths. However, you can achieve this by
+peeling off two elements at a time using recursive conditional types and
+rest tuples.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IsEven<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="kw">readonly</span> <span class="dt">unknown</span>[]<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> <span class="kw">readonly</span> []</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> <span class="kw">true</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> T <span class="kw">extends</span> <span class="kw">readonly</span> [<span class="dt">unknown</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Rest]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> IsEven<span class="op">&lt;</span>Rest<span class="op">&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div>
+<p>Here is how the evaluation works:</p>
+<ol type="1">
+<li>If the tuple is empty (<code>[]</code>), its length is
+<code>0</code>, which is even (<code>true</code>).</li>
+<li>If the tuple has at least two elements
+(<code>[unknown, unknown, ...infer Rest]</code>), TypeScript discards
+the pair and recurses on <code>Rest</code>.</li>
+<li>If an odd element remains and cannot form a pair, the second pattern
+fails to match, evaluating to <code>false</code>.</li>
+</ol>
+<h2 id="enforcing-the-constraint-in-a-function">Enforcing the Constraint
+in a Function</h2>
+<p>Once you have the helper type, apply it to a generic function
+parameter. If the tuple has an odd number of elements, you can resolve
+the parameter type to a descriptive error type or
+<code>never</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processEvenPairs</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="kw">readonly</span> <span class="dt">unknown</span>[]<span class="op">&gt;</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  items<span class="op">:</span> IsEven<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="kw">extends</span> <span class="kw">true</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> T </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> [errorMessage<span class="op">:</span> <span class="st">&quot;Tuple must contain an even number of elements&quot;</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> items<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="practical-usage-and-compiler-verification">Practical Usage and
+Compiler Verification</h2>
+<p>When calling this function, passing an array literal without
+assertions might infer a generic <code>number[]</code> or
+<code>string[]</code> type instead of a fixed tuple. To enforce the
+check, TypeScript needs tuple inference, which is typically provided by
+passing the arguments directly or using <code>as const</code>.</p>
+<h3 id="valid-function-calls">Valid Function Calls</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Passed as an empty tuple (0 items is even)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>([])<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Passed as a two-item tuple</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>([<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;a&quot;</span>])<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Passed as a four-item tuple</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>([<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>])<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// With `as const`</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> validReadonly <span class="op">=</span> [<span class="st">&quot;key1&quot;</span><span class="op">,</span> <span class="st">&quot;val1&quot;</span><span class="op">,</span> <span class="st">&quot;key2&quot;</span><span class="op">,</span> <span class="st">&quot;val2&quot;</span>] <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>(validReadonly)<span class="op">;</span></span></code></pre></div>
+<h3 id="invalid-function-calls">Invalid Function Calls</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;number&#39; is not assignable to type &#39;&quot;Tuple must contain an even number of elements&quot;&#39;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>([<span class="dv">1</span>])<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;number&#39; is not assignable to type &#39;&quot;Tuple must contain an even number of elements&quot;&#39;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>([<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>])<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Fails with read-only tuples of odd length</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> invalidReadonly <span class="op">=</span> [<span class="st">&quot;x&quot;</span><span class="op">,</span> <span class="st">&quot;y&quot;</span><span class="op">,</span> <span class="st">&quot;z&quot;</span>] <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">processEvenPairs</span>(invalidReadonly)<span class="op">;</span></span></code></pre></div>
+<h2
+id="alternate-approach-enforcing-pairs-with-variadic-tuples">Alternate
+Approach: Enforcing Pairs with Variadic Tuples</h2>
+<p>If your tuple consists of uniform data paired together, you can also
+define the parameter type by recursively constructing pairs directly
+instead of checking the validity afterwards:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> KeyValuePair<span class="op">&lt;</span>K <span class="op">=</span> <span class="dt">string</span><span class="op">,</span> V <span class="op">=</span> <span class="dt">unknown</span><span class="op">&gt;</span> <span class="op">=</span> [K<span class="op">,</span> V]<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EvenPairs<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> T <span class="kw">extends</span> [<span class="kw">infer</span> K<span class="op">,</span> <span class="kw">infer</span> V<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Rest]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">?</span> [K<span class="op">,</span> V<span class="op">,</span> <span class="op">...</span>EvenPairs<span class="op">&lt;</span>Rest<span class="op">&gt;</span>]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">:</span> []<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">pairValues</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">unknown</span>[]<span class="op">&gt;</span>(values<span class="op">:</span> EvenPairs<span class="op">&lt;</span>T<span class="op">&gt;</span>) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Implementation logic here</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> values<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This alternative forces the elements to strictly alternate or resolve
+explicitly to valid pairs during argument evaluation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/enforce-even-length-tuples-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

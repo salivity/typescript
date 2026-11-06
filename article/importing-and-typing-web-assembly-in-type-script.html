@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importing and Typing WebAssembly in TypeScript - typescript</title>
+    <meta name="description" content="Integrating WebAssembly (Wasm) into TypeScript requires bridging the gap between binary execution and static type checking. While WebAssembly executes compiled code from languages like Rust, C++, or AssemblyScript at near-native speeds, TypeScript needs s">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/importing-and-typing-web-assembly-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Importing and Typing WebAssembly in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/importing-and-typing-web-assembly-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating WebAssembly (Wasm) into TypeScript requires bridging the gap between binary execution and static type checking. While WebAssembly executes compiled code from languages like Rust, C++, or AssemblyScript at near-native speeds, TypeScript needs s" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="importing-and-typing-webassembly-in-typescript">Importing and
+Typing WebAssembly in TypeScript</h1>
+<p>Integrating WebAssembly (Wasm) into TypeScript requires bridging the
+gap between binary execution and static type checking. While WebAssembly
+executes compiled code from languages like Rust, C++, or AssemblyScript
+at near-native speeds, TypeScript needs structural definitions to
+validate function signatures, memory imports, and returned values. This
+article covers how to import Wasm binaries into TypeScript projects,
+generate ambient type declarations, configure modern bundlers, and use
+automated tooling for seamless type safety.</p>
+<h2 id="native-fetch-and-manual-type-definitions">Native Fetch and
+Manual Type Definitions</h2>
+<p>By default, the TypeScript compiler does not know the internal
+exports of a <code>.wasm</code> file. When using the standard
+WebAssembly JavaScript API, modules are loaded asynchronously, and their
+types must be explicitly defined using custom TypeScript interfaces.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Define the exports provided by your WebAssembly module</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> MathWasmExports {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add</span>(a<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  memory<span class="op">:</span> WebAssembly<span class="op">.</span><span class="at">Memory</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">loadWasm</span>(url<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>MathWasmExports<span class="op">&gt;</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(url)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { instance } <span class="op">=</span> <span class="cf">await</span> WebAssembly<span class="op">.</span><span class="fu">instantiateStreaming</span>(response)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Cast the exports to the typed interface</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> instance<span class="op">.</span><span class="at">exports</span> <span class="im">as</span> <span class="dt">unknown</span> <span class="im">as</span> MathWasmExports<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wasm <span class="op">=</span> <span class="cf">await</span> <span class="fu">loadWasm</span>(<span class="st">&#39;/math.wasm&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(wasm<span class="op">.</span><span class="fu">add</span>(<span class="dv">5</span><span class="op">,</span> <span class="dv">10</span>))<span class="op">;</span></span></code></pre></div>
+<h2 id="direct-imports-via-bundlers">Direct Imports via Bundlers</h2>
+<p>Modern bundlers like Webpack 5 and Vite allow importing
+<code>.wasm</code> files directly as ES modules. To make TypeScript
+recognize these imports without throwing compilation errors (such as
+<code>TS2307: Cannot find module</code>), you must declare ambient
+modules using a declaration file (e.g., <code>wasm.d.ts</code>).</p>
+<h3 id="generic-module-declaration">Generic Module Declaration</h3>
+<p>For basic setups where module exports are not identical across all
+files, you can declare a generic module pattern in your declarations
+directory:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// wasm.d.ts</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&quot;*.wasm&quot;</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> init<span class="op">:</span> (imports<span class="op">?:</span> WebAssembly<span class="op">.</span><span class="at">Imports</span>) <span class="kw">=&gt;</span> <span class="bu">Promise</span><span class="op">&lt;</span>WebAssembly<span class="op">.</span><span class="at">Instance</span><span class="op">&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="im">default</span> init<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="module-specific-declarations">Module-Specific Declarations</h3>
+<p>For precise type safety, declare the exact module path and export its
+specific function signatures:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// math-wasm.d.ts</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="im">module</span> <span class="st">&quot;*math.wasm&quot;</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">function</span> <span class="fu">add</span>(a<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="im">export</span> <span class="kw">function</span> <span class="fu">subtract</span>(a<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Once declared, you can import the Wasm module directly into your
+TypeScript code:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { add<span class="op">,</span> subtract } <span class="im">from</span> <span class="st">&quot;./math.wasm&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">add</span>(<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="automated-typing-with-wasm-pack-and-wasm-bindgen">Automated
+Typing with wasm-pack and wasm-bindgen</h2>
+<p>When compiling higher-level languages like Rust to WebAssembly,
+manual type declarations can become out of sync. Tools such as
+<code>wasm-pack</code> and <code>wasm-bindgen</code> automate this
+workflow by parsing the source code and automatically generating a
+JavaScript wrapper along with matching <code>.d.ts</code> definition
+files.</p>
+<ol type="1">
+<li><strong>Compilation</strong>: Running
+<code>wasm-pack build --target web</code> generates a <code>pkg/</code>
+directory containing:
+<ul>
+<li>The compiled <code>.wasm</code> binary.</li>
+<li>A <code>.js</code> JavaScript loader script.</li>
+<li>A <code>.d.ts</code> TypeScript definitions file mapping Rust
+structs and functions to TypeScript types.</li>
+</ul></li>
+<li><strong>Importing the Generated Package</strong>:</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> init<span class="op">,</span> { greet<span class="op">,</span> calculate_hash } <span class="im">from</span> <span class="st">&#39;./pkg/my_wasm_library&#39;</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">run</span>() {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Initialize the Wasm memory and instantiate the module</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">await</span> <span class="fu">init</span>()<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Full IDE autocompletion and type checking are now active</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">greet</span>(<span class="st">&quot;TypeScript Developer&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> hash<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="fu">calculate_hash</span>(<span class="kw">new</span> <span class="bu">Uint8Array</span>([<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]))<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">run</span>()<span class="op">;</span></span></code></pre></div>
+<h2 id="configuring-tsconfigjson">Configuring tsconfig.json</h2>
+<p>Ensure your <code>tsconfig.json</code> includes the declaration files
+by either placing them in the root source directory or explicitly
+referencing them in the <code>include</code> array:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES2022&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="st">&quot;ESNext&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;moduleResolution&quot;</span><span class="fu">:</span> <span class="st">&quot;bundler&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;strict&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;include&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;src/**/*&quot;</span><span class="ot">,</span> <span class="st">&quot;types/**/*.d.ts&quot;</span><span class="ot">]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Setting <code>moduleResolution</code> to <code>bundler</code> or
+<code>node16</code>/<code>nodenext</code> ensures compatibility with
+modern module systems handling binary assets.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/importing-and-typing-web-assembly-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

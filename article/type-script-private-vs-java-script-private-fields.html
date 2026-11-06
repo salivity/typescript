@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript private vs JavaScript Private Fields - typescript</title>
+    <meta name="description" content="When managing encapsulation in modern web development, developers often choose between TypeScript&#39;s private keyword and native JavaScript private fields denoted by a # prefix. While both mechanisms aim to hide class internals, they operate at fundamentall">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-private-vs-java-script-private-fields">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript private vs JavaScript Private Fields - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-private-vs-java-script-private-fields" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When managing encapsulation in modern web development, developers often choose between TypeScript&#39;s private keyword and native JavaScript private fields denoted by a # prefix. While both mechanisms aim to hide class internals, they operate at fundamentall" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-private-vs-javascript-private-fields">TypeScript
+private vs JavaScript Private Fields</h1>
+<p>When managing encapsulation in modern web development, developers
+often choose between TypeScript's <code>private</code> keyword and
+native JavaScript private fields denoted by a <code>#</code> prefix.
+While both mechanisms aim to hide class internals, they operate at
+fundamentally different levels of the execution lifecycle. TypeScript's
+<code>private</code> keyword enforces accessibility only at compile
+time, whereas JavaScript's <code>#</code> syntax provides true runtime
+encapsulation backed directly by the JavaScript engine. Understanding
+these differences in runtime enforcement, transpilation output, and
+inheritance behavior is essential for choosing the right tool for your
+project.</p>
+<h2 id="compile-time-vs-runtime-enforcement">Compile-Time vs. Runtime
+Enforcement</h2>
+<p>The primary distinction between the two approaches lies in when and
+how access restrictions are enforced.</p>
+<h3 id="typescripts-private-keyword">TypeScript's <code>private</code>
+Keyword</h3>
+<p>The <code>private</code> modifier is an abstraction provided solely
+by TypeScript's type system:</p>
+<ul>
+<li><strong>Compile-Time Only:</strong> The restriction exists strictly
+while TypeScript is checking your code. If you attempt to access a
+<code>private</code> property from outside the class, the TypeScript
+compiler will throw an error.</li>
+<li><strong>No Runtime Protection:</strong> Once compiled into
+JavaScript, the <code>private</code> keyword is completely erased. The
+property becomes a standard, publicly accessible property on the
+resulting object. It can be inspected via <code>Object.keys()</code>,
+accessed using bracket notation (<code>instance["secret"]</code>), or
+bypassed using type assertion
+(<code>(instance as any).secret</code>).</li>
+</ul>
+<h3 id="javascripts-hash--private-fields">JavaScript's Hash
+<code>#</code> Private Fields</h3>
+<p>Native private fields (introduced in ECMAScript 2022) are hard limits
+enforced by the JavaScript runtime:</p>
+<ul>
+<li><strong>Hard Runtime Encapsulation:</strong> Fields prefixed with
+<code>#</code> (such as <code>#secret</code>) cannot be accessed outside
+the class body under any circumstances.</li>
+<li><strong>No Bypassing:</strong> Attempting to access
+<code>#secret</code> outside the declaring class results in a syntax
+error (if attempted directly) or a runtime <code>TypeError</code>. They
+do not appear in <code>Object.keys()</code>,
+<code>Object.getOwnPropertyNames()</code>, or <code>for...in</code>
+loops, and cannot be accessed via bracket notation
+(<code>instance["#secret"]</code> will return <code>undefined</code> or
+look for a literal string key named <code>"#secret"</code>).</li>
+</ul>
+<h2 id="syntax-and-declaration">Syntax and Declaration</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Example {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript private modifier</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> tsSecret<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;TypeScript hidden&quot;</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// JavaScript private field</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  #jsSecret<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;JavaScript hidden&quot;</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readSecrets</span>() {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Both are accessible within the class body</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="kw">this</span><span class="op">.</span><span class="at">tsSecret</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="kw">this</span><span class="op">.</span>#<span class="at">jsSecret</span>)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> example <span class="op">=</span> <span class="kw">new</span> <span class="fu">Example</span>()<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript compile error, but succeeds at runtime:</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">// (example as any).tsSecret -&gt; &quot;TypeScript hidden&quot;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Runtime error:</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">// example.#jsSecret -&gt; SyntaxError: Private field &#39;#jsSecret&#39; must be declared in an enclosing class</span></span></code></pre></div>
+<h2 id="subclassing-and-name-collisions">Subclassing and Name
+Collisions</h2>
+<p>Both mechanisms prevent subclasses from accessing parent-private
+state, but they handle collisions differently:</p>
+<ul>
+<li><strong>TypeScript <code>private</code>:</strong> A subclass cannot
+define a property with the same name as a <code>private</code> property
+in the parent class without generating a TypeScript error, because both
+map to the same property name on the final prototype/instance.</li>
+<li><strong>JavaScript <code>#</code> fields:</strong> Private
+identifiers are scoped strictly to the declaring class. A subclass can
+declare a <code>#secret</code> field without colliding with or
+overriding a parent class's <code>#secret</code> field. Each class
+manages its own distinct internal slot.</li>
+</ul>
+<h2 id="transpilation-and-performance">Transpilation and
+Performance</h2>
+<ul>
+<li><strong>TypeScript <code>private</code>:</strong> Leaves zero
+runtime overhead when targeting modern JavaScript, as it simply emits
+standard property declarations or assignments.</li>
+<li><strong>JavaScript <code>#</code> fields:</strong> When targeting
+modern runtimes (ES2022+), engines use optimized internal slots.
+However, if you configure TypeScript to compile native private fields
+down to older targets (such as ES2015 or ES5), the compiler must
+generate helper structures using <code>WeakMap</code> or
+<code>WeakSet</code>. This downlevel compilation introduces both a
+memory and execution speed overhead.</li>
+</ul>
+<h2 id="when-to-use-which">When to Use Which</h2>
+<ul>
+<li><strong>Use TypeScript's <code>private</code></strong> when you want
+cleaner syntax, only need developer ergonomics to prevent accidental
+usage within a TypeScript codebase, or need to support older browser
+environments without the overhead of <code>WeakMap</code>
+polyfills.</li>
+<li><strong>Use JavaScript's <code>#</code> fields</strong> when
+building security-sensitive logic, developing public libraries where
+consumers might use plain JavaScript, or when absolute internal privacy
+must be guaranteed against reflection and runtime inspection.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-private-vs-java-script-private-fields';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

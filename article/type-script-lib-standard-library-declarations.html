@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Lib: Standard Library Declarations - typescript</title>
+    <meta name="description" content="The lib compiler option in TypeScript determines which built-in JavaScript API and runtime environment type declarations are included during compilation. By modifying this setting in your tsconfig.json, you tell the TypeScript compiler which global object">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-lib-standard-library-declarations">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Lib: Standard Library Declarations - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-lib-standard-library-declarations" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The lib compiler option in TypeScript determines which built-in JavaScript API and runtime environment type declarations are included during compilation. By modifying this setting in your tsconfig.json, you tell the TypeScript compiler which global object" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-lib-standard-library-declarations">TypeScript Lib:
+Standard Library Declarations</h1>
+<p>The <code>lib</code> compiler option in TypeScript determines which
+built-in JavaScript API and runtime environment type declarations are
+included during compilation. By modifying this setting in your
+<code>tsconfig.json</code>, you tell the TypeScript compiler which
+global objects, methods, and environment-specific interfaces—such as the
+DOM or modern ECMAScript features—exist in your target runtime. This
+article explains default <code>lib</code> behaviors, how explicit
+configuration works, and how to tailor declarations for specific
+execution environments like Node.js or browsers.</p>
+<h2 id="how-the-lib-setting-works">How the <code>lib</code> Setting
+Works</h2>
+<p>TypeScript ships with a collection of standard declaration files
+(ending in <code>.d.ts</code>) that represent standard JavaScript
+features and web platform APIs. When you configure the <code>lib</code>
+array in <code>tsconfig.json</code>, you dictate which of these standard
+files TypeScript loads into the compilation context.</p>
+<p>If an API's declaration file is omitted, TypeScript treats references
+to that API as unknown symbols, resulting in compilation errors like
+<code>Cannot find name 'Promise'</code> or
+<code>Cannot find name 'document'</code>.</p>
+<h2 id="default-inheritance-based-on-target">Default Inheritance Based
+on <code>target</code></h2>
+<p>When the <code>lib</code> property is omitted from your
+configuration, TypeScript automatically selects a default set of
+standard libraries based on the <code>target</code> property:</p>
+<ul>
+<li><strong>Targeting <code>ES5</code></strong>: TypeScript defaults to
+<code>["dom", "es5", "scripthost"]</code>.</li>
+<li><strong>Targeting <code>ES6</code> / <code>ES2015</code></strong>:
+TypeScript defaults to
+<code>["dom", "es6", "dom.iterable", "scripthost"]</code>.</li>
+<li><strong>Targeting newer targets (e.g., <code>ES2022</code>,
+<code>ESNext</code>)</strong>: TypeScript includes the corresponding ES
+standard library along with standard browser APIs (<code>dom</code>,
+<code>dom.iterable</code>).</li>
+</ul>
+<p>Relying on defaults is often sufficient for standard web applications
+matching their target runtime, but it introduces issues in non-browser
+environments or polyfilled runtimes.</p>
+<h2 id="overriding-the-defaults">Overriding the Defaults</h2>
+<p>Specifying the <code>lib</code> option in <code>tsconfig.json</code>
+completely overrides the default list. TypeScript will load
+<em>only</em> the declaration files explicitly declared in the
+array.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;es5&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;lib&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;es5&quot;</span><span class="ot">,</span> <span class="st">&quot;es2015.promise&quot;</span><span class="ot">,</span> <span class="st">&quot;dom&quot;</span><span class="ot">]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>In the configuration above, even though the code compiles down to
+ECMAScript 5 syntax, the type checker allows modern <code>Promise</code>
+usage because <code>"es2015.promise"</code> is explicitly declared.</p>
+<h2 id="common-standard-library-categories">Common Standard Library
+Categories</h2>
+<p>Standard library definitions are generally categorized into runtime
+environments and language versions:</p>
+<h3 id="1-ecmascript-language-levels">1. ECMAScript Language Levels</h3>
+<p>These libraries represent core JavaScript features specified by the
+ECMAScript standard:</p>
+<ul>
+<li><strong>Whole versions</strong>: <code>es5</code>, <code>es6</code>
+(or <code>es2015</code>), <code>es2020</code>, <code>esnext</code></li>
+<li><strong>Modular sub-features</strong>: <code>es2015.core</code>,
+<code>es2015.promise</code>, <code>es2015.iterable</code>,
+<code>es2017.string</code>, <code>es2020.bigint</code></li>
+</ul>
+<p>Modular libraries allow you to support specific modern features
+(often provided via polyfills) without declaring the entire future
+specification.</p>
+<h3 id="2-environment-apis">2. Environment APIs</h3>
+<p>These libraries expose APIs provided by execution environments rather
+than the ECMAScript specification itself:</p>
+<ul>
+<li><strong><code>dom</code></strong>: Declares browser APIs, including
+global objects like <code>window</code>, <code>document</code>, and HTML
+element types.</li>
+<li><strong><code>dom.iterable</code></strong>: Provides iterable
+definitions for DOM objects, such as <code>NodeList</code> iteration
+with <code>for...of</code>.</li>
+<li><strong><code>webworker</code></strong>: Declares global APIs
+available within Web Workers.</li>
+<li><strong><code>scripthost</code></strong>: Declares APIs for Windows
+Script Host.</li>
+</ul>
+<h2 id="tailoring-declarations-to-your-runtime">Tailoring Declarations
+to Your Runtime</h2>
+<p>Configuring <code>lib</code> is critical for avoiding false positives
+and runtime errors.</p>
+<h3 id="nodejs-applications">Node.js Applications</h3>
+<p>Node.js environments do not have access to browser globals. Relying
+on default settings that include <code>dom</code> can lead to errors
+where code accidentally references <code>window</code> or
+<code>document</code> without the compiler warning you. For Node.js,
+omit DOM-related declarations:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;es2022&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;lib&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;es2022&quot;</span><span class="ot">]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="decoupling-syntax-from-apis">Decoupling Syntax from APIs</h3>
+<p>The <code>target</code> flag controls the output JavaScript syntax
+(such as arrow functions or optional chaining), while <code>lib</code>
+controls available runtime APIs. If your deployment environment supports
+modern APIs natively or via polyfills, but requires older JavaScript
+syntax for tool compatibility, decouple them:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;es5&quot;</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;lib&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;es2021&quot;</span><span class="ot">,</span> <span class="st">&quot;dom&quot;</span><span class="ot">]</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>This configuration ensures TypeScript downlevels modern syntax to ES5
+while allowing code to use ECMAScript 2021 APIs without compilation
+errors.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-lib-standard-library-declarations';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Overload Implementation Signatures - typescript</title>
+    <meta name="description" content="This article explains the concept of an implementation signature in TypeScript overloaded functions, detailing its role, behavior, and structural rules. You will learn how the implementation signature bridges the gap between TypeScript&#39;s compile-time type">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-overload-implementation-signatures">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Overload Implementation Signatures - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-overload-implementation-signatures" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the concept of an implementation signature in TypeScript overloaded functions, detailing its role, behavior, and structural rules. You will learn how the implementation signature bridges the gap between TypeScript&#39;s compile-time type" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-overload-implementation-signatures">TypeScript
+Overload Implementation Signatures</h1>
+<p>This article explains the concept of an implementation signature in
+TypeScript overloaded functions, detailing its role, behavior, and
+structural rules. You will learn how the implementation signature
+bridges the gap between TypeScript's compile-time type-checking
+contracts and the single runtime function body that executes your
+code.</p>
+<h2 id="understanding-function-overloading-in-typescript">Understanding
+Function Overloading in TypeScript</h2>
+<p>In TypeScript, function overloading allows you to define multiple
+function shapes—specifying different parameter types, counts, and return
+types—for a single function name.</p>
+<p>A TypeScript overloaded function consists of two parts:</p>
+<ol type="1">
+<li><strong>Overload signatures</strong>: One or more declarations
+defining the public-facing types that callers are allowed to invoke.
+These do not have a function body.</li>
+<li><strong>Implementation signature</strong>: The final signature that
+includes the actual code block <code>{ ... }</code> executing the
+runtime logic.</li>
+</ol>
+<h2 id="what-is-the-implementation-signature">What is the Implementation
+Signature?</h2>
+<p>The implementation signature is the signature directly attached to
+the function's body. Its primary responsibility is to accept any
+argument combination allowed by the overload signatures and return an
+appropriate value.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Overload signatures (public interface)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatInput</span>(input<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatInput</span>(input<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatInput</span>(input<span class="op">:</span> <span class="dt">boolean</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Implementation signature (internal implementation)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatInput</span>(input<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">boolean</span>)<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">number</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="kw">typeof</span> input <span class="op">===</span> <span class="st">&quot;boolean&quot;</span>) {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> input <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">String</span>(input)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the example above,
+<code>function formatInput(input: string | number | boolean): string | number</code>
+is the implementation signature.</p>
+<h2 id="key-characteristics-of-the-implementation-signature">Key
+Characteristics of the Implementation Signature</h2>
+<h3 id="1-it-is-hidden-from-callers">1. It Is Hidden from Callers</h3>
+<p>Even though the implementation signature is written in your code,
+callers cannot interact with it directly. TypeScript checks calls
+exclusively against the overload signatures.</p>
+<p>Using the previous example:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: Matches overload 1</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">formatInput</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: Matches overload 2</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">formatInput</span>(<span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Implementation signature allows boolean, but specifies a number return</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="fu">formatInput</span>(<span class="kw">true</span>)<span class="op">;</span> <span class="co">// Type &#39;number&#39; is not assignable to type &#39;string&#39;</span></span></code></pre></div>
+<p>If you specify an implementation signature that is broader than the
+overload signatures, callers still cannot use those extra types:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getId</span>(x<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Implementation signature allows string, but no overload does:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getId</span>(x<span class="op">:</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">any</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> x<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">getId</span>(<span class="st">&quot;abc&quot;</span>)<span class="op">;</span> </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: No overload matches this call. Argument of type &#39;string&#39; is not assignable to parameter of type &#39;number&#39;.</span></span></code></pre></div>
+<h3 id="2-it-must-be-compatible-with-all-overload-signatures">2. It Must
+Be Compatible with All Overload Signatures</h3>
+<p>The implementation signature must be general enough to satisfy every
+overload signature listed before it. If an overload signature has a
+parameter or return type that the implementation signature cannot accept
+or produce, the TypeScript compiler will throw an error
+(<code>This overload signature is not compatible with its implementation signature</code>).</p>
+<p>Common compatibility rules include:</p>
+<ul>
+<li><strong>Parameter Types</strong>: The implementation's parameters
+must use union types or broader types (like <code>any</code> or
+<code>unknown</code>) to encompass all overload types.</li>
+<li><strong>Parameter Count</strong>: If overloads have differing
+numbers of arguments, the implementation signature must make trailing
+parameters optional (using <code>?</code> or default values).</li>
+<li><strong>Return Types</strong>: The implementation's return type must
+be assignable to or a union of all possible return types defined in the
+overload signatures.</li>
+</ul>
+<h3 id="3-handling-different-parameter-counts">3. Handling Different
+Parameter Counts</h3>
+<p>When overloads accept varying numbers of arguments, the
+implementation signature must accommodate the maximum possible count
+using optional parameters:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Overloads</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">makeDate</span>(timestamp<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Date</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">makeDate</span>(m<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> d<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Date</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Implementation signature requires optional parameters</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">makeDate</span>(mOrTimestamp<span class="op">:</span> <span class="dt">number</span><span class="op">,</span> d<span class="op">?:</span> <span class="dt">number</span><span class="op">,</span> y<span class="op">?:</span> <span class="dt">number</span>)<span class="op">:</span> <span class="bu">Date</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (d <span class="op">!==</span> <span class="kw">undefined</span> <span class="op">&amp;&amp;</span> y <span class="op">!==</span> <span class="kw">undefined</span>) {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Date</span>(y<span class="op">,</span> mOrTimestamp<span class="op">,</span> d)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Date</span>(mOrTimestamp)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<p>The implementation signature is the internal, working definition of
+an overloaded function. While overload signatures act as the public
+contract for external callers, the implementation signature unifies
+those contracts into a single set of compatible types accompanied by the
+concrete JavaScript logic.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-overload-implementation-signatures';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

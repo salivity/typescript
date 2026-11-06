@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Generators in TypeScript: Yield, Return, Next - typescript</title>
+    <meta name="description" content="TypeScript provides first-class support for typing generator functions through the built-in generic interface Generator&lt;TYield, TReturn, TNext&gt;. This interface allows you to strictly define the types of values emitted by the yield operator, the final valu">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-generators-in-type-script-yield-return-next">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing Generators in TypeScript: Yield, Return, Next - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-generators-in-type-script-yield-return-next" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript provides first-class support for typing generator functions through the built-in generic interface Generator&lt;TYield, TReturn, TNext&gt;. This interface allows you to strictly define the types of values emitted by the yield operator, the final valu" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-generators-in-typescript-yield-return-next">Typing
+Generators in TypeScript: Yield, Return, Next</h1>
+<p>TypeScript provides first-class support for typing generator
+functions through the built-in generic interface
+<code>Generator&lt;TYield, TReturn, TNext&gt;</code>. This interface
+allows you to strictly define the types of values emitted by the
+<code>yield</code> operator, the final value returned upon completion,
+and the values accepted into the generator via the <code>.next()</code>
+method. By leveraging these three type parameters, you can eliminate
+runtime type errors and enforce strict communication boundaries between
+the generator and the calling code.</p>
+<h3 id="the-generatortyield-treturn-tnext-interface">The
+<code>Generator&lt;TYield, TReturn, TNext&gt;</code> Interface</h3>
+<p>A generator function's return type is defined by three generic
+arguments:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">Generator</span><span class="op">&lt;</span>TYield<span class="op">,</span> TReturn<span class="op">,</span> TNext<span class="op">&gt;</span></span></code></pre></div>
+<ul>
+<li><strong><code>TYield</code></strong>: The type of values emitted by
+the generator using the <code>yield</code> keyword.</li>
+<li><strong><code>TReturn</code></strong>: The type of the value
+returned when the generator finishes execution (via a
+<code>return</code> statement).</li>
+<li><strong><code>TNext</code></strong>: The type of values that can be
+passed into the generator via <code>iterator.next(value)</code>. This is
+the type that expressions evaluating <code>yield</code> will resolve
+to.</li>
+</ul>
+<h3 id="defining-tyield">Defining TYield</h3>
+<p><code>TYield</code> represents every value exposed to consumers
+iterating over the generator (for example, via a <code>for...of</code>
+loop or repeated <code>.next()</code> calls).</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span><span class="op">*</span> <span class="fu">countUp</span>()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In this case, the <code>value</code> property on the iterator result
+object will be of type <code>number</code> while the generator is
+running.</p>
+<h3 id="defining-treturn">Defining TReturn</h3>
+<p><code>TReturn</code> specifies the type of the value returned when
+the generator completes execution. If a generator does not explicitly
+return a value, <code>TReturn</code> should be typed as
+<code>void</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span><span class="op">*</span> <span class="fu">produceResult</span>()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">string</span><span class="op">,</span> <span class="dt">unknown</span><span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="st">&quot;Completed successfully&quot;</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> iterator <span class="op">=</span> <span class="fu">produceResult</span>()<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>iterator<span class="op">.</span><span class="fu">next</span>()<span class="op">;</span> <span class="co">// { value: 1, done: false }</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>iterator<span class="op">.</span><span class="fu">next</span>()<span class="op">;</span> <span class="co">// { value: 2, done: false }</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> finalResult <span class="op">=</span> iterator<span class="op">.</span><span class="fu">next</span>()<span class="op">;</span> <span class="co">// { value: &quot;Completed successfully&quot;, done: true }</span></span></code></pre></div>
+<p>When <code>done</code> becomes <code>true</code>, TypeScript
+recognizes that <code>finalResult.value</code> matches the
+<code>TReturn</code> type (<code>string</code>).</p>
+<h3 id="defining-tnext">Defining TNext</h3>
+<p><code>TNext</code> controls two-way communication. When you call
+<code>.next(value)</code>, that value is passed back into the generator
+where execution paused at a <code>yield</code> expression.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span><span class="op">*</span> <span class="fu">interactiveGenerator</span>()<span class="op">:</span> <span class="bu">Generator</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> initialValue <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The yield expression evaluates to the value passed into .next()</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> step<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="kw">yield</span> <span class="vs">`Initial value is </span><span class="sc">${</span>initialValue<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> nextValue <span class="op">=</span> initialValue <span class="op">+</span> step<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="vs">`Next value is </span><span class="sc">${</span>nextValue<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> iterator <span class="op">=</span> <span class="fu">interactiveGenerator</span>()<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// The first next() call initializes the generator; it cannot accept an argument</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>iterator<span class="op">.</span><span class="fu">next</span>()<span class="op">;</span> <span class="co">// { value: &quot;Initial value is 0&quot;, done: false }</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Subsequent next() calls require the argument to match TNext (number)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>iterator<span class="op">.</span><span class="fu">next</span>(<span class="dv">5</span>)<span class="op">;</span> <span class="co">// { value: &quot;Next value is 5&quot;, done: false }</span></span></code></pre></div>
+<p>Because the generator has not yet paused at a <code>yield</code>
+during the first invocation of <code>.next()</code>, TypeScript accepts
+<code>void</code> or <code>undefined</code> for the initial
+<code>.next()</code> call, but strictly enforces the <code>TNext</code>
+type on subsequent calls.</p>
+<h3 id="default-types-and-type-inference">Default Types and Type
+Inference</h3>
+<p>If you do not explicitly annotate a generator, TypeScript attempts to
+infer the types:</p>
+<ul>
+<li><strong><code>TYield</code></strong> is inferred as the union of all
+yielded expressions.</li>
+<li><strong><code>TReturn</code></strong> is inferred from the return
+statements.</li>
+<li><strong><code>TNext</code></strong> defaults to <code>unknown</code>
+because TypeScript cannot infer what future callers will pass into
+<code>.next()</code>.</li>
+</ul>
+<p>To ensure strict type safety when using values returned from
+<code>yield</code> expressions, you should explicitly declare the
+<code>Generator&lt;TYield, TReturn, TNext&gt;</code> return type
+annotation on the function.</p>
+<h3 id="typing-asynchronous-generators">Typing Asynchronous
+Generators</h3>
+<p>For asynchronous generators declared with
+<code>async function*</code>, TypeScript provides the
+<code>AsyncGenerator&lt;TYield, TReturn, TNext&gt;</code> interface. It
+operates identically to <code>Generator</code>, but wrapping iterations
+in promises:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span><span class="op">*</span> <span class="fu">fetchSequence</span>()<span class="op">:</span> AsyncGenerator<span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">void</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> query<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="kw">yield</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/typing-generators-in-type-script-yield-return-next';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

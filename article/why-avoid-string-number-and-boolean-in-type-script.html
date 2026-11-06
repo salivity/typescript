@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Avoid String, Number, and Boolean in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, developers should consistently use lowercase types like string, number, and boolean instead of their uppercase counterparts String, Number, and Boolean. While these uppercase types may seem interchangeable at first glance, they refer to Jav">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-avoid-string-number-and-boolean-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Avoid String, Number, and Boolean in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-avoid-string-number-and-boolean-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, developers should consistently use lowercase types like string, number, and boolean instead of their uppercase counterparts String, Number, and Boolean. While these uppercase types may seem interchangeable at first glance, they refer to Jav" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-avoid-string-number-and-boolean-in-typescript">Why Avoid
+String, Number, and Boolean in TypeScript</h1>
+<p>In TypeScript, developers should consistently use lowercase types
+like <code>string</code>, <code>number</code>, and <code>boolean</code>
+instead of their uppercase counterparts <code>String</code>,
+<code>Number</code>, and <code>Boolean</code>. While these uppercase
+types may seem interchangeable at first glance, they refer to
+JavaScript's object wrappers rather than the primitive data types. Using
+wrapper types leads to subtle type-checking errors, unintended behavior,
+and unnecessary memory overhead, making the use of primitive lowercase
+types the standard best practice in modern TypeScript development.</p>
+<h3 id="primitives-vs-object-wrapper-types">Primitives vs. Object
+Wrapper Types</h3>
+<p>JavaScript differentiates between primitive values and wrapper
+objects. Primitive values—such as <code>'hello'</code>, <code>42</code>,
+and <code>true</code>—are lightweight, immutable values stored directly
+in memory.</p>
+<p>When you define a type using uppercase <code>String</code>,
+<code>Number</code>, or <code>Boolean</code>, you are targeting the
+special JavaScript object constructor wrapper (e.g., instances created
+via <code>new String('hello')</code>).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lowercase refers to the primitive value</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> primitiveText<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Uppercase refers to the wrapper object instance</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> objectText<span class="op">:</span> <span class="bu">String</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">String</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>JavaScript automatically "boxes" a primitive into an object
+temporarily when you access methods like <code>.toUpperCase()</code> or
+<code>.toFixed()</code>, and then discards the object immediately.
+Explicitly declaring variables as these object wrappers is almost never
+needed.</p>
+<h3 id="assignability-and-type-mismatches">Assignability and Type
+Mismatches</h3>
+<p>One of the primary reasons to avoid uppercase types is the one-way
+type compatibility problem. TypeScript allows a primitive to be assigned
+to an object type, but an object type cannot be assigned to a
+primitive.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> primitiveString<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> objectString<span class="op">:</span> <span class="bu">String</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">String</span>(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// This succeeds:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>objectString <span class="op">=</span> primitiveString<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// This fails with a type error:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>primitiveString <span class="op">=</span> objectString<span class="op">;</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Type &#39;String&#39; is not assignable to type &#39;string&#39;.</span></span></code></pre></div>
+<p>If an API or function expects a standard <code>string</code>, passing
+a variable typed as <code>String</code> will trigger a compile-time
+error. This discrepancy breaks interoperability across libraries and
+utility functions that correctly rely on primitives.</p>
+<h3 id="truthiness-and-comparison-hazards">Truthiness and Comparison
+Hazards</h3>
+<p>Wrapper objects introduce unexpected runtime bugs when evaluated in
+conditional statements. In JavaScript, any object is truthy, even if it
+wraps a falsy value.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> falseWrapper<span class="op">:</span> <span class="bu">Boolean</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">Boolean</span>(<span class="kw">false</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (falseWrapper) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This block executes because falseWrapper is an object!</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;This will unexpectedly run.&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Similarly, reference equality (<code>===</code>) fails when comparing
+wrapper objects to primitive values, leading to silent logical errors
+during execution.</p>
+<h3 id="official-guidelines-and-linting-rules">Official Guidelines and
+Linting Rules</h3>
+<p>TypeScript's official documentation explicitly advises against using
+<code>Number</code>, <code>String</code>, <code>Boolean</code>,
+<code>Symbol</code>, or <code>Object</code>. Popular static analysis
+tools like ESLint enforce this convention out of the box through rules
+such as <code>@typescript-eslint/no-wrapper-object-types</code>
+(formerly part of <code>@typescript-eslint/ban-types</code>).</p>
+<p>Always use the lowercase primitive keywords—<code>string</code>,
+<code>number</code>, <code>boolean</code>, <code>symbol</code>, and
+<code>bigint</code>—to ensure type safety, avoid unexpected object
+behavior, and maintain consistency with the broader TypeScript
+ecosystem.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-avoid-string-number-and-boolean-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

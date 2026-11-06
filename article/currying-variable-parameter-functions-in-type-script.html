@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currying Variable Parameter Functions in TypeScript - typescript</title>
+    <meta name="description" content="This article explores how TypeScript&#39;s type system models curried functions with variable parameter lengths using recursive conditional types and variadic tuple types. By breaking down function argument lists into structured tuples, TypeScript can dynamic">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/currying-variable-parameter-functions-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Currying Variable Parameter Functions in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/currying-variable-parameter-functions-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript&#39;s type system models curried functions with variable parameter lengths using recursive conditional types and variadic tuple types. By breaking down function argument lists into structured tuples, TypeScript can dynamic" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="currying-variable-parameter-functions-in-typescript">Currying
+Variable Parameter Functions in TypeScript</h1>
+<p>This article explores how TypeScript's type system models curried
+functions with variable parameter lengths using recursive conditional
+types and variadic tuple types. By breaking down function argument lists
+into structured tuples, TypeScript can dynamically infer parameters,
+preserve strict type safety across partial applications, and
+continuously compute subsequent function signatures until all arguments
+are satisfied.</p>
+<h3 id="the-mechanics-variadic-tuples-and-recursive-types">The
+Mechanics: Variadic Tuples and Recursive Types</h3>
+<p>Currying converts a function with multiple parameters into a sequence
+of functions, each taking a subset of those parameters. To model this
+generically in TypeScript for any function arity, the type system relies
+on two main features introduced in TypeScript 4.0 and 4.1:</p>
+<ol type="1">
+<li><strong>Variadic Tuple Types:</strong> Allows representing argument
+lists as tuple types that can be decomposed using rest elements
+(<code>...infer Rest</code>).</li>
+<li><strong>Recursive Conditional Types:</strong> Enables type-level
+loops that peel off parameters one by one (or in chunks) until no
+parameters remain.</li>
+</ol>
+<h3 id="defining-a-strict-unary-curry">Defining a Strict Unary
+Curry</h3>
+<p>A strict curried function takes exactly one parameter at a time. The
+type definition extracts the first element of a parameter tuple,
+constructs a function signature accepting that parameter, and
+recursively calls itself with the remaining elements.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Curry<span class="op">&lt;</span>TArgs <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> TReturn<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  TArgs <span class="kw">extends</span> [<span class="kw">infer</span> First<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Rest]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> (arg<span class="op">:</span> First) <span class="kw">=&gt;</span> Curry<span class="op">&lt;</span>Rest<span class="op">,</span> TReturn<span class="op">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> TReturn<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to extract parameters and return types</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CurriedFunction<span class="op">&lt;</span>F<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  F <span class="kw">extends</span> (<span class="op">...</span>args<span class="op">:</span> <span class="kw">infer</span> P) <span class="kw">=&gt;</span> <span class="kw">infer</span> R </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> Curry<span class="op">&lt;</span>P<span class="op">,</span> R<span class="op">&gt;</span> </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span></code></pre></div>
+<p>When applied to a function like
+<code>(a: string, b: number, c: boolean) =&gt; void</code>,
+<code>CurriedFunction</code> recursively unfolds into:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(arg<span class="op">:</span> <span class="dt">string</span>) <span class="kw">=&gt;</span> (arg<span class="op">:</span> <span class="dt">number</span>) <span class="kw">=&gt;</span> (arg<span class="op">:</span> <span class="dt">boolean</span>) <span class="kw">=&gt;</span> <span class="kw">void</span></span></code></pre></div>
+<h3 id="supporting-variable-chunk-sizes-partial-currying">Supporting
+Variable Chunk Sizes (Partial Currying)</h3>
+<p>In real-world implementations like Lodash or Ramda, curried functions
+allow callers to provide multiple arguments at once. To model
+variable-length argument slices, TypeScript must determine whether the
+provided arguments fully satisfy or only partially satisfy the expected
+parameter tuple.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VariadicCurry<span class="op">&lt;</span>TArgs <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> TReturn<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>TProvided <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">&gt;</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span>args<span class="op">:</span> TProvided</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  )<span class="op">:</span> TArgs <span class="kw">extends</span> [<span class="op">...</span>TProvided<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> TRest]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> TRest <span class="kw">extends</span> []</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="op">?</span> TReturn</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="op">:</span> VariadicCurry<span class="op">&lt;</span>TRest<span class="op">,</span> TReturn<span class="op">&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>This type works by matching the tuple of provided arguments
+(<code>TProvided</code>) as a prefix of the target arguments
+(<code>TArgs</code>).</p>
+<ul>
+<li>If <code>TProvided</code> consumes all of <code>TArgs</code>,
+<code>TRest</code> is empty (<code>[]</code>), and the evaluation
+resolves to <code>TReturn</code>.</li>
+<li>If elements remain in <code>TRest</code>, the return value is
+another <code>VariadicCurry</code> function waiting for the remaining
+tuple.</li>
+</ul>
+<h3 id="handling-arbitrary-subsets-and-overloads">Handling Arbitrary
+Subsets and Overloads</h3>
+<p>A more permissive and idiomatic approach generates the full set of
+valid call signatures for any combination of arguments. This can be
+achieved by using conditional types that accept any prefix of the
+argument tuple:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CurryVariadic<span class="op">&lt;</span>Args <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">,</span> Return<span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  Args <span class="kw">extends</span> []</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">?</span> () <span class="kw">=&gt;</span> Return</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="op">&lt;</span>Provided <span class="kw">extends</span> <span class="dt">any</span>[]<span class="op">&gt;</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span>args<span class="op">:</span> Provided</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      ) <span class="kw">=&gt;</span> Args <span class="kw">extends</span> [<span class="op">...</span>Provided<span class="op">,</span> <span class="op">...</span><span class="kw">infer</span> Rest]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">?</span> Rest <span class="kw">extends</span> []</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>          <span class="op">?</span> Return</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>          <span class="op">:</span> CurryVariadic<span class="op">&lt;</span>Rest<span class="op">,</span> Return<span class="op">&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">:</span> Provided <span class="kw">extends</span> []</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>          <span class="op">?</span> CurryVariadic<span class="op">&lt;</span>Args<span class="op">,</span> Return<span class="op">&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          <span class="op">:</span> <span class="dt">never</span><span class="op">;</span></span></code></pre></div>
+<h3 id="type-system-constraints">Type System Constraints</h3>
+<p>While TypeScript cleanly handles finite, fixed-length parameter
+tuples, modeling currying introduces specific constraints:</p>
+<ul>
+<li><strong>Recursion Limits:</strong> TypeScript enforces a maximum
+recursion depth on conditional types (typically around 50 iterations),
+though standard function parameter counts rarely exceed this limit.</li>
+<li><strong>Rest Parameters:</strong> Functions that already contain
+trailing rest parameters (e.g.,
+<code>(...nums: number[]) =&gt; void</code>) represent unbounded tuples.
+Peeling parameters off unbounded tuples requires custom handling, as
+TypeScript cannot determine when the tuple terminates.</li>
+<li><strong>Optional Arguments:</strong> Optional parameters
+(<code>a?: number</code>) resolve to union types
+(<code>number | undefined</code>), which can complicate prefix matching
+unless explicitly handled using tuple transformations that strip
+optionality.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/currying-variable-parameter-functions-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

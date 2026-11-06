@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Type Narrowing Reverses Widening in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, type widening and type narrowing represent opposite sides of the compiler&#39;s type inference mechanism. Widening automatically generalizes specific literal types into broader primitive types during mutable declarations, ensuring flexibility f">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-narrowing-reverses-widening-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Type Narrowing Reverses Widening in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-narrowing-reverses-widening-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, type widening and type narrowing represent opposite sides of the compiler&#39;s type inference mechanism. Widening automatically generalizes specific literal types into broader primitive types during mutable declarations, ensuring flexibility f" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-type-narrowing-reverses-widening-in-typescript">How Type
+Narrowing Reverses Widening in TypeScript</h1>
+<p>In TypeScript, type widening and type narrowing represent opposite
+sides of the compiler's type inference mechanism. Widening automatically
+generalizes specific literal types into broader primitive types during
+mutable declarations, ensuring flexibility for future assignments.
+Conversely, type narrowing uses control flow analysis and runtime checks
+to systematically restrict these broad types back down to specific
+literals or subtypes. This article explains the mechanics of both
+processes and demonstrates how type narrowing actively counteracts the
+effects of type widening to restore type precision and safety.</p>
+<h2 id="understanding-type-widening">Understanding Type Widening</h2>
+<p>Type widening occurs when TypeScript infers a broad, general type for
+an expression that could otherwise have a specific literal type. This
+behavior is standard for mutable bindings declared with <code>let</code>
+or <code>var</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Type inferred as &#39;string&#39; (widened), not &#39;&quot;success&quot;&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> status <span class="op">=</span> <span class="st">&quot;success&quot;</span><span class="op">;</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed because &#39;status&#39; was widened to &#39;string&#39;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>status <span class="op">=</span> <span class="st">&quot;error&quot;</span><span class="op">;</span> </span></code></pre></div>
+<p>When declaring a variable with <code>const</code>, TypeScript
+preserves the literal type because the variable cannot be
+reassigned:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Type inferred as &#39;&quot;success&quot;&#39; (not widened)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> fixedStatus <span class="op">=</span> <span class="st">&quot;success&quot;</span><span class="op">;</span> </span></code></pre></div>
+<p>Widening prioritizes flexibility over strictness, allowing variables
+to accept other values of the same primitive domain. However, this
+flexibility can lead to lost precision, particularly when handling union
+types or specific application states.</p>
+<h2 id="understanding-type-narrowing">Understanding Type Narrowing</h2>
+<p>Type narrowing is the process of refining a broad type into a more
+specific one within a localized execution branch. TypeScript leverages
+Control Flow Analysis (CFA) to observe runtime conditions and adjust the
+compile-time type of variables accordingly.</p>
+<p>Narrowing is triggered by constructs such as:</p>
+<ul>
+<li>Equality checks (<code>===</code>, <code>!==</code>)</li>
+<li>The <code>typeof</code> operator</li>
+<li>The <code>instanceof</code> operator</li>
+<li>The <code>in</code> operator</li>
+<li>Custom type predicates (<code>is</code>)</li>
+<li>Assertion functions</li>
+</ul>
+<h2 id="how-narrowing-reverses-the-effects-of-widening">How Narrowing
+Reverses the Effects of Widening</h2>
+<p>Type narrowing reverses widening by examining runtime checks and
+stripping away the generalized types, restoring the exact literal types
+or smaller union branches that were lost during variable
+initialization.</p>
+<h3 id="1-reversing-primitive-widening-with-equality-checks">1.
+Reversing Primitive Widening with Equality Checks</h3>
+<p>When a variable has been widened from a literal to a primitive type
+(such as <code>string</code> or <code>number</code>), an equality check
+instructs the compiler to narrow that variable back down to the literal
+type within that conditional block.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> action <span class="op">=</span> <span class="st">&quot;create&quot;</span><span class="op">;</span> <span class="co">// Widened to &#39;string&#39;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (action <span class="op">===</span> <span class="st">&quot;create&quot;</span>) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Inside this block, &#39;action&#39; is narrowed from &#39;string&#39; back to &#39;&quot;create&quot;&#39;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">handleCreate</span>(action)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Through CFA, TypeScript knows that the condition guarantees
+<code>action</code> can only be the literal <code>"create"</code> inside
+the <code>if</code> statement, completely undoing the initial
+widening.</p>
+<h3 id="2-refining-widened-union-types">2. Refining Widened Union
+Types</h3>
+<p>Widening can also occur across union members. Narrowing eliminates
+impossible members of a union step-by-step:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Direction <span class="op">=</span> <span class="st">&quot;North&quot;</span> <span class="op">|</span> <span class="st">&quot;South&quot;</span> <span class="op">|</span> <span class="st">&quot;East&quot;</span> <span class="op">|</span> <span class="st">&quot;West&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">move</span>(direction<span class="op">:</span> Direction) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;direction&#39; is the broad union type</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (direction <span class="op">===</span> <span class="st">&quot;North&quot;</span>) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Narrowed to &#39;&quot;North&quot;&#39;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Here, &#39;direction&#39; is narrowed to &#39;&quot;South&quot; | &quot;East&quot; | &quot;West&quot;&#39;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (direction <span class="op">===</span> <span class="st">&quot;South&quot;</span>) {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Narrowed to &#39;&quot;South&quot;&#39;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Here, &#39;direction&#39; is narrowed to &#39;&quot;East&quot; | &quot;West&quot;&#39;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-reversing-object-property-widening">3. Reversing Object
+Property Widening</h3>
+<p>When object literals are defined without <code>as const</code>, their
+properties are automatically widened:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> config <span class="op">=</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  mode<span class="op">:</span> <span class="st">&quot;dark&quot;</span><span class="op">,</span> <span class="co">// Inferred as &#39;string&#39;, not &#39;&quot;dark&quot;&#39;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setMode</span>(mode<span class="op">:</span> <span class="st">&quot;dark&quot;</span> <span class="op">|</span> <span class="st">&quot;light&quot;</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Fails: Argument of type &#39;string&#39; is not assignable to &#39;&quot;dark&quot; | &quot;light&quot;&#39;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">// setMode(config.mode); </span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Narrowing reverses this limitation:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (config<span class="op">.</span><span class="at">mode</span> <span class="op">===</span> <span class="st">&quot;dark&quot;</span> <span class="op">||</span> config<span class="op">.</span><span class="at">mode</span> <span class="op">===</span> <span class="st">&quot;light&quot;</span>) {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &#39;config.mode&#39; is narrowed from &#39;string&#39; to &#39;&quot;dark&quot; | &quot;light&quot;&#39;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setMode</span>(config<span class="op">.</span><span class="at">mode</span>)<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<p>Type widening and type narrowing maintain the balance between
+mutability and type safety in TypeScript:</p>
+<ol type="1">
+<li><strong>Widening</strong> expands types (e.g.,
+<code>"success"</code> becomes <code>string</code>) to accommodate
+reassignment and dynamic runtime values.</li>
+<li><strong>Control Flow Analysis</strong> tracks the lifecycle of these
+widened variables across code branches.</li>
+<li><strong>Narrowing</strong> acts upon conditional guards
+(<code>===</code>, <code>typeof</code>, etc.) to discard irrelevant
+branches, effectively shrinking the widened type back to its precise
+literal or subtype definition.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-type-narrowing-reverses-widening-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

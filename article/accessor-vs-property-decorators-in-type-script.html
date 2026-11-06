@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessor vs Property Decorators in TypeScript - typescript</title>
+    <meta name="description" content="This article explains the core differences between accessor decorators and property decorators in TypeScript. While both allow developers to inspect, modify, or annotate class members, they target different elements of a class definition, accept different">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/accessor-vs-property-decorators-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Accessor vs Property Decorators in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/accessor-vs-property-decorators-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the core differences between accessor decorators and property decorators in TypeScript. While both allow developers to inspect, modify, or annotate class members, they target different elements of a class definition, accept different" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="accessor-vs-property-decorators-in-typescript">Accessor vs
+Property Decorators in TypeScript</h1>
+<p>This article explains the core differences between accessor
+decorators and property decorators in TypeScript. While both allow
+developers to inspect, modify, or annotate class members, they target
+different elements of a class definition, accept different parameters,
+and have distinct capabilities regarding runtime behavior and property
+descriptors.</p>
+<h2 id="what-is-a-property-decorator">What is a Property Decorator?</h2>
+<p>A property decorator is applied directly to a class field
+declaration. In legacy (experimental) TypeScript, a property decorator
+function receives two arguments:</p>
+<ol type="1">
+<li><strong><code>target</code></strong>: Either the constructor
+function for a static member or the prototype of the class for an
+instance member.</li>
+<li><strong><code>propertyKey</code></strong>: The name of the member
+being decorated (<code>string | symbol</code>).</li>
+</ol>
+<p>Because a standard class field does not exist on the prototype until
+an instance is created, a property decorator does not receive a
+<code>PropertyDescriptor</code>. As a result, it cannot directly modify
+property descriptors or alter how a property is initialized unless it
+manually calls <code>Object.defineProperty</code> on the prototype or
+utilizes metadata reflection libraries.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">LogProperty</span>(target<span class="op">:</span> <span class="dt">any</span><span class="op">,</span> propertyKey<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Property registered: </span><span class="sc">${</span>propertyKey<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  @LogProperty</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> <span class="st">&quot;Alice&quot;</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="what-is-an-accessor-decorator">What is an Accessor
+Decorator?</h2>
+<p>An accessor decorator is applied to an explicit getter or setter
+method within a class. Unlike property decorators, an accessor decorator
+receives three arguments in legacy TypeScript:</p>
+<ol type="1">
+<li><strong><code>target</code></strong>: The constructor function
+(static) or prototype (instance).</li>
+<li><strong><code>propertyKey</code></strong>: The name of the getter or
+setter.</li>
+<li><strong><code>descriptor</code></strong>: The
+<code>PropertyDescriptor</code> for the member.</li>
+</ol>
+<p>Because it has direct access to the <code>PropertyDescriptor</code>,
+an accessor decorator can inspect, modify, or return a completely new
+property descriptor. This allows you to easily wrap getter/setter
+behavior, cache return values, or intercept read and write
+operations.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">ReadOnly</span>(target<span class="op">:</span> <span class="dt">any</span><span class="op">,</span> propertyKey<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> descriptor<span class="op">:</span> PropertyDescriptor) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  descriptor<span class="op">.</span><span class="at">writable</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> descriptor<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Account {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> _balance<span class="op">:</span> <span class="dt">number</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  @ReadOnly</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">get</span> <span class="fu">balance</span>() {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">_balance</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="key-differences">Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Property Decorator</th>
+<th style="text-align: left;">Accessor Decorator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Application Target</strong></td>
+<td style="text-align: left;">Plain class fields</td>
+<td style="text-align: left;">Getters and setters (<code>get</code> /
+<code>set</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Property Descriptor</strong></td>
+<td style="text-align: left;">Not provided to the decorator</td>
+<td style="text-align: left;">Provided
+(<code>PropertyDescriptor</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Return Value Effect</strong></td>
+<td style="text-align: left;">Return value is ignored</td>
+<td style="text-align: left;">Returned descriptor overrides original
+descriptor</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Primary Use Cases</strong></td>
+<td style="text-align: left;">Metadata reflection, dependency injection,
+validation markers</td>
+<td style="text-align: left;">Caching, logging read/write operations,
+altering access permissions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ecmascript-stage-3-decorators-typescript-50">ECMAScript Stage 3
+Decorators (TypeScript 5.0+)</h2>
+<p>In modern TypeScript (5.0 and later) following the ECMAScript
+standard:</p>
+<ul>
+<li><strong>Field Decorators</strong> receive the field's initial value
+(usually <code>undefined</code> on definition) and a context object with
+<code>kind: "field"</code>. They can return an initializer function that
+modifies the initial value.</li>
+<li><strong>Getter/Setter Decorators</strong> receive the original
+method function and a context object with <code>kind: "getter"</code> or
+<code>kind: "setter"</code>. They can return a wrapped function to
+modify access behavior.</li>
+<li><strong>Auto-Accessor Decorators</strong> are introduced using the
+<code>accessor</code> keyword (e.g.,
+<code>accessor name: string</code>). They receive an object with both
+<code>get</code> and <code>set</code> functions and can alter storage
+and access behavior simultaneously.</li>
+</ul>
+<h2 id="when-to-use-which">When to Use Which</h2>
+<p>Choose a <strong>property decorator</strong> when you need to
+annotate fields with metadata (such as for serialization or ORM mapping)
+without changing how the field's value is retrieved or updated.</p>
+<p>Choose an <strong>accessor decorator</strong> when you need to
+intercept, modify, or govern the logic executed during read or write
+operations, such as enforcing read-only states, validating assignments,
+or lazy-loading data.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/accessor-vs-property-decorators-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

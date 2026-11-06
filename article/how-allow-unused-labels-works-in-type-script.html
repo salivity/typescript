@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How allowUnusedLabels Works in TypeScript - typescript</title>
+    <meta name="description" content="The allowUnusedLabels compiler option in TypeScript controls how the compiler reacts when it encounters labeled statements that are never referenced by a break or continue statement. This article explains what unused labels are, how modifying the allowUnu">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-allow-unused-labels-works-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How allowUnusedLabels Works in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-allow-unused-labels-works-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The allowUnusedLabels compiler option in TypeScript controls how the compiler reacts when it encounters labeled statements that are never referenced by a break or continue statement. This article explains what unused labels are, how modifying the allowUnu" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-allowunusedlabels-works-in-typescript">How allowUnusedLabels
+Works in TypeScript</h1>
+<p>The <code>allowUnusedLabels</code> compiler option in TypeScript
+controls how the compiler reacts when it encounters labeled statements
+that are never referenced by a <code>break</code> or
+<code>continue</code> statement. This article explains what unused
+labels are, how modifying the <code>allowUnusedLabels</code> setting
+impacts your code diagnostics, and why configuring it is important for
+preventing syntax mistakes.</p>
+<h3 id="what-are-labels-in-javascript-and-typescript">What Are Labels in
+JavaScript and TypeScript?</h3>
+<p>In JavaScript and TypeScript, you can prefix statements with an
+identifier followed by a colon (such as <code>myLoop: for (...)</code>).
+These are called labels. They allow nested loops or code blocks to be
+selectively targeted by <code>break</code> or <code>continue</code>
+statements.</p>
+<p>An unused label occurs when a label is declared, but no subsequent
+<code>break</code> or <code>continue</code> uses it:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>outerLoop<span class="op">:</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">5</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(i)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the example above, <code>outerLoop</code> is never used to break
+or continue execution, making it redundant.</p>
+<h3 id="how-the-allowunusedlabels-flag-operates">How the
+<code>allowUnusedLabels</code> Flag Operates</h3>
+<p>The <code>allowUnusedLabels</code> setting is defined in the
+<code>compilerOptions</code> section of your <code>tsconfig.json</code>
+file. It accepts three potential values: <code>undefined</code>,
+<code>true</code>, or <code>false</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;allowUnusedLabels&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><strong><code>undefined</code> (Default):</strong> TypeScript will
+provide an informational suggestion in editors (such as VS Code), often
+graying out the unused label to indicate dead code, but it will not emit
+a compiler error or fail a build.</li>
+<li><strong><code>false</code>:</strong> TypeScript treats unused labels
+as errors (<code>TS7028: Unused label.</code>). If an unused label is
+present in the code, compilation fails.</li>
+<li><strong><code>true</code>:</strong> TypeScript completely ignores
+unused labels. No warnings, suggestions, or compiler errors will be
+produced.</li>
+</ul>
+<h3 id="why-you-should-set-allowunusedlabels-to-false">Why You Should
+Set <code>allowUnusedLabels</code> to <code>false</code></h3>
+<p>Unused labels are rarely written intentionally. In modern JavaScript
+and TypeScript development, they are almost always the result of a
+typo.</p>
+<p>The most common occurrence is mistakenly returning an object literal
+from an arrow function without wrapping the object in parentheses:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> getUser <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>In this snippet, JavaScript parses <code>{ name: "Alice" }</code> not
+as an object literal, but as a block body containing a label named
+<code>name:</code> followed by an expression statement
+<code>"Alice"</code>.</p>
+<p>Setting <code>allowUnusedLabels: false</code> flags
+<code>name:</code> as an unused label error, allowing you to catch this
+syntax error immediately during the build process instead of letting the
+function return <code>undefined</code> silently at runtime.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-allow-unused-labels-works-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Array.isArray Narrows Types in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript utilizes control flow analysis and built-in type predicates to accurately differentiate between arrays and scalar values within union types. When processing a union consisting of scalar types (such as string, number, or primitive objects) and a">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-array-is-array-narrows-types-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Array.isArray Narrows Types in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-array-is-array-narrows-types-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript utilizes control flow analysis and built-in type predicates to accurately differentiate between arrays and scalar values within union types. When processing a union consisting of scalar types (such as string, number, or primitive objects) and a" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-arrayisarray-narrows-types-in-typescript">How Array.isArray
+Narrows Types in TypeScript</h1>
+<p>TypeScript utilizes control flow analysis and built-in type
+predicates to accurately differentiate between arrays and scalar values
+within union types. When processing a union consisting of scalar types
+(such as <code>string</code>, <code>number</code>, or primitive objects)
+and array types (such as <code>string[]</code> or
+<code>number[]</code>), the <code>Array.isArray()</code> method acts as
+a native type guard. Invoking this check refines the union so that the
+array types are isolated in the truthy branch and the scalar types are
+isolated in the falsy branch, eliminating the need for manual type
+assertions.</p>
+<h3 id="the-mechanism-type-predicates">The Mechanism: Type
+Predicates</h3>
+<p>TypeScript's core library defines <code>Array.isArray()</code> using
+a type predicate. In standard TypeScript definitions, its signature
+resembles:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">isArray</span>(arg<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> arg <span class="kw">is</span> <span class="dt">any</span>[]<span class="op">;</span></span></code></pre></div>
+<p>Or, in more recent versions supporting read-only collections:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">isArray</span>(arg<span class="op">:</span> <span class="dt">unknown</span>)<span class="op">:</span> arg <span class="kw">is</span> <span class="kw">readonly</span> <span class="dt">unknown</span>[]<span class="op">;</span></span></code></pre></div>
+<p>The <code>arg is ...</code> return signature informs the TypeScript
+compiler that if the function returns <code>true</code>, the checked
+variable is guaranteed to be an array type. During compilation, the
+control flow analysis engine uses this information to update the
+variable's type within that specific execution path.</p>
+<h3 id="narrowing-unions-of-scalars-and-arrays">Narrowing Unions of
+Scalars and Arrays</h3>
+<p>Consider a common scenario where a function accepts either a single
+scalar value or an array of those values, such as
+<code>string | string[]</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processInput</span>(input<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">string</span>[]) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(input)) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TypeScript narrows &#39;input&#39; to: string[]</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Array length: </span><span class="sc">${</span>input<span class="op">.</span><span class="at">length</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    input<span class="op">.</span><span class="fu">forEach</span>(item <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(item<span class="op">.</span><span class="fu">toUpperCase</span>()))<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TypeScript narrows &#39;input&#39; to: string</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Single string: </span><span class="sc">${</span>input<span class="op">.</span><span class="fu">toUpperCase</span>()<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the <code>if</code> block, TypeScript filters the union
+<code>string | string[]</code> to only include types assignable to
+<code>readonly unknown[]</code>. The scalar <code>string</code> does not
+satisfy this condition, leaving only <code>string[]</code>.</p>
+<p>In the <code>else</code> block, TypeScript removes the array
+component from the union through exclusion. Because
+<code>string[]</code> was satisfied in the <code>if</code> branch, the
+remaining type must be the scalar <code>string</code>.</p>
+<h3 id="handling-complex-scalar-unions">Handling Complex Scalar
+Unions</h3>
+<p>The same mechanism applies to unions with multiple distinct scalar
+types and array types:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MixedData <span class="op">=</span> <span class="dt">number</span> <span class="op">|</span> <span class="dt">boolean</span> <span class="op">|</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleData</span>(data<span class="op">:</span> MixedData) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">Array</span><span class="op">.</span><span class="fu">isArray</span>(data)) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Narrowed to: string[]</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> data<span class="op">.</span><span class="fu">join</span>(<span class="st">&quot;, &quot;</span>)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Narrowed to: number | boolean</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> data<span class="op">.</span><span class="fu">toString</span>()<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Here, <code>Array.isArray</code> successfully filters out all
+non-array candidates at once. The <code>else</code> branch retains all
+scalar members (<code>number | boolean</code>), allowing you to perform
+subsequent narrowing checks (such as
+<code>typeof data === "number"</code>) on the remaining primitives.</p>
+<h3 id="behavior-with-generics-and-readonly-arrays">Behavior with
+Generics and Readonly Arrays</h3>
+<p>When dealing with generics or <code>readonly</code> arrays,
+<code>Array.isArray()</code> handles narrowing predictably:</p>
+<ol type="1">
+<li><strong>Tuples and Arrays:</strong> If a union contains a tuple, a
+standard array, and a scalar (e.g.,
+<code>[string, number] | string[] | number</code>),
+<code>Array.isArray()</code> narrows the truthy branch to the union of
+the tuple and array types
+(<code>[string, number] | string[]</code>).</li>
+<li><strong>Readonly Arrays:</strong> TypeScript recognizes that mutable
+arrays extend <code>readonly unknown[]</code>. Consequently, types
+defined as <code>readonly T[]</code> are also captured properly by the
+guard.</li>
+</ol>
+<p>By leveraging <code>Array.isArray()</code>, TypeScript safely
+untangles collections from singular values at runtime while
+automatically aligning compile-time types with the corresponding runtime
+logic.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-array-is-array-narrows-types-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

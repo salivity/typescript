@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Const Enum Alternatives for isolatedModules - typescript</title>
+    <meta name="description" content="When TypeScript&#39;s isolatedModules flag is enabled, compilers like Babel, SWC, and esbuild transpile each file independently without full type graph awareness, rendering const enum exports invalid because they cannot be safely inlined across file boundarie">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-const-enum-alternatives-for-isolated-modules">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Const Enum Alternatives for isolatedModules - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-const-enum-alternatives-for-isolated-modules" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When TypeScript&#39;s isolatedModules flag is enabled, compilers like Babel, SWC, and esbuild transpile each file independently without full type graph awareness, rendering const enum exports invalid because they cannot be safely inlined across file boundarie" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-const-enum-alternatives-for-isolatedmodules">TypeScript
+Const Enum Alternatives for isolatedModules</h1>
+<p>When TypeScript's <code>isolatedModules</code> flag is enabled,
+compilers like Babel, SWC, and esbuild transpile each file independently
+without full type graph awareness, rendering <code>const enum</code>
+exports invalid because they cannot be safely inlined across file
+boundaries. To maintain compile-time safety and runtime performance
+without breaking isolated transpilation pipelines, developers must rely
+on effective alternatives. This article covers the top replacements for
+<code>const enum</code>, including <code>as const</code> object maps,
+literal union types, and standard enums, outlining how each approach
+satisfies the constraints of modern build tools.</p>
+<h2 id="the-problem-with-const-enum-under-isolatedmodules">The Problem
+with <code>const enum</code> Under <code>isolatedModules</code></h2>
+<p>A standard <code>const enum</code> is erased during compilation, and
+its values are inlined directly at the call site. However, when
+transpilers operate on a single-file basis via
+<code>isolatedModules</code>, they cannot read external type definitions
+to inline values from imported <code>const enum</code> declarations.
+This results in a runtime error or a compilation failure.</p>
+<p>Below are the most effective alternatives.</p>
+<hr />
+<h2 id="1-object-literals-with-as-const-recommended">1. Object Literals
+with <code>as const</code> (Recommended)</h2>
+<p>The most popular and idiomatic modern TypeScript pattern is combining
+an immutable object literal with a mapped type.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> Direction <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Up<span class="op">:</span> <span class="st">&#39;UP&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Down<span class="op">:</span> <span class="st">&#39;DOWN&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  Left<span class="op">:</span> <span class="st">&#39;LEFT&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  Right<span class="op">:</span> <span class="st">&#39;RIGHT&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>} <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> Direction <span class="op">=</span> <span class="kw">typeof</span> Direction[<span class="kw">keyof</span> <span class="kw">typeof</span> Direction]<span class="op">;</span></span></code></pre></div>
+<h3 id="why-it-works">Why It Works</h3>
+<ul>
+<li><strong>Compatibility:</strong> Generates standard JavaScript
+objects that single-file transpilers like esbuild and Babel can parse
+without issue.</li>
+<li><strong>Unified Namespace:</strong> You can use
+<code>Direction</code> as both a runtime object
+(<code>Direction.Up</code>) and a TypeScript type
+(<code>let d: Direction</code>).</li>
+<li><strong>Tree-shaking:</strong> Dead-code elimination tools easily
+optimize plain object structures.</li>
+</ul>
+<hr />
+<h2 id="2-string-literal-union-types">2. String Literal Union Types</h2>
+<p>If you only need type safety without the need to iterate over values
+at runtime, pure string literal unions are the simplest alternative.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> Direction <span class="op">=</span> <span class="st">&#39;UP&#39;</span> <span class="op">|</span> <span class="st">&#39;DOWN&#39;</span> <span class="op">|</span> <span class="st">&#39;LEFT&#39;</span> <span class="op">|</span> <span class="st">&#39;RIGHT&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">move</span>(direction<span class="op">:</span> Direction) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// ...</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="why-it-works-1">Why It Works</h3>
+<ul>
+<li><strong>Zero Runtime Cost:</strong> Entirely erased during
+compilation, leaving no JavaScript output.</li>
+<li><strong>Refactoring:</strong> Fully supported by IDE autocomplete
+and rename refactoring.</li>
+<li><strong>Simplicity:</strong> Eliminates the ceremony of accessing
+object properties.</li>
+</ul>
+<hr />
+<h2 id="3-regular-non-const-enums">3. Regular (Non-Const) Enums</h2>
+<p>Removing the <code>const</code> modifier turns the declaration into a
+standard TypeScript enum.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">enum</span> Direction {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  Up <span class="op">=</span> <span class="st">&#39;UP&#39;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  Down <span class="op">=</span> <span class="st">&#39;DOWN&#39;</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  Left <span class="op">=</span> <span class="st">&#39;LEFT&#39;</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  Right <span class="op">=</span> <span class="st">&#39;RIGHT&#39;</span><span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="why-it-works-2">Why It Works</h3>
+<ul>
+<li><strong>Syntax Familiarity:</strong> Preserves classic TypeScript
+enum syntax and nominal type checking.</li>
+<li><strong>Safe Transpilation:</strong> Regular enums compile into an
+Immediately Invoked Function Expression (IIFE) object at runtime,
+allowing single-file transpilers to preserve the imported
+reference.</li>
+</ul>
+<p><em>Note: Regular enums add a minor amount of boilerplate code to
+your final build output compared to pure objects or unions.</em></p>
+<hr />
+<h2 id="4-transpiler-plugins">4. Transpiler Plugins</h2>
+<p>If migrating existing codebases away from <code>const enum</code> is
+too costly, you can keep them by integrating dedicated build plugins
+into your toolchain:</p>
+<ul>
+<li><strong>Babel:</strong> <code>babel-plugin-const-enum</code>
+transforms <code>const enum</code> declarations into numeric/string
+literals or regular enums during the Babel build step.</li>
+<li><strong>esbuild/SWC:</strong> Specialized pre-processing plugins
+exist in various bundler ecosystems (like Vite or Webpack) that inline
+the types before the single-file transpilation stage executes.</li>
+</ul>
+<hr />
+<h2 id="summary-of-choices">Summary of Choices</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Approach</th>
+<th style="text-align: left;">Runtime Overhead</th>
+<th style="text-align: left;">Single-File Transpiler Safe</th>
+<th style="text-align: left;">Autocomplete / Type Safety</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>as const</code>
+Object</strong></td>
+<td style="text-align: left;">Minimal (plain object)</td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: left;">Excellent</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Literal Unions</strong></td>
+<td style="text-align: left;">None (erased)</td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: left;">Excellent</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Standard
+<code>enum</code></strong></td>
+<td style="text-align: left;">Small (IIFE output)</td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: left;">Excellent</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Plugins</strong></td>
+<td style="text-align: left;">None (inlined)</td>
+<td style="text-align: left;">Requires extra tooling</td>
+<td style="text-align: left;">Excellent</td>
+</tr>
+</tbody>
+</table></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-const-enum-alternatives-for-isolated-modules';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
