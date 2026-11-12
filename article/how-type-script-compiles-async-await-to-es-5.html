@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Compiles Async/Await to ES5 - typescript</title>
+    <meta name="description" content="This article explores how the TypeScript compiler transforms modern async/await syntax into ECMAScript 5 (ES5) compatible JavaScript. Because ES5 lacks both native async/await and ES6 generator functions (function), TypeScript bridges this gap by rewritin">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-compiles-async-await-to-es-5">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Compiles Async/Await to ES5 - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-compiles-async-await-to-es-5" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how the TypeScript compiler transforms modern async/await syntax into ECMAScript 5 (ES5) compatible JavaScript. Because ES5 lacks both native async/await and ES6 generator functions (function), TypeScript bridges this gap by rewritin" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-compiles-asyncawait-to-es5">How TypeScript
+Compiles Async/Await to ES5</h1>
+<p>This article explores how the TypeScript compiler transforms modern
+<code>async</code>/<code>await</code> syntax into ECMAScript 5 (ES5)
+compatible JavaScript. Because ES5 lacks both native
+<code>async</code>/<code>await</code> and ES6 generator functions
+(<code>function*</code>), TypeScript bridges this gap by rewriting
+asynchronous functions into a state-machine architecture managed by two
+core helper routines: <code>__awaiter</code> and
+<code>__generator</code>.</p>
+<h2 id="the-challenge-of-es5-downleveling">The Challenge of ES5
+Downleveling</h2>
+<p>Targeting ES5 requires eliminating all syntax features introduced in
+ES2015 and later. While an ES6 target can simply compile
+<code>async</code>/<code>await</code> into standard generator functions
+paired with a promise runner, targeting ES5 means generators themselves
+must be simulated.</p>
+<p>To overcome this, TypeScript uses:</p>
+<ol type="1">
+<li><strong><code>__awaiter</code></strong>: A promise-management
+wrapper that drives the execution forward.</li>
+<li><strong><code>__generator</code></strong>: A state-machine simulator
+that mimics generator behavior (<code>yield</code>, <code>next</code>,
+<code>throw</code>, and <code>return</code>) using standard
+<code>switch/case</code> control flow.</li>
+</ol>
+<h2 id="the-role-of-__awaiter">The Role of <code>__awaiter</code></h2>
+<p>The <code>__awaiter</code> helper acts like a coroutine runner
+(similar to the popular <code>co</code> library). Its primary
+responsibility is wrapping the execution of an asynchronous task in a
+native or polyfilled <code>Promise</code>.</p>
+<p>When an <code>async</code> function is invoked,
+<code>__awaiter</code> immediately returns a new <code>Promise</code>.
+It defines an internal stepping mechanism, typically named
+<code>step</code>, which recursively calls the generator's
+<code>next()</code> or <code>throw()</code> methods.</p>
+<p>When the generator yields a value (which corresponds to an expression
+evaluated in an <code>await</code> statement):</p>
+<ul>
+<li>If the yielded promise resolves, <code>__awaiter</code> calls
+<code>step("next", resolvedValue)</code>, resuming execution.</li>
+<li>If the yielded promise rejects, <code>__awaiter</code> calls
+<code>step("throw", rejectionError)</code> to let the state machine
+handle the error or reject the outer promise.</li>
+<li>When the state machine completes (<code>done: true</code>),
+<code>__awaiter</code> resolves the outer promise with the final return
+value.</li>
+</ul>
+<h2 id="the-role-of-__generator">The Role of
+<code>__generator</code></h2>
+<p>The <code>__generator</code> helper replaces native ES6 generator
+mechanics (<code>function*</code> and <code>yield</code>). It receives a
+function body containing a large <code>switch</code> statement, where
+each <code>case</code> corresponds to an execution step between
+suspension points (the <code>await</code> expressions).</p>
+<p>The helper maintains an internal state object (commonly designated as
+<code>_</code>) that tracks:</p>
+<ul>
+<li><strong><code>label</code></strong>: The instruction pointer (the
+current <code>case</code> in the switch statement).</li>
+<li><strong><code>sent</code></strong>: The value returned to the
+generator when execution resumes (the resolved value of an awaited
+promise).</li>
+<li><strong><code>trys</code> and </strong><code>ops</code>**: Arrays
+tracking exception handlers, nested <code>try/catch/finally</code>
+blocks, and call-stack unwinding.</li>
+</ul>
+<p>Every time <code>await</code> is used in your code, TypeScript splits
+the function into discrete blocks. It sets <code>_.label</code> to point
+to the next block, and returns an operation indicating that execution
+should pause.</p>
+<h2 id="the-transformation-in-action">The Transformation in Action</h2>
+<p>Consider this simple TypeScript function:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">fetchUser</span>(id<span class="op">:</span> <span class="dt">number</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="vs">`/api/user/</span><span class="sc">${</span>id<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> data<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When compiled to ES5, the code is restructured into the following
+functional layout:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fetchUser</span>(id) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">__awaiter</span>(<span class="kw">this</span><span class="op">,</span> <span class="kw">void</span> <span class="dv">0</span><span class="op">,</span> <span class="kw">void</span> <span class="dv">0</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> response<span class="op">,</span> data<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">__generator</span>(<span class="kw">this</span><span class="op">,</span> <span class="kw">function</span> (_a) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">switch</span> (_a<span class="op">.</span><span class="at">label</span>) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="dv">0</span><span class="op">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> [<span class="dv">4</span> <span class="co">/*yield*/</span><span class="op">,</span> <span class="fu">fetch</span>(<span class="st">&quot;/api/user/&quot;</span> <span class="op">+</span> id)]<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="dv">1</span><span class="op">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                    response <span class="op">=</span> _a<span class="op">.</span><span class="fu">sent</span>()<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> [<span class="dv">4</span> <span class="co">/*yield*/</span><span class="op">,</span> response<span class="op">.</span><span class="fu">json</span>()]<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">case</span> <span class="dv">2</span><span class="op">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                    data <span class="op">=</span> _a<span class="op">.</span><span class="fu">sent</span>()<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> [<span class="dv">2</span> <span class="co">/*return*/</span><span class="op">,</span> data]<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="deconstructing-the-compiled-output">Deconstructing the Compiled
+Output</h3>
+<ol type="1">
+<li><strong>State 0</strong>: Execution begins. The code calls
+<code>fetch("/api/user/" + id)</code>. The helper returns
+<code>[4, fetch(...)]</code>, where opcode <code>4</code> represents a
+<code>yield</code>. <code>__awaiter</code> intercepts this promise and
+pauses execution.</li>
+<li><strong>State 1</strong>: Once the fetch promise resolves,
+<code>__awaiter</code> invokes <code>_a.sent()</code> to retrieve the
+result, assigns it to <code>response</code>, and evaluates
+<code>response.json()</code>. It yields again via
+<code>[4, response.json()]</code>.</li>
+<li><strong>State 2</strong>: When <code>response.json()</code>
+resolves, its result is assigned to <code>data</code>. The function
+encounters <code>return [2, data]</code>, where opcode <code>2</code>
+signals completion (<code>return</code>). <code>__awaiter</code> marks
+the generator as complete and resolves the outer promise.</li>
+</ol>
+<h2 id="error-handling-downleveling">Error Handling Downleveling</h2>
+<p>When <code>try/catch/finally</code> blocks wrap <code>await</code>
+calls, TypeScript extends the state machine by populating the
+<code>trys</code> array in the generator's state. Each entry records the
+start label, end label, catch label, and finally label.</p>
+<p>If an error is thrown internally or fed into the generator via
+<code>step("throw", err)</code>, <code>__generator</code> checks the
+current <code>label</code> against the <code>trys</code> table. If the
+execution point is within a monitored block, it jumps to the catch
+label; otherwise, it bubbles the error up, causing
+<code>__awaiter</code> to reject the outer promise.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-type-script-compiles-async-await-to-es-5';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

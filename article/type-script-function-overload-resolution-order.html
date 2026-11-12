@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Function Overload Resolution Order - typescript</title>
+    <meta name="description" content="Function overload resolution in TypeScript determines which specific type signature applies to a function call that has multiple definitions. TypeScript resolves overloads using a strict top-to-bottom order, selecting the first signature that is structura">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-function-overload-resolution-order">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Function Overload Resolution Order - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-function-overload-resolution-order" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Function overload resolution in TypeScript determines which specific type signature applies to a function call that has multiple definitions. TypeScript resolves overloads using a strict top-to-bottom order, selecting the first signature that is structura" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-function-overload-resolution-order">TypeScript
+Function Overload Resolution Order</h1>
+<p>Function overload resolution in TypeScript determines which specific
+type signature applies to a function call that has multiple definitions.
+TypeScript resolves overloads using a strict top-to-bottom order,
+selecting the first signature that is structurally compatible with the
+passed arguments. Because the compiler stops checking as soon as it
+finds a valid match, the order in which overloads are declared is
+critical to avoiding unintended type inferences and masked
+signatures.</p>
+<h3 id="top-to-bottom-evaluation">Top-to-Bottom Evaluation</h3>
+<p>When a function with multiple overload signatures is invoked, the
+TypeScript compiler checks the declared signatures sequentially,
+beginning with the first one listed in the code. The resolution process
+follows these rules:</p>
+<ol type="1">
+<li><strong>Sequential Evaluation:</strong> The compiler tests the call
+arguments against each overload signature from top to bottom.</li>
+<li><strong>First Match Wins:</strong> As soon as an overload signature
+matches the types and count of the provided arguments, the compiler
+selects that signature and stops evaluating further overloads.</li>
+<li><strong>The Implementation Signature is Ignored:</strong> The final
+signature—the one containing the actual function body—is the
+implementation signature. It is invisible to external callers and is not
+considered during overload resolution.</li>
+</ol>
+<h3 id="the-specificity-rule-narrow-to-wide">The Specificity Rule:
+Narrow to Wide</h3>
+<p>Because the first matching overload is always selected, you must
+order signatures from most specific (narrowest) to least specific
+(widest). Placing a general signature above a specific signature will
+"shadow" the specific signature, preventing it from ever being
+invoked.</p>
+<h4 id="incorrect-ordering-wide-before-narrow">Incorrect Ordering (Wide
+Before Narrow)</h4>
+<p>In this example, the <code>string</code> parameter matches any string
+value, so the literal <code>"admin"</code> overload is never
+reached:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Incorrect: Broad overload first</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="st">&quot;admin&quot;</span>)<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">any</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> role <span class="op">===</span> <span class="st">&quot;admin&quot;</span> <span class="op">?</span> <span class="kw">true</span> <span class="op">:</span> role<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: Return type is &#39;string&#39;, not &#39;boolean&#39;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">getRole</span>(<span class="st">&quot;admin&quot;</span>)<span class="op">;</span> </span></code></pre></div>
+<h4 id="correct-ordering-narrow-before-wide">Correct Ordering (Narrow
+Before Wide)</h4>
+<p>Moving the narrow literal type above the broader primitive type
+ensures that the compiler matches the specialized behavior first:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct: Specific overload first</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="st">&quot;admin&quot;</span>)<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="dt">string</span>)<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getRole</span>(role<span class="op">:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">any</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> role <span class="op">===</span> <span class="st">&quot;admin&quot;</span> <span class="op">?</span> <span class="kw">true</span> <span class="op">:</span> role<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: Return type is correctly resolved as &#39;boolean&#39;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">getRole</span>(<span class="st">&quot;admin&quot;</span>)<span class="op">;</span> </span></code></pre></div>
+<h3 id="union-and-subtype-overloads">Union and Subtype Overloads</h3>
+<p>The same principle applies when dealing with inheritance, unions, and
+optional parameters:</p>
+<ul>
+<li><strong>Subtypes vs. Supertypes:</strong> If a derived class or
+specialized interface is overloaded alongside its base class, the
+derived class must be placed first.</li>
+<li><strong>Optional Parameters:</strong> Overloads with fewer, more
+specific parameters should typically be ordered according to precision
+to prevent an overload with optional parameters from catching arguments
+meant for a different signature.</li>
+</ul>
+<p>If the arguments provided do not match any of the overload
+signatures, TypeScript raises a compile-time error pointing to the
+closest overload candidate or stating that no overload matches the
+call.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-function-overload-resolution-order';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>declare const enum vs declare enum in TypeScript - typescript</title>
+    <meta name="description" content="In TypeScript, ambient enums defined with the declare keyword inform the compiler about enum structures that exist in an external environment without generating code for their definition. The fundamental difference between a declare const enum and a stand">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/declare-const-enum-vs-declare-enum-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="declare const enum vs declare enum in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/declare-const-enum-vs-declare-enum-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, ambient enums defined with the declare keyword inform the compiler about enum structures that exist in an external environment without generating code for their definition. The fundamental difference between a declare const enum and a stand" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="declare-const-enum-vs-declare-enum-in-typescript">declare const
+enum vs declare enum in TypeScript</h1>
+<p>In TypeScript, ambient enums defined with the <code>declare</code>
+keyword inform the compiler about enum structures that exist in an
+external environment without generating code for their definition. The
+fundamental difference between a <code>declare const enum</code> and a
+standard <code>declare enum</code> is how member access is compiled:
+<code>declare enum</code> generates runtime property accesses against a
+presumed global or ambient object, while <code>declare const enum</code>
+inlines the member values directly as literals at compile time,
+eliminating any runtime object lookup.</p>
+<h2 id="standard-declare-enum">Standard <code>declare enum</code></h2>
+<p>A standard <code>declare enum</code> tells the TypeScript compiler
+that an enum object exists at runtime elsewhere (such as via a
+<code>&lt;script&gt;</code> tag or a global library), but no definition
+code should be emitted in the current file.</p>
+<p>When your code accesses a member of a <code>declare enum</code>,
+TypeScript preserves the member access expression as a standard object
+lookup in the emitted JavaScript.</p>
+<h3 id="example">Example</h3>
+<p>TypeScript:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">enum</span> Direction {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Up <span class="op">=</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Down <span class="op">=</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> move <span class="op">=</span> Direction<span class="op">.</span><span class="at">Up</span><span class="op">;</span></span></code></pre></div>
+<p>Compiled JavaScript:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;use strict&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> move <span class="op">=</span> Direction<span class="op">.</span><span class="at">Up</span><span class="op">;</span></span></code></pre></div>
+<p>Because TypeScript emits <code>Direction.Up</code>, a real JavaScript
+object named <code>Direction</code> must exist in the runtime scope
+where this code runs. If that object is missing at runtime, the code
+throws a <code>ReferenceError</code>.</p>
+<h2 id="declare-const-enum"><code>declare const enum</code></h2>
+<p>A <code>declare const enum</code> combines ambient declaration
+behavior with constant enum behavior. It instructs the compiler that the
+enum exists conceptually for type-checking and provides concrete
+compile-time constants, but no runtime object needs to be
+referenced.</p>
+<p>When your code references a member of a
+<code>declare const enum</code>, TypeScript replaces the identifier with
+its actual literal value (number or string) directly at the call
+site.</p>
+<h3 id="example-1">Example</h3>
+<p>TypeScript:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span> <span class="kw">const</span> <span class="kw">enum</span> Direction {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  Up <span class="op">=</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  Down <span class="op">=</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> move <span class="op">=</span> Direction<span class="op">.</span><span class="at">Up</span><span class="op">;</span></span></code></pre></div>
+<p>Compiled JavaScript:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;use strict&quot;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> move <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div>
+<p>Because the value <code>0</code> is inlined directly, no
+<code>Direction</code> object is ever referenced or needed in the
+runtime environment.</p>
+<h2 id="summary-of-key-differences">Summary of Key Differences</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><code>declare enum</code></th>
+<th style="text-align: left;"><code>declare const enum</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Code Generation for
+Members</strong></td>
+<td style="text-align: left;">Compiles to a property lookup (e.g.,
+<code>Direction.Up</code>).</td>
+<td style="text-align: left;">Inlines the literal value directly (e.g.,
+<code>0</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runtime Dependency</strong></td>
+<td style="text-align: left;">Requires an actual <code>Direction</code>
+object in the global/runtime scope.</td>
+<td style="text-align: left;">Requires no runtime object; references are
+completely replaced.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Bundle Size &amp;
+Performance</strong></td>
+<td style="text-align: left;">Retains property access operations in the
+output JS.</td>
+<td style="text-align: left;">Slightly smaller and faster due to direct
+literal replacement.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Transpiler
+Compatibility</strong></td>
+<td style="text-align: left;">Supported by single-file transpilers
+(e.g., Babel, SWC) if configured.</td>
+<td style="text-align: left;">Often problematic under
+<code>--isolatedModules</code> unless values are purely numeric/string
+and known locally.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="when-to-use-which">When to Use Which</h2>
+<p>Use a standard <code>declare enum</code> when you are writing type
+definitions for an existing JavaScript library that exposes a real
+object at runtime containing reverse mappings or when you need to pass
+the enum object itself as a parameter.</p>
+<p>Use a <code>declare const enum</code> when you are defining external
+constants where you want zero runtime overhead, guaranteed inlining, and
+you do not require a physical JavaScript object to back the values at
+execution time.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/declare-const-enum-vs-declare-enum-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

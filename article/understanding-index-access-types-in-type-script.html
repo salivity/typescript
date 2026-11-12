@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Index Access Types in TypeScript - typescript</title>
+    <meta name="description" content="Index access types, also known as lookup types, allow you to query and reuse the type of a specific property from another type in TypeScript. By mirroring the bracket notation used to access object properties at runtime, index access types prevent code du">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/understanding-index-access-types-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Understanding Index Access Types in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/understanding-index-access-types-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Index access types, also known as lookup types, allow you to query and reuse the type of a specific property from another type in TypeScript. By mirroring the bracket notation used to access object properties at runtime, index access types prevent code du" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="understanding-index-access-types-in-typescript">Understanding
+Index Access Types in TypeScript</h1>
+<p>Index access types, also known as lookup types, allow you to query
+and reuse the type of a specific property from another type in
+TypeScript. By mirroring the bracket notation used to access object
+properties at runtime, index access types prevent code duplication and
+ensure strict type consistency throughout your codebase. This guide
+explains what index access types are, how to declare them using standard
+bracket notation, and how to apply them to nested objects, unions, and
+arrays.</p>
+<hr />
+<h3 id="what-are-index-access-types">What Are Index Access Types?</h3>
+<p>In TypeScript, an index access type looks up a specific property on
+another type using the syntax <code>Type[Key]</code>. Instead of
+manually redefining a type that already exists as a property of an
+interface or type alias, you extract it directly. This establishes a
+single source of truth: if the original type changes, any dependent
+index access types update automatically.</p>
+<h3 id="basic-declaration-and-syntax">Basic Declaration and Syntax</h3>
+<p>To declare an index access type, supply the parent type followed by
+the property name in square brackets. The key must be a valid type
+itself, typically a string literal type representing the property
+name.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Declaring index access types</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserId <span class="op">=</span> User[<span class="st">&#39;id&#39;</span>]<span class="op">;</span>     <span class="co">// string</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserAge <span class="op">=</span> User[<span class="st">&#39;age&#39;</span>]<span class="op">;</span>   <span class="co">// number</span></span></code></pre></div>
+<p>Because the index itself is a type, you cannot pass a runtime
+variable directly into the brackets unless you use the
+<code>typeof</code> operator.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> key <span class="op">=</span> <span class="st">&#39;name&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: Cannot find name &#39;key&#39;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// type UserName = User[key];</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Correct: Use typeof to refer to the type of the constant</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserName <span class="op">=</span> User[<span class="kw">typeof</span> key]<span class="op">;</span> <span class="co">// string</span></span></code></pre></div>
+<h3 id="accessing-nested-object-types">Accessing Nested Object
+Types</h3>
+<p>Index access notation can be chained to extract types from deeply
+nested data structures.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Company <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  location<span class="op">:</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    city<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    coordinates<span class="op">:</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      lat<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      lng<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Extracting deeply nested types</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="bu">Coordinates</span> <span class="op">=</span> Company[<span class="st">&#39;location&#39;</span>][<span class="st">&#39;coordinates&#39;</span>]<span class="op">;</span> <span class="co">// { lat: number; lng: number; }</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Latitude <span class="op">=</span> Company[<span class="st">&#39;location&#39;</span>][<span class="st">&#39;coordinates&#39;</span>][<span class="st">&#39;lat&#39;</span>]<span class="op">;</span> <span class="co">// number</span></span></code></pre></div>
+<h3 id="accessing-multiple-keys-and-unions">Accessing Multiple Keys and
+Unions</h3>
+<p>You can look up multiple properties simultaneously by passing a union
+of keys. The resulting type will be a union of the corresponding
+property types.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Product <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  sku<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  inStock<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: number | string</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProductIdentifier <span class="op">=</span> Product[<span class="st">&#39;id&#39;</span> <span class="op">|</span> <span class="st">&#39;sku&#39;</span>]<span class="op">;</span></span></code></pre></div>
+<p>When combined with the <code>keyof</code> operator, an index access
+type can dynamically extract a union of all property value types within
+an object.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: number | string | boolean</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProductValues <span class="op">=</span> Product[<span class="kw">keyof</span> Product]<span class="op">;</span></span></code></pre></div>
+<h3 id="index-access-types-with-arrays-and-tuples">Index Access Types
+with Arrays and Tuples</h3>
+<p>Index access types also work with array and tuple types using the
+<code>number</code> keyword or numeric literal types.</p>
+<h4 id="arrays">Arrays</h4>
+<p>Using <code>[number]</code> extracts the type of the array's
+elements:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> roles <span class="op">=</span> [<span class="st">&#39;admin&#39;</span><span class="op">,</span> <span class="st">&#39;editor&#39;</span><span class="op">,</span> <span class="st">&#39;viewer&#39;</span>] <span class="im">as</span> <span class="kw">const</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Extract the union of all string literals in the array</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Role <span class="op">=</span> <span class="kw">typeof</span> roles[<span class="dt">number</span>]<span class="op">;</span> <span class="co">// &quot;admin&quot; | &quot;editor&quot; | &quot;viewer&quot;</span></span></code></pre></div>
+<h4 id="tuples">Tuples</h4>
+<p>For tuples, you can access specific elements by their numeric index,
+or use <code>number</code> to get a union of all possible tuple
+values:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> KeyValuePair <span class="op">=</span> [<span class="dt">string</span><span class="op">,</span> <span class="dt">number</span>]<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> KeyType <span class="op">=</span> KeyValuePair[<span class="dv">0</span>]<span class="op">;</span>       <span class="co">// string</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ValueType <span class="op">=</span> KeyValuePair[<span class="dv">1</span>]<span class="op">;</span>     <span class="co">// number</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AllElementTypes <span class="op">=</span> KeyValuePair[<span class="dt">number</span>]<span class="op">;</span> <span class="co">// string | number</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/understanding-index-access-types-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

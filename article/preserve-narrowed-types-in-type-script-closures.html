@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preserve Narrowed Types in TypeScript Closures - typescript</title>
+    <meta name="description" content="In TypeScript, narrowing a mutable variable using control flow checks often fails to carry that narrowed type into nested callbacks and closures. Because mutable variables can be reassigned at any time prior to closure execution, the TypeScript compiler i">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/preserve-narrowed-types-in-type-script-closures">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Preserve Narrowed Types in TypeScript Closures - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/preserve-narrowed-types-in-type-script-closures" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, narrowing a mutable variable using control flow checks often fails to carry that narrowed type into nested callbacks and closures. Because mutable variables can be reassigned at any time prior to closure execution, the TypeScript compiler i" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="preserve-narrowed-types-in-typescript-closures">Preserve
+Narrowed Types in TypeScript Closures</h1>
+<p>In TypeScript, narrowing a mutable variable using control flow checks
+often fails to carry that narrowed type into nested callbacks and
+closures. Because mutable variables can be reassigned at any time prior
+to closure execution, the TypeScript compiler intentionally widens their
+types back to prevent runtime errors. Declaring values with
+<code>const</code>, either at the initial declaration or by capturing a
+narrowed reference in a local constant, locks the binding and guarantees
+immutability, allowing TypeScript to safely preserve narrowed types
+across closures.</p>
+<h2 id="the-closure-narrowing-problem">The Closure Narrowing
+Problem</h2>
+<p>TypeScript relies on control flow analysis to narrow types. When you
+check if a variable of type <code>string | null</code> is not
+<code>null</code>, the compiler narrows the type to <code>string</code>
+within that conditional block. However, if you reference that variable
+inside a nested function, callback, or asynchronous operation,
+TypeScript may discard the narrowed type.</p>
+<p>Consider the following scenario using a mutable <code>let</code>
+variable:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processData</span>(value<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> data <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (data <span class="op">!==</span> <span class="kw">null</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">setTimeout</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Error: &#39;data&#39; is possibly &#39;null&#39;.</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(data<span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span> <span class="dv">1000</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// &#39;data&#39; could be reassigned here before the timeout executes</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Because <code>data</code> is declared with <code>let</code>, it is
+mutable. TypeScript cannot guarantee that the value of <code>data</code>
+inside the <code>setTimeout</code> callback will remain a
+<code>string</code> when the callback eventually executes. To maintain
+safety, TypeScript widens <code>data</code> back to its original union
+type inside the closure.</p>
+<h2 id="how-const-preserves-narrowed-types">How <code>const</code>
+Preserves Narrowed Types</h2>
+<p>A <code>const</code> variable creates an immutable binding that
+cannot be reassigned. When TypeScript narrows a <code>const</code>
+variable, it knows the value can never be replaced with a different type
+later in the scope. Consequently, closures referencing a
+<code>const</code> retain the narrowed type safely.</p>
+<p>To preserve the narrowed type in a closure, capture the narrowed
+value into a <code>const</code> before entering the nested function:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">processData</span>(value<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span>) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> data <span class="op">=</span> value<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (data <span class="op">!==</span> <span class="kw">null</span>) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> safeData <span class="op">=</span> data<span class="op">;</span> <span class="co">// safeData is locked as &#39;string&#39;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">setTimeout</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="co">// TypeScript knows safeData is always &#39;string&#39;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(safeData<span class="op">.</span><span class="fu">toUpperCase</span>())<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span> <span class="dv">1000</span>)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="kw">null</span><span class="op">;</span> <span class="co">// safeData remains unaffected</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By aliasing <code>data</code> to <code>safeData</code> via
+<code>const</code>, the reference captured by the closure is immune to
+subsequent reassignments. The compiler preserves the <code>string</code>
+type without requiring explicit type assertions (<code>as string</code>)
+or non-null assertion operators (<code>!</code>).</p>
+<h2 id="preserving-object-properties-across-closures">Preserving Object
+Properties Across Closures</h2>
+<p>The same issue occurs when narrowing object properties. Because
+object properties are mutable by default, TypeScript cannot guarantee
+that another function or external process will not mutate a property
+before a closure runs:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  email<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sendNotification</span>(user<span class="op">:</span> UserProfile) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (user<span class="op">.</span><span class="at">email</span>) {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> email <span class="op">=</span> user<span class="op">.</span><span class="at">email</span><span class="op">;</span> <span class="co">// Extracted to a const</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(<span class="st">&#39;/api/notify&#39;</span><span class="op">,</span> {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      method<span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      body<span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>({ to<span class="op">:</span> email })</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    })<span class="op">.</span><span class="fu">then</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="co">// &#39;email&#39; reliably stays &#39;string&#39;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Sent to </span><span class="sc">${</span>email<span class="op">.</span><span class="fu">toLowerCase</span>()<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Destructuring or storing the property into a local <code>const</code>
+immediately snapshots the value and freezes its narrowed type for any
+subsequent closures.</p>
+<h2 id="summary">Summary</h2>
+<p>Whenever a closure must access a narrowed type:</p>
+<ul>
+<li>Avoid referencing outer <code>let</code> variables or mutable object
+properties directly inside the closure.</li>
+<li>Extract or alias the narrowed value to a <code>const</code> binding
+before defining the closure.</li>
+<li>Rely on TypeScript's immutability guarantees for <code>const</code>
+to keep types narrow without type assertions.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/preserve-narrowed-types-in-type-script-closures';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

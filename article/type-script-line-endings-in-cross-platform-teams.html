@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Line Endings in Cross-Platform Teams - typescript</title>
+    <meta name="description" content="Managing line endings across cross-platform development teams can lead to dirty Git diffs, inconsistent build artifacts, and unexpected compiler output when engineers alternate between Windows (CRLF) and Unix-based environments like macOS and Linux (LF).">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-line-endings-in-cross-platform-teams">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Line Endings in Cross-Platform Teams - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-line-endings-in-cross-platform-teams" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing line endings across cross-platform development teams can lead to dirty Git diffs, inconsistent build artifacts, and unexpected compiler output when engineers alternate between Windows (CRLF) and Unix-based environments like macOS and Linux (LF)." />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-line-endings-in-cross-platform-teams">TypeScript Line
+Endings in Cross-Platform Teams</h1>
+<p>Managing line endings across cross-platform development teams can
+lead to dirty Git diffs, inconsistent build artifacts, and unexpected
+compiler output when engineers alternate between Windows (CRLF) and
+Unix-based environments like macOS and Linux (LF). TypeScript resolves
+these discrepancies by decoupling source code parsing from code
+generation through its built-in <code>newLine</code> compiler option,
+while relying on companion tooling like Git attributes and formatters to
+normalize the source files themselves. This guide explains the exact
+mechanisms TypeScript uses to manage line endings and the best practices
+required to ensure consistency across your team.</p>
+<h3 id="the-source-code-parsing-mechanism">The Source Code Parsing
+Mechanism</h3>
+<p>The TypeScript compiler (<code>tsc</code>) handles differing line
+endings automatically during the lexical analysis and parsing phases.
+The internal scanner recognizes carriage return (<code>\r</code>), line
+feed (<code>\n</code>), and carriage return followed by line feed
+(<code>\r\n</code>) as identical line-break tokens.</p>
+<p>Because the compiler normalizes these characters into standard tokens
+in the Abstract Syntax Tree (AST), code written with CRLF on a Windows
+machine will parse and type-check identically on a Linux Continuous
+Integration (CI) runner using LF. Differing line endings in raw
+TypeScript source files will not cause syntax errors or semantic type
+issues.</p>
+<h3 id="the-newline-compiler-option">The <code>newLine</code> Compiler
+Option</h3>
+<p>While TypeScript parses any standard line break seamlessly, the
+emitted JavaScript, source maps, and declaration files
+(<code>.d.ts</code>) must pick a specific line-ending format. By
+default, <code>tsc</code> emits files using the operating system's
+native line ending: CRLF on Windows and LF on macOS and Linux. In a
+cross-platform team, this behavior creates uncommitted changes or
+divergent build artifacts simply because two developers compiled the
+same code on different machines.</p>
+<p>To enforce deterministic output regardless of the host operating
+system, TypeScript provides the <code>newLine</code> configuration in
+<code>tsconfig.json</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;newLine&quot;</span><span class="fu">:</span> <span class="st">&quot;lf&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The valid settings are:</p>
+<ul>
+<li><code>"lf"</code>: Forces all generated files to end with line feeds
+(<code>\n</code>), matching Unix standards. This is the recommended
+setting for modern web development and CI/CD pipelines.</li>
+<li><code>"crlf"</code>: Forces all generated files to use carriage
+return plus line feed (<code>\r\n</code>), matching legacy Windows
+standards.</li>
+</ul>
+<p>Setting this explicitly ensures that builds generated locally on
+Windows match the outputs generated by Linux-based automated build
+environments bit-for-bit.</p>
+<h3 id="integrating-with-git-via-gitattributes">Integrating with Git via
+<code>.gitattributes</code></h3>
+<p>The <code>newLine</code> option only controls the output of the
+compilation process; it does not alter the line endings of the source
+<code>.ts</code> files on disk. If a Windows developer checks in a file
+with CRLF, and a Mac developer checks in a change with LF, version
+control histories become polluted with entire-file diffs.</p>
+<p>To prevent this, teams should configure a <code>.gitattributes</code>
+file in the repository root. This takes precedence over individual
+developer configurations like <code>core.autocrlf</code>:</p>
+<pre class="gitattributes"><code>* text=auto eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf</code></pre>
+<p>This configuration forces Git to normalize all TypeScript files to LF
+upon commit and guarantees that checkouts onto any platform retain LF
+line endings.</p>
+<h3 id="complementary-tooling-eslint-and-prettier">Complementary
+Tooling: ESLint and Prettier</h3>
+<p>To catch line-ending discrepancies before compilation or commit:</p>
+<ol type="1">
+<li><strong>Prettier</strong>: Setting <code>"endOfLine": "lf"</code> in
+your <code>.prettierrc</code> ensures all developers format files using
+the same characters across IDEs.</li>
+<li><strong>ESLint</strong>: The <code>linebreak-style</code> rule can
+be set to <code>["error", "unix"]</code> to flag any accidental CRLF
+insertions directly in developer text editors.</li>
+</ol>
+<p>By combining the TypeScript <code>newLine</code> compiler option with
+a strict <code>.gitattributes</code> policy and automated formatting,
+cross-platform teams eliminate line-ending conflicts across both source
+code and emitted build outputs.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-line-endings-in-cross-platform-teams';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

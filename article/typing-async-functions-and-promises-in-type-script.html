@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Async Functions and Promises in TypeScript - typescript</title>
+    <meta name="description" content="This article provides a concise overview of how TypeScript handles asynchronous code, detailing how the Promise&lt;T&gt; generic models deferred values, how async functions enforce and infer asynchronous return types, and how the Awaited&lt;T&gt; utility type handles">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/typing-async-functions-and-promises-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typing Async Functions and Promises in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/typing-async-functions-and-promises-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a concise overview of how TypeScript handles asynchronous code, detailing how the Promise&lt;T&gt; generic models deferred values, how async functions enforce and infer asynchronous return types, and how the Awaited&lt;T&gt; utility type handles" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typing-async-functions-and-promises-in-typescript">Typing Async
+Functions and Promises in TypeScript</h1>
+<p>This article provides a concise overview of how TypeScript handles
+asynchronous code, detailing how the <code>Promise&lt;T&gt;</code>
+generic models deferred values, how <code>async</code> functions enforce
+and infer asynchronous return types, and how the
+<code>Awaited&lt;T&gt;</code> utility type handles recursive promise
+unwrapping at compile time.</p>
+<h2 id="the-promiset-generic-type">The <code>Promise&lt;T&gt;</code>
+Generic Type</h2>
+<p>In TypeScript, deferred results are represented using the generic
+interface <code>Promise&lt;T&gt;</code>, where <code>T</code> specifies
+the type of the value resolved upon success.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fetchUserId</span>()<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Promise</span>((resolve) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">resolve</span>(<span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When you define an explicit return type of
+<code>Promise&lt;T&gt;</code>, TypeScript ensures that any value passed
+to the <code>resolve</code> callback matches <code>T</code>.</p>
+<h2 id="typing-async-functions">Typing <code>async</code> Functions</h2>
+<p>Any function declared with the <code>async</code> keyword in
+JavaScript inherently returns a Promise. TypeScript strictly enforces
+this behavior: the return type of an <code>async</code> function must
+always be a <code>Promise</code>.</p>
+<p>If you write a regular return statement within an <code>async</code>
+function, TypeScript automatically wraps the inferred return type in a
+<code>Promise</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Return type is inferred as Promise&lt;string&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">getGreeting</span>() {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="st">&quot;Hello, World!&quot;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you explicitly define the return type, it must be declared as
+<code>Promise&lt;T&gt;</code>, not <code>T</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">getStatus</span>()<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">boolean</span><span class="op">&gt;</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: The return type of an async function or method must be the global Promise&lt;T&gt; type.</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">getInvalidStatus</span>()<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="promise-resolution-with-await">Promise Resolution with
+<code>await</code></h2>
+<p>When the <code>await</code> operator is used inside an
+<code>async</code> function, TypeScript extracts the resolved type
+<code>T</code> from <code>Promise&lt;T&gt;</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">processData</span>() {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> userId <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetchUserId</span>()<span class="op">;</span> <span class="co">// Inferred as type &#39;number&#39;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(userId<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>))<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you apply <code>await</code> to a non-promise value, TypeScript
+evaluates the expression as the value's immediate type rather than
+raising an error, mimicking JavaScript's runtime behavior.</p>
+<h2 id="recursive-unwrapping-with-awaitedt">Recursive Unwrapping with
+<code>Awaited&lt;T&gt;</code></h2>
+<p>At runtime, native JavaScript promises automatically unwrap nested
+promises. For example, resolving a
+<code>Promise&lt;Promise&lt;string&gt;&gt;</code> yields a
+<code>string</code>, not a <code>Promise&lt;string&gt;</code>.</p>
+<p>To match this behavior at the type level, TypeScript provides the
+intrinsic <code>Awaited&lt;T&gt;</code> utility type (introduced in
+TypeScript 4.5). It recursively strips away promise layers:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DeepPromise <span class="op">=</span> <span class="bu">Promise</span><span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="bu">Promise</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;&gt;&gt;;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Resolved <span class="op">=</span> Awaited<span class="op">&lt;</span>DeepPromise<span class="op">&gt;;</span> <span class="co">// number</span></span></code></pre></div>
+<p>TypeScript uses <code>Awaited&lt;T&gt;</code> internally to infer the
+return types of functions like <code>Promise.all</code>,
+<code>Promise.race</code>, and statements using <code>await</code>.</p>
+<h2 id="error-handling-and-rejections">Error Handling and
+Rejections</h2>
+<p>TypeScript does not statically type Promise rejections or caught
+errors as part of the function signature. Because JavaScript allows any
+value to be thrown, caught errors in <code>try/catch</code> blocks or
+Promise <code>.catch()</code> handlers default to <code>unknown</code>
+(or <code>any</code>, depending on the
+<code>useUnknownInCatchVariables</code> compiler flag).</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">execute</span>() {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> <span class="fu">fetchUserId</span>()<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (error<span class="op">:</span> <span class="dt">unknown</span>) {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (error <span class="kw">instanceof</span> <span class="bu">Error</span>) {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(error<span class="op">.</span><span class="at">message</span>)<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/typing-async-functions-and-promises-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Discriminated Unions for State Machines - typescript</title>
+    <meta name="description" content="This article explains what discriminated unions are in TypeScript and why they are the standard recommendation for modeling finite state machines. You will learn how the combination of literal types, a shared discriminant property, and exhaustive type che">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-discriminated-unions-for-state-machines">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Discriminated Unions for State Machines - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-discriminated-unions-for-state-machines" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains what discriminated unions are in TypeScript and why they are the standard recommendation for modeling finite state machines. You will learn how the combination of literal types, a shared discriminant property, and exhaustive type che" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-discriminated-unions-for-state-machines">TypeScript
+Discriminated Unions for State Machines</h1>
+<p>This article explains what discriminated unions are in TypeScript and
+why they are the standard recommendation for modeling finite state
+machines. You will learn how the combination of literal types, a shared
+discriminant property, and exhaustive type checking prevents invalid
+application states, simplifies state transitions, and guarantees
+compile-time safety across your state-driven logic.</p>
+<h2 id="what-is-a-discriminated-union">What Is a Discriminated
+Union?</h2>
+<p>A discriminated union (also known as a tagged union or algebraic data
+type) is a pattern in TypeScript where multiple object types are
+combined into a single union type, with each member sharing a common
+literal property known as the "discriminant" or "tag."</p>
+<p>TypeScript evaluates this discriminant property to narrow down the
+specific type within the union automatically.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Circle <span class="op">=</span> { kind<span class="op">:</span> <span class="st">&quot;circle&quot;</span><span class="op">;</span> radius<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Square <span class="op">=</span> { kind<span class="op">:</span> <span class="st">&quot;square&quot;</span><span class="op">;</span> sideLength<span class="op">:</span> <span class="dt">number</span> }<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Shape <span class="op">=</span> Circle <span class="op">|</span> Square<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getArea</span>(shape<span class="op">:</span> Shape)<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (shape<span class="op">.</span><span class="at">kind</span>) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;circle&quot;</span><span class="op">:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="cn">PI</span> <span class="op">*</span> shape<span class="op">.</span><span class="at">radius</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span> <span class="co">// TypeScript knows this is Circle</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;square&quot;</span><span class="op">:</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> shape<span class="op">.</span><span class="at">sideLength</span> <span class="op">**</span> <span class="dv">2</span><span class="op">;</span>       <span class="co">// TypeScript knows this is Square</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="why-discriminated-unions-excel-in-state-machines">Why
+Discriminated Unions Excel in State Machines</h2>
+<p>A state machine relies on a fundamental principle: a system can only
+exist in one of a finite set of states at any given moment, and
+transitions between these states must be explicit. Discriminated unions
+are the ideal vehicle for this pattern for three major reasons:</p>
+<h3 id="1-making-impossible-states-unrepresentable">1. Making Impossible
+States Unrepresentable</h3>
+<p>A common anti-pattern in state management is grouping all potential
+properties into a single interface with optional fields:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Anti-pattern: prone to invalid states</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> RequestState {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  status<span class="op">:</span> <span class="st">&quot;idle&quot;</span> <span class="op">|</span> <span class="st">&quot;loading&quot;</span> <span class="op">|</span> <span class="st">&quot;success&quot;</span> <span class="op">|</span> <span class="st">&quot;error&quot;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  data<span class="op">?:</span> ResponseData<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  error<span class="op">?:</span> <span class="bu">Error</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>In the model above, nothing stops a bug from producing a state where
+<code>status</code> is <code>"loading"</code>, but both
+<code>data</code> and <code>error</code> are populated.</p>
+<p>With discriminated unions, each state explicitly defines only the
+data it is allowed to carry:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RequestState <span class="op">=</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { status<span class="op">:</span> <span class="st">&quot;idle&quot;</span> }</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { status<span class="op">:</span> <span class="st">&quot;loading&quot;</span> }</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { status<span class="op">:</span> <span class="st">&quot;success&quot;</span><span class="op">;</span> data<span class="op">:</span> ResponseData }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { status<span class="op">:</span> <span class="st">&quot;error&quot;</span><span class="op">;</span> error<span class="op">:</span> <span class="bu">Error</span> }<span class="op">;</span></span></code></pre></div>
+<p>This guarantees that an <code>"idle"</code> or <code>"loading"</code>
+state can never accidentally access <code>data</code> or
+<code>error</code>, eliminating runtime <code>undefined</code> errors
+before code reaches production.</p>
+<h3 id="2-built-in-exhaustive-type-checking">2. Built-in Exhaustive Type
+Checking</h3>
+<p>When writing transition logic or state handlers, TypeScript enforces
+that every possible state is accounted for. By asserting the unhandled
+state against the <code>never</code> type, the compiler alerts you
+immediately if a new state is introduced without updating every
+handler.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleState</span>(state<span class="op">:</span> RequestState)<span class="op">:</span> <span class="dt">string</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (state<span class="op">.</span><span class="at">status</span>) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;idle&quot;</span><span class="op">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="st">&quot;Ready to start.&quot;</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;loading&quot;</span><span class="op">:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="st">&quot;Loading data...&quot;</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;success&quot;</span><span class="op">:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="vs">`Loaded: </span><span class="sc">${</span>state<span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">title</span><span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;error&quot;</span><span class="op">:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="vs">`Failed: </span><span class="sc">${</span>state<span class="op">.</span><span class="at">error</span><span class="op">.</span><span class="at">message</span><span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span> {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> _exhaustiveCheck<span class="op">:</span> <span class="dt">never</span> <span class="op">=</span> state<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> _exhaustiveCheck<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you add a new state—such as
+<code>{ status: "cancelled" }</code>—to <code>RequestState</code>, the
+<code>default</code> branch will fail compilation because
+<code>state</code> cannot be assigned to <code>never</code>.</p>
+<h3 id="3-clear-state-transitions">3. Clear State Transitions</h3>
+<p>Discriminated unions make finite state transition functions
+deterministic and safe. You can easily map current states and incoming
+actions to valid next states:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Action <span class="op">=</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;FETCH&quot;</span> }</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;RESOLVE&quot;</span><span class="op">;</span> payload<span class="op">:</span> ResponseData }</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> { type<span class="op">:</span> <span class="st">&quot;REJECT&quot;</span><span class="op">;</span> error<span class="op">:</span> <span class="bu">Error</span> }<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">transition</span>(state<span class="op">:</span> RequestState<span class="op">,</span> action<span class="op">:</span> Action)<span class="op">:</span> RequestState {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (state<span class="op">.</span><span class="at">status</span>) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;idle&quot;</span><span class="op">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (action<span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&quot;FETCH&quot;</span>) <span class="cf">return</span> { status<span class="op">:</span> <span class="st">&quot;loading&quot;</span> }<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> state<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;loading&quot;</span><span class="op">:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (action<span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&quot;RESOLVE&quot;</span>) {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { status<span class="op">:</span> <span class="st">&quot;success&quot;</span><span class="op">,</span> data<span class="op">:</span> action<span class="op">.</span><span class="at">payload</span> }<span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (action<span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&quot;REJECT&quot;</span>) {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { status<span class="op">:</span> <span class="st">&quot;error&quot;</span><span class="op">,</span> error<span class="op">:</span> action<span class="op">.</span><span class="at">error</span> }<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> state<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;success&quot;</span><span class="op">:</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;error&quot;</span><span class="op">:</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (action<span class="op">.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&quot;FETCH&quot;</span>) <span class="cf">return</span> { status<span class="op">:</span> <span class="st">&quot;loading&quot;</span> }<span class="op">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> state<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By accurately restricting what data belongs to which phase,
+discriminated unions align TypeScript's type system directly with the
+mathematical definition of a state machine, replacing ambiguous runtime
+checks with strict compile-time guarantees.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-discriminated-unions-for-state-machines';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

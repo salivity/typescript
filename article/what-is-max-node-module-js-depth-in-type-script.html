@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is maxNodeModuleJsDepth in TypeScript? - typescript</title>
+    <meta name="description" content="The maxNodeModuleJsDepth setting in TypeScript controls how deeply the compiler searches inside the nodemodules directory to inspect and infer types from untyped JavaScript files. This article explains the purpose of the setting, how it operates alongside">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/what-is-max-node-module-js-depth-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is maxNodeModuleJsDepth in TypeScript? - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/what-is-max-node-module-js-depth-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The maxNodeModuleJsDepth setting in TypeScript controls how deeply the compiler searches inside the nodemodules directory to inspect and infer types from untyped JavaScript files. This article explains the purpose of the setting, how it operates alongside" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-maxnodemodulejsdepth-in-typescript">What Is
+maxNodeModuleJsDepth in TypeScript?</h1>
+<p>The <code>maxNodeModuleJsDepth</code> setting in TypeScript controls
+how deeply the compiler searches inside the <code>node_modules</code>
+directory to inspect and infer types from untyped JavaScript files. This
+article explains the purpose of the setting, how it operates alongside
+the <code>allowJs</code> compiler option, and the performance
+considerations you need to be aware of when configuring it.</p>
+<p>In TypeScript projects, third-party libraries installed in
+<code>node_modules</code> typically provide type definitions via
+<code>.d.ts</code> files or through <code>@types</code> packages.
+However, when a JavaScript library lacks these declarations, TypeScript
+normally treats the imported module as having the <code>any</code> type.
+To improve developer tooling and type safety without writing custom
+declaration files, TypeScript can attempt to infer types directly from
+raw JavaScript source code.</p>
+<p>The <code>maxNodeModuleJsDepth</code> option sets the maximum
+dependency depth that TypeScript will traverse under
+<code>node_modules</code> to automatically load and analyze these
+JavaScript files.</p>
+<h3 id="prerequisites-and-default-behavior">Prerequisites and Default
+Behavior</h3>
+<p>The setting is closely tied to the <code>allowJs</code> compiler
+option:</p>
+<ul>
+<li><strong>Requires <code>allowJs</code></strong>:
+<code>maxNodeModuleJsDepth</code> only takes effect if
+<code>"allowJs": true</code> is enabled in your
+<code>tsconfig.json</code>. If <code>allowJs</code> is disabled,
+TypeScript will not inspect JavaScript files in
+<code>node_modules</code> regardless of this setting.</li>
+<li><strong>Default Value</strong>: The default value is <code>0</code>.
+With a depth of <code>0</code>, TypeScript disables automatic JavaScript
+module resolution inside <code>node_modules</code>, treating untyped
+JavaScript packages as untyped or requiring an ambient module
+declaration.</li>
+</ul>
+<h3 id="how-depth-levels-work">How Depth Levels Work</h3>
+<p>When you increase the value, the compiler steps down the dependency
+tree:</p>
+<ul>
+<li><strong>Depth 1</strong>: TypeScript inspects only the immediate
+JavaScript files of the imported package inside
+<code>node_modules</code>.</li>
+<li><strong>Depth 2</strong>: TypeScript inspects the package and any
+secondary JavaScript dependencies that the package itself imports from
+<code>node_modules</code>.</li>
+<li><strong>Depth N</strong>: The compiler continues traversing nested
+imports up to <em>N</em> levels deep.</li>
+</ul>
+<p>Here is how the configuration is defined in a
+<code>tsconfig.json</code> file:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;allowJs&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;maxNodeModuleJsDepth&quot;</span><span class="fu">:</span> <span class="dv">1</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="performance-considerations">Performance Considerations</h3>
+<p>While increasing <code>maxNodeModuleJsDepth</code> can provide type
+inference and auto-completion for JavaScript libraries lacking type
+definitions, it comes with a significant performance cost.</p>
+<p>JavaScript parsing and type inference are resource-intensive. Deeply
+nested dependency trees can cause TypeScript to parse thousands of
+untyped files, dramatically increasing compilation times and degrading
+language server responsiveness in your code editor. For this reason, the
+value should rarely exceed <code>1</code> or <code>2</code>. If type
+definitions are still missing at that depth, the recommended best
+practice is to install community-maintained types via DefinitelyTyped
+(<code>npm install -D @types/package-name</code>) or manually declare a
+minimal type definition file in your project.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/what-is-max-node-module-js-depth-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

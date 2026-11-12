@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Mixin Compositions in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript utilizes class heritage and functional composition to overcome the constraints of single inheritance, allowing developers to assemble reusable behaviors across disparate class hierarchies. This article explains how TypeScript models multiple mi">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/multiple-mixin-compositions-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Multiple Mixin Compositions in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/multiple-mixin-compositions-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript utilizes class heritage and functional composition to overcome the constraints of single inheritance, allowing developers to assemble reusable behaviors across disparate class hierarchies. This article explains how TypeScript models multiple mi" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="multiple-mixin-compositions-in-typescript">Multiple Mixin
+Compositions in TypeScript</h1>
+<p>TypeScript utilizes class heritage and functional composition to
+overcome the constraints of single inheritance, allowing developers to
+assemble reusable behaviors across disparate class hierarchies. This
+article explains how TypeScript models multiple mixins using generic
+constructor types, class expressions, and sequential inheritance chains
+to provide robust, type-safe composition without relying on traditional
+multiple-inheritance syntax.</p>
+<h3 id="the-problem-with-single-inheritance">The Problem with Single
+Inheritance</h3>
+<p>In standard object-oriented JavaScript and TypeScript, a class can
+only extend a single superclass via the <code>extends</code> keyword.
+This single-inheritance model restricts code reuse when distinct,
+modular capabilities—such as logging, serialization, or state
+tracking—need to be shared across unrelated classes. Mixins solve this
+by treating subclasses as factory functions that take a base class and
+return an extended class.</p>
+<h3 id="the-constructor-contract">The Constructor Contract</h3>
+<p>To support composition, TypeScript requires a structural
+representation of a class constructor. This is achieved using a generic
+constructor type:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Constructor<span class="op">&lt;</span>T <span class="op">=</span> {}<span class="op">&gt;</span> <span class="op">=</span> <span class="kw">new</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> T<span class="op">;</span></span></code></pre></div>
+<p>This type allows a mixin function to accept any constructable type,
+enforce constraints if needed, and extend it dynamically.</p>
+<h3 id="defining-individual-mixins">Defining Individual Mixins</h3>
+<p>A TypeScript mixin is a function that accepts a parameterized base
+class extending <code>Constructor</code> and returns an anonymous class
+expression that inherits from that base:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Mixin 1: Adds timestamping capabilities</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Timestamped</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(Base<span class="op">:</span> TBase) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> Base {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    timestamp <span class="op">=</span> <span class="kw">new</span> <span class="bu">Date</span>()<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getTimestamp</span>() {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">timestamp</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Mixin 2: Adds activation state capabilities</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Activatable</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(Base<span class="op">:</span> TBase) {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">class</span> <span class="kw">extends</span> Base {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    isActive <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">activate</span>() {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">isActive</span> <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">deactivate</span>() {</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="kw">this</span><span class="op">.</span><span class="at">isActive</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="stacking-mixins-through-heritage-chains">Stacking Mixins Through
+Heritage Chains</h3>
+<p>Class heritage supports multiple mixins through function chaining.
+Because each mixin returns a new class that extends the input class,
+wrapping an existing base class sequentially forms a standard prototype
+chain:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseEntity {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(id<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">id</span> <span class="op">=</span> id<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Chaining the mixins onto the base class</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> User <span class="kw">extends</span> <span class="fu">Activatable</span>(<span class="fu">Timestamped</span>(BaseEntity)) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(id<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> name<span class="op">:</span> <span class="dt">string</span>) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">super</span>(id)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">name</span> <span class="op">=</span> name<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>At runtime, this creates a linear prototype hierarchy:
+<code>User</code> -&gt; <code>Activatable</code> -&gt;
+<code>Timestamped</code> -&gt; <code>BaseEntity</code>.</p>
+<h3 id="how-typescript-resolves-types">How TypeScript Resolves
+Types</h3>
+<p>The TypeScript compiler infers the return type of each mixin function
+as an intersection of the base class instance type and the newly defined
+properties. When nested calls like
+<code>Activatable(Timestamped(BaseEntity))</code> are passed to the
+<code>extends</code> clause, TypeScript statically analyzes the
+inheritance chain, collapsing the layered types into a cohesive shape.
+The resulting <code>User</code> instance automatically exposes all
+members from <code>BaseEntity</code>, <code>Timestamped</code>, and
+<code>Activatable</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> <span class="kw">new</span> <span class="fu">User</span>(<span class="st">&quot;101&quot;</span><span class="op">,</span> <span class="st">&quot;Alice&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">id</span>)<span class="op">;</span>           <span class="co">// BaseEntity property</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="fu">getTimestamp</span>())<span class="op">;</span><span class="co">// Timestamped property</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>user<span class="op">.</span><span class="fu">activate</span>()<span class="op">;</span>                <span class="co">// Activatable method</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(user<span class="op">.</span><span class="at">isActive</span>)<span class="op">;</span>     <span class="co">// true</span></span></code></pre></div>
+<h3 id="streamlining-composition-with-helpers">Streamlining Composition
+with Helpers</h3>
+<p>When applying many mixins, nested function calls can become difficult
+to read. A helper function can flatten the composition while preserving
+TypeScript's inferred types:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Mixin<span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">,</span> TResult <span class="kw">extends</span> Constructor<span class="op">&gt;</span> <span class="op">=</span> (base<span class="op">:</span> TBase) <span class="kw">=&gt;</span> TResult<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">composeMixins</span><span class="op">&lt;</span>TBase <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(base<span class="op">:</span> TBase) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span><span class="op">&lt;</span>TResult <span class="kw">extends</span> Constructor<span class="op">&gt;</span>(mixin<span class="op">:</span> Mixin<span class="op">&lt;</span>TBase<span class="op">,</span> TResult<span class="op">&gt;</span>) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> result <span class="op">=</span> <span class="fu">mixin</span>(base)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="fu">composeMixins</span>(result)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">build</span>() {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> base<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> MixedEntity <span class="op">=</span> <span class="fu">composeMixins</span>(BaseEntity)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">with</span>(Timestamped)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">with</span>(Activatable)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">build</span>()<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AdminUser <span class="kw">extends</span> MixedEntity {}</span></code></pre></div>
+<p>By leveraging class expressions in mixin functions and nesting them
+within class declarations, TypeScript enables modular, multi-tier
+inheritance while guaranteeing complete compile-time type safety.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/multiple-mixin-compositions-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

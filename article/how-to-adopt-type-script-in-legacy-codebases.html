@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Adopt TypeScript in Legacy Codebases - typescript</title>
+    <meta name="description" content="Migrating a massive legacy JavaScript codebase to TypeScript can feel overwhelming, but a gradual, iterative approach makes the transition manageable and safe. This guide outlines proven strategies for incrementally introducing TypeScript without halting">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-adopt-type-script-in-legacy-codebases">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Adopt TypeScript in Legacy Codebases - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-adopt-type-script-in-legacy-codebases" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Migrating a massive legacy JavaScript codebase to TypeScript can feel overwhelming, but a gradual, iterative approach makes the transition manageable and safe. This guide outlines proven strategies for incrementally introducing TypeScript without halting" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-adopt-typescript-in-legacy-codebases">How to Adopt
+TypeScript in Legacy Codebases</h1>
+<p>Migrating a massive legacy JavaScript codebase to TypeScript can feel
+overwhelming, but a gradual, iterative approach makes the transition
+manageable and safe. This guide outlines proven strategies for
+incrementally introducing TypeScript without halting feature
+development, breaking production builds, or overwhelming engineering
+teams. By establishing the right compiler settings, leveraging hybrid
+tooling, prioritizing core modules, and systematically tightening type
+safety, organizations can modernize their codebases smoothly and
+reliably.</p>
+<h2 id="1-configure-a-permissive-typescript-environment">1. Configure a
+Permissive TypeScript Environment</h2>
+<p>The first step is introducing a <code>tsconfig.json</code> file
+configured to accommodate existing JavaScript alongside TypeScript.
+Setting <code>allowJs: true</code> instructs the TypeScript compiler
+(<code>tsc</code>) to process <code>.js</code> files without compiling
+errors, while <code>noEmit: true</code> allows TypeScript to act
+strictly as a linter if you are using tools like Babel or Webpack for
+the actual build.</p>
+<p>Keep initial strictness flags off:</p>
+<ul>
+<li>Set <code>strict: false</code></li>
+<li>Set <code>noImplicitAny: false</code></li>
+</ul>
+<p>This establishes the baseline infrastructure without generating
+thousands of blocking compile-time errors on day one.</p>
+<h2 id="2-integrate-type-checking-into-cicd">2. Integrate Type Checking
+into CI/CD</h2>
+<p>Integrate TypeScript verification into your continuous integration
+pipeline early. Add a dedicated script (e.g.,
+<code>npm run type-check</code>) that runs
+<code>tsc --noEmit</code>.</p>
+<p>Initially, run this check only against changed files or configured
+directories, or ensure that it passes with your permissive
+configuration. Making type checking a prerequisite for merging ensures
+that no new type regressions are introduced as the migration
+progresses.</p>
+<h2 id="3-use-jsdoc-for-zero-build-type-checking">3. Use JSDoc for
+Zero-Build Type Checking</h2>
+<p>Before converting <code>.js</code> files to <code>.ts</code>, teams
+can start typing code immediately using standard JSDoc comments. When
+combined with the <code>// @ts-check</code> directive at the top of a
+JavaScript file, the TypeScript compiler checks the file using JSDoc
+type annotations.</p>
+<p>This strategy requires zero file renaming, preserves Git history
+cleanly, and familiarizes the team with TypeScript’s type system while
+remaining entirely within standard JavaScript syntax.</p>
+<h2 id="4-prioritize-high-impact-boundaries-first">4. Prioritize
+High-Impact Boundaries First</h2>
+<p>Avoid random file conversions. Instead, target high-traffic,
+foundational layers that yield the highest return on investment:</p>
+<ul>
+<li><strong>Shared Utilities and Helpers:</strong> These are imported
+across the entire application. Typing them provides immediate downstream
+autocomplete and type safety for other developers.</li>
+<li><strong>API Contracts and Data Models:</strong> Define types and
+interfaces for backend responses and global state stores. Catching
+runtime data mismatches at compile time prevents widespread frontend
+bugs.</li>
+<li><strong>New Features and Modules:</strong> Mandate that all net-new
+files must be written in TypeScript (<code>.ts</code> or
+<code>.tsx</code>).</li>
+</ul>
+<h2 id="5-implement-the-boy-scout-rule-for-existing-files">5. Implement
+the "Boy Scout Rule" for Existing Files</h2>
+<p>Enforce a policy where developers convert existing JavaScript files
+to TypeScript only when touching them for bug fixes or feature work.</p>
+<p>When a developer modifies a legacy module:</p>
+<ol type="1">
+<li>Rename the file from <code>.js</code> to <code>.ts</code> (or
+<code>.jsx</code> to <code>.tsx</code>).</li>
+<li>Fix any immediate syntax and structural issues.</li>
+<li>Apply pragmatic typing to the touched functions.</li>
+<li>Keep moving forward without attempting to refactor the entire
+module's architecture.</li>
+</ol>
+<p>Over time, the most frequently modified—and therefore most
+critical—parts of the codebase naturally become fully typed.</p>
+<h2 id="6-use-the-any-type-and-ts-expect-error-pragmatically">6. Use the
+<code>any</code> Type and <code>@ts-expect-error</code>
+Pragmatically</h2>
+<p>Dogmatic adherence to strict typing can stall a gradual migration.
+When converting complex legacy code, it is acceptable to use the
+<code>any</code> type or explicit type assertions
+(<code>as unknown as TargetType</code>) to keep momentum.</p>
+<p>For intentional workarounds or third-party library issues, use
+<code>// @ts-expect-error</code> with an explanatory comment instead of
+<code>// @ts-ignore</code>. This ensures that if the underlying issue is
+resolved later, the compiler prompts developers to remove the obsolete
+suppression directive.</p>
+<h2 id="7-incrementally-increase-compiler-strictness">7. Incrementally
+Increase Compiler Strictness</h2>
+<p>Once a significant portion of the codebase is converted and
+developers are comfortable with TypeScript, begin enabling strict
+compiler checks incrementally:</p>
+<ol type="1">
+<li>Enable <code>noImplicitReturns</code> and
+<code>noFallthroughCasesInSwitch</code>.</li>
+<li>Enable <code>noImplicitAny</code> module by module, or across the
+whole project once coverage is high.</li>
+<li>Enable <code>strictNullChecks</code> to eliminate common runtime
+errors like "cannot read property of undefined."</li>
+<li>Finally, enable <code>strict: true</code>.</li>
+</ol>
+<p>Taking a tiered approach prevents developer fatigue and steadily
+elevates overall code quality without disrupting regular release
+cycles.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-to-adopt-type-script-in-legacy-codebases';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

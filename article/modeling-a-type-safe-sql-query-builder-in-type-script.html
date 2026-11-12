@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modeling a Type-Safe SQL Query Builder in TypeScript - typescript</title>
+    <meta name="description" content="Building a type-safe SQL query builder in TypeScript involves leveraging advanced type features—primarily generics, phantom types, mapped types, and method chaining—to track query state at compile time. By modeling the database schema as a collection of T">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/modeling-a-type-safe-sql-query-builder-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Modeling a Type-Safe SQL Query Builder in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/modeling-a-type-safe-sql-query-builder-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Building a type-safe SQL query builder in TypeScript involves leveraging advanced type features—primarily generics, phantom types, mapped types, and method chaining—to track query state at compile time. By modeling the database schema as a collection of T" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="modeling-a-type-safe-sql-query-builder-in-typescript">Modeling a
+Type-Safe SQL Query Builder in TypeScript</h1>
+<p>Building a type-safe SQL query builder in TypeScript involves
+leveraging advanced type features—primarily generics, phantom types,
+mapped types, and method chaining—to track query state at compile time.
+By modeling the database schema as a collection of TypeScript types and
+updating generic parameters as clauses like <code>SELECT</code>,
+<code>FROM</code>, and <code>JOIN</code> are invoked, developers can
+catch invalid column selections, incorrect table joins, and mismatched
+data types before code ever executes.</p>
+<h2 id="1-defining-the-database-schema">1. Defining the Database
+Schema</h2>
+<p>The foundation of type safety is an accurate representation of the
+database schema. Tables are modeled as interfaces where keys correspond
+to column names and values correspond to their SQL data types mapped to
+TypeScript primitives.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UsersTable {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  email<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  created_at<span class="op">:</span> <span class="bu">Date</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> PostsTable {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  user_id<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  title<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  content<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> DatabaseSchema {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  users<span class="op">:</span> UsersTable<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  posts<span class="op">:</span> PostsTable<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="2-using-generics-to-accumulate-query-state">2. Using Generics to
+Accumulate Query State</h2>
+<p>A query builder relies on a class with generic parameters that change
+as methods are chained. These generic parameters do not necessarily
+exist as runtime values; instead, they act as compile-time trackers
+for:</p>
+<ol type="1">
+<li><strong><code>TSchema</code></strong>: The full database
+schema.</li>
+<li><strong><code>TActiveTables</code></strong>: The tables currently
+available in the query context (via <code>FROM</code> or
+<code>JOIN</code>).</li>
+<li><strong><code>TResult</code></strong>: The shape of the final data
+returned by executing the query.</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> QueryBuilder<span class="op">&lt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  TSchema<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  TActiveTables <span class="kw">extends</span> <span class="kw">keyof</span> TSchema <span class="op">=</span> never<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  TResult <span class="op">=</span> unknown</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">protected</span> sqlParts<span class="op">:</span> <span class="dt">string</span>[] <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">protected</span> schema<span class="op">?:</span> TSchema) {}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="3-implementing-the-from-method">3. Implementing the
+<code>from</code> Method</h2>
+<p>The <code>from</code> method designates the primary table. It
+constrains input to valid table names within <code>TSchema</code> and
+sets <code>TActiveTables</code> to that table, enabling subsequent
+methods to autocomplete and validate against its columns.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> QueryBuilder<span class="op">&lt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  TSchema<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  TActiveTables <span class="kw">extends</span> <span class="kw">keyof</span> TSchema <span class="op">=</span> never<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  TResult <span class="op">=</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">never</span><span class="op">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">protected</span> query<span class="op">:</span> { table<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span> columns<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span> where<span class="op">:</span> <span class="dt">string</span>[] } <span class="op">=</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    columns<span class="op">:</span> []<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    where<span class="op">:</span> []<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="im">from</span><span class="op">&lt;</span>TTable <span class="kw">extends</span> <span class="kw">keyof</span> TSchema<span class="op">&gt;</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    table<span class="op">:</span> TTable</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )<span class="op">:</span> QueryBuilder<span class="op">&lt;</span>TSchema<span class="op">,</span> TTable<span class="op">,</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">never</span><span class="op">&gt;&gt;</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> next <span class="op">=</span> <span class="kw">new</span> <span class="fu">QueryBuilder</span><span class="op">&lt;</span>TSchema<span class="op">,</span> TTable<span class="op">,</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">never</span><span class="op">&gt;&gt;</span>()<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    next<span class="op">.</span><span class="at">query</span> <span class="op">=</span> { <span class="op">...</span><span class="kw">this</span><span class="op">.</span><span class="at">query</span><span class="op">,</span> table<span class="op">:</span> table <span class="im">as</span> <span class="dt">string</span> }<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> next<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="4-modeling-column-selection-with-select">4. Modeling Column
+Selection with <code>select</code></h2>
+<p>The <code>select</code> method updates <code>TResult</code> based on
+the chosen columns. It should restrict selections to valid keys in
+<code>TSchema[TActiveTables]</code>. By using a rest parameter of keys,
+TypeScript can construct a picked type representing the selected
+columns.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">select</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> TSchema[TActiveTables]<span class="op">&gt;</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span>columns<span class="op">:</span> K[]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> QueryBuilder<span class="op">&lt;</span>TSchema<span class="op">,</span> TActiveTables<span class="op">,</span> <span class="bu">Pick</span><span class="op">&lt;</span>TSchema[TActiveTables]<span class="op">,</span> K<span class="op">&gt;&gt;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> next <span class="op">=</span> <span class="kw">new</span> QueryBuilder<span class="op">&lt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    TSchema<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    TActiveTables<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Pick</span><span class="op">&lt;</span>TSchema[TActiveTables]<span class="op">,</span> K<span class="op">&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  next<span class="op">.</span><span class="at">query</span> <span class="op">=</span> { <span class="op">...</span><span class="kw">this</span><span class="op">.</span><span class="at">query</span><span class="op">,</span> columns<span class="op">:</span> columns <span class="im">as</span> <span class="dt">string</span>[] }<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> next<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If multiple columns are passed, TypeScript infers a union of those
+keys (e.g., <code>'id' | 'name'</code>), and
+<code>Pick&lt;UsersTable, 'id' | 'name'&gt;</code> creates
+<code>{ id: number; name: string }</code>.</p>
+<h2 id="5-adding-type-safe-conditions-with-where">5. Adding Type-Safe
+Conditions with <code>where</code></h2>
+<p>Filtering via <code>where</code> requires verifying that the
+specified column exists on active tables and that the comparison value
+matches the column's type:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">where</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> TSchema[TActiveTables]<span class="op">&gt;</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  column<span class="op">:</span> K<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  operator<span class="op">:</span> <span class="st">&#39;=&#39;</span> <span class="op">|</span> <span class="st">&#39;!=&#39;</span> <span class="op">|</span> <span class="st">&#39;&gt;&#39;</span> <span class="op">|</span> <span class="st">&#39;&lt;&#39;</span><span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> TSchema[TActiveTables][K]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> <span class="kw">this</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">this</span><span class="op">.</span><span class="at">query</span><span class="op">.</span><span class="at">where</span><span class="op">.</span><span class="fu">push</span>(<span class="vs">`</span><span class="sc">${</span><span class="bu">String</span>(column)<span class="sc">}</span><span class="vs"> </span><span class="sc">${</span>operator<span class="sc">}</span><span class="vs"> </span><span class="sc">${</span><span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(value)<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If <code>column</code> is <code>'id'</code>, TypeScript requires
+<code>value</code> to be a <code>number</code>. Passing a
+<code>string</code> causes a compile-time type error.</p>
+<h2 id="6-resolving-and-executing-queries">6. Resolving and Executing
+Queries</h2>
+<p>The final execution step should return a Promise of the inferred
+<code>TResult</code> array.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="fu">execute</span>()<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>TResult[]<span class="op">&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { table<span class="op">,</span> columns<span class="op">,</span> where } <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">query</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> colSql <span class="op">=</span> columns<span class="op">.</span><span class="at">length</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">?</span> columns<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;, &#39;</span>) <span class="op">:</span> <span class="st">&#39;*&#39;</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> whereSql <span class="op">=</span> where<span class="op">.</span><span class="at">length</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">?</span> <span class="vs">` WHERE </span><span class="sc">${</span>where<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39; AND &#39;</span>)<span class="sc">}</span><span class="vs">`</span> <span class="op">:</span> <span class="st">&#39;&#39;</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sql <span class="op">=</span> <span class="vs">`SELECT </span><span class="sc">${</span>colSql<span class="sc">}</span><span class="vs"> FROM </span><span class="sc">${</span>table<span class="sc">}${</span>whereSql<span class="sc">}</span><span class="vs">;`</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Internal execution mechanism (e.g., pg, mysql2)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Executing SQL:&#39;</span><span class="op">,</span> sql)<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [] <span class="im">as</span> TResult[]<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="7-putting-it-together">7. Putting It Together</h2>
+<p>When combined, the API provides full auto-completion and prevents
+runtime schema errors:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> db <span class="op">=</span> <span class="kw">new</span> <span class="fu">QueryBuilder</span><span class="op">&lt;</span>DatabaseSchema<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid query</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> users <span class="op">=</span> <span class="cf">await</span> db</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">from</span>(<span class="st">&#39;users&#39;</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">select</span>(<span class="st">&#39;id&#39;</span><span class="op">,</span> <span class="st">&#39;name&#39;</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">where</span>(<span class="st">&#39;id&#39;</span><span class="op">,</span> <span class="st">&#39;=&#39;</span><span class="op">,</span> <span class="dv">1</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">execute</span>()<span class="op">;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Type of `users`: Promise&lt;{ id: number; name: string }[]&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler Errors:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">// db.from(&#39;invalid_table&#39;);               // Error: Argument not assignable to &#39;users&#39; | &#39;posts&#39;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">// db.from(&#39;users&#39;).select(&#39;non_existent&#39;);// Error: &#39;non_existent&#39; not assignable to keyof UsersTable</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">// db.from(&#39;users&#39;).where(&#39;id&#39;, &#39;=&#39;, &#39;1&#39;); // Error: string is not assignable to number</span></span></code></pre></div>
+<p>To extend this pattern further, support for joins can be added by
+expanding <code>TActiveTables</code> into a union of joined tables, and
+table-prefixed columns (e.g., <code>users.id</code>) can be modeled
+using TypeScript template literal types
+(<code>${Table}.${Column}</code>).</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/modeling-a-type-safe-sql-query-builder-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

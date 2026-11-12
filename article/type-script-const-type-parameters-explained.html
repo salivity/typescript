@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Const Type Parameters Explained - typescript</title>
+    <meta name="description" content="TypeScript 5.0 introduced const type parameters, a feature that enables functions to infer the most specific, literal types for generic arguments without requiring callers to write as const assertions manually. This article explains how generic inference">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-const-type-parameters-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Const Type Parameters Explained - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-const-type-parameters-explained" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript 5.0 introduced const type parameters, a feature that enables functions to infer the most specific, literal types for generic arguments without requiring callers to write as const assertions manually. This article explains how generic inference" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-const-type-parameters-explained">TypeScript Const
+Type Parameters Explained</h1>
+<p>TypeScript 5.0 introduced <code>const</code> type parameters, a
+feature that enables functions to infer the most specific, literal types
+for generic arguments without requiring callers to write
+<code>as const</code> assertions manually. This article explains how
+generic inference traditionally widens types, how prefixing a type
+parameter with <code>const</code> alters this behavior, and the
+practical scenarios where this pattern simplifies code and prevents
+type-widening bugs.</p>
+<h2 id="the-limitation-of-standard-generic-inference">The Limitation of
+Standard Generic Inference</h2>
+<p>By default, TypeScript prioritizes mutability when inferring types
+for generic arguments. When an object or array literal is passed to a
+generic function, the compiler widens primitive values to their general
+types (such as <code>"hello"</code> to <code>string</code>) and infers
+arrays as mutable arrays rather than fixed-length tuples.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setConfig</span><span class="op">&lt;</span>T<span class="op">&gt;</span>(config<span class="op">:</span> T)<span class="op">:</span> T {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> config<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type of config: { routes: string[]; timeout: number }</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> standardConfig <span class="op">=</span> <span class="fu">setConfig</span>({</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> [<span class="st">&quot;/home&quot;</span><span class="op">,</span> <span class="st">&quot;/dashboard&quot;</span>]<span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  timeout<span class="op">:</span> <span class="dv">5000</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Prior to TypeScript 5.0, the only way to preserve exact string
+literals and fixed-length tuples was to require the caller to append
+<code>as const</code> at the call site:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type: { readonly routes: readonly [&quot;/home&quot;, &quot;/dashboard&quot;]; readonly timeout: 5000 }</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> strictConfig <span class="op">=</span> <span class="fu">setConfig</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> [<span class="st">&quot;/home&quot;</span><span class="op">,</span> <span class="st">&quot;/dashboard&quot;</span>]<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  timeout<span class="op">:</span> <span class="dv">5000</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>} <span class="im">as</span> <span class="kw">const</span>)<span class="op">;</span></span></code></pre></div>
+<p>This approach shifts the burden of type safety to the caller. If the
+caller forgets <code>as const</code>, the strict literal inference is
+lost.</p>
+<h2 id="enhancing-inference-with-const-modifiers">Enhancing Inference
+with <code>const</code> Modifiers</h2>
+<p>Placing the <code>const</code> modifier directly on a type parameter
+shifts the responsibility from the caller to the function definition. It
+instructs the compiler to automatically treat the passed argument as an
+<code>as const</code> expression.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setConfig</span><span class="op">&lt;</span><span class="kw">const</span> T<span class="op">&gt;</span>(config<span class="op">:</span> T)<span class="op">:</span> T {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> config<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Inferred type: { readonly routes: readonly [&quot;/home&quot;, &quot;/dashboard&quot;]; readonly timeout: 5000 }</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> autoConfig <span class="op">=</span> <span class="fu">setConfig</span>({</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> [<span class="st">&quot;/home&quot;</span><span class="op">,</span> <span class="st">&quot;/dashboard&quot;</span>]<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  timeout<span class="op">:</span> <span class="dv">5000</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>With <code>const T</code>, TypeScript performs the following
+adjustments during type argument inference:</p>
+<ol type="1">
+<li><strong>Primitive Literal Retention</strong>: String, numeric, and
+boolean literals are retained as their exact types rather than widened
+to <code>string</code>, <code>number</code>, or
+<code>boolean</code>.</li>
+<li><strong>Tuple Conversion</strong>: Array literals are inferred as
+<code>readonly</code> tuples with exact indices rather than mutable,
+variable-length arrays.</li>
+<li><strong>Readonly Modifiers</strong>: Object properties and array
+elements are marked <code>readonly</code> to reflect their immutable
+status.</li>
+</ol>
+<h2 id="practical-example-route-and-key-matching">Practical Example:
+Route and Key Matching</h2>
+<p>A common use case involves validating that a string is a member of an
+array defined in the same function call. Without <code>const</code> type
+parameters, arrays widen to <code>string[]</code>, preventing
+compile-time checks.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RouteConfig<span class="op">&lt;</span>T <span class="kw">extends</span> <span class="kw">readonly</span> <span class="dt">string</span>[]<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> T<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  defaultRoute<span class="op">:</span> T[<span class="dt">number</span>]<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createRouter</span><span class="op">&lt;</span><span class="kw">const</span> T <span class="kw">extends</span> <span class="kw">readonly</span> <span class="dt">string</span>[]<span class="op">&gt;</span>(config<span class="op">:</span> RouteConfig<span class="op">&lt;</span>T<span class="op">&gt;</span>) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> config<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Valid: &quot;home&quot; is part of the routes tuple</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> router <span class="op">=</span> <span class="fu">createRouter</span>({</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> [<span class="st">&quot;home&quot;</span><span class="op">,</span> <span class="st">&quot;about&quot;</span><span class="op">,</span> <span class="st">&quot;contact&quot;</span>]<span class="op">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  defaultRoute<span class="op">:</span> <span class="st">&quot;home&quot;</span><span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Compilation Error: Type &#39;&quot;login&quot;&#39; is not assignable to type &#39;&quot;home&quot; | &quot;about&quot; | &quot;contact&quot;&#39;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> invalidRouter <span class="op">=</span> <span class="fu">createRouter</span>({</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  routes<span class="op">:</span> [<span class="st">&quot;home&quot;</span><span class="op">,</span> <span class="st">&quot;about&quot;</span><span class="op">,</span> <span class="st">&quot;contact&quot;</span>]<span class="op">,</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  defaultRoute<span class="op">:</span> <span class="st">&quot;login&quot;</span><span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Without the <code>const</code> parameter on
+<code>createRouter</code>, <code>routes</code> would widen to
+<code>string[]</code>, making <code>T[number]</code> evaluate to
+<code>string</code>. This would cause the invalid route
+<code>"login"</code> to pass type checking silently.</p>
+<h2 id="important-constraints-to-consider">Important Constraints to
+Consider</h2>
+<p>While <code>const</code> type parameters provide automatic literal
+inference, their behavior depends on how data is passed:</p>
+<ul>
+<li><strong>Inline Literals Only</strong>: The <code>const</code>
+modifier only applies to values written inline at the call site. If a
+pre-existing mutable variable is passed, its already-widened type is
+preserved.</li>
+<li><strong>Readonly Outputs</strong>: Inferred structures become deeply
+<code>readonly</code>. Functions that intend to mutate their inputs or
+return mutable structures should not use <code>const</code> type
+parameters, as doing so leads to type mismatches with standard mutable
+types.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-const-type-parameters-explained';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

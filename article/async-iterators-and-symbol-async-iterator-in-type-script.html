@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Async Iterators and Symbol.asyncIterator in TypeScript - typescript</title>
+    <meta name="description" content="This article provides an overview of asynchronous iterators in JavaScript and explains how TypeScript defines, types, and validates the Symbol.asyncIterator protocol. You will learn the mechanics behind handling asynchronous streams of data, the core inte">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/async-iterators-and-symbol-async-iterator-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Async Iterators and Symbol.asyncIterator in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/async-iterators-and-symbol-async-iterator-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of asynchronous iterators in JavaScript and explains how TypeScript defines, types, and validates the Symbol.asyncIterator protocol. You will learn the mechanics behind handling asynchronous streams of data, the core inte" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="async-iterators-and-symbolasynciterator-in-typescript">Async
+Iterators and Symbol.asyncIterator in TypeScript</h1>
+<p>This article provides an overview of asynchronous iterators in
+JavaScript and explains how TypeScript defines, types, and validates the
+<code>Symbol.asyncIterator</code> protocol. You will learn the mechanics
+behind handling asynchronous streams of data, the core interfaces
+provided by TypeScript's standard library, and how to configure your
+project to use them effectively.</p>
+<h2 id="what-are-async-iterators">What Are Async Iterators?</h2>
+<p>An async iterator is an object that allows iteration over
+asynchronous data sources, such as streams, paginated API responses, or
+event emitters. Unlike standard synchronous iterators which immediately
+return a <code>{ value, done }</code> object, an async iterator returns
+a <code>Promise</code> that resolves to an iterator result:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;</span></span></code></pre></div>
+<p>Async iterators are consumed using the <code>for await...of</code>
+loop syntax. Each iteration pauses execution until the promise returned
+by the iterator's <code>next()</code> method settles.</p>
+<h2 id="the-role-of-symbolasynciterator">The Role of
+Symbol.asyncIterator</h2>
+<p>For an object to be recognized as an async iterable by JavaScript
+runtimes and language constructs like <code>for await...of</code>, it
+must implement a method keyed by the well-known symbol
+<code>Symbol.asyncIterator</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> asyncIterable <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]() {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">async</span> <span class="fu">next</span>() {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { <span class="dt">value</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span> <span class="dt">done</span><span class="op">:</span> <span class="kw">false</span> }<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>When a <code>for await...of</code> loop executes, it invokes the
+<code>[Symbol.asyncIterator]()</code> factory method on the target
+object to obtain the iterator instance.</p>
+<h2 id="how-typescript-types-symbolasynciterator">How TypeScript Types
+Symbol.asyncIterator</h2>
+<p>TypeScript models this mechanism through standard library
+declarations, primarily defined in
+<code>lib.es2018.asynciterable.d.ts</code>.</p>
+<h3 id="1-the-symbol-definition">1. The Symbol Definition</h3>
+<p>TypeScript defines the property on the global
+<code>SymbolConstructor</code> interface:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> SymbolConstructor {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> asyncIterator<span class="op">:</span> unique <span class="dt">symbol</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This guarantees that <code>[Symbol.asyncIterator]</code> is treated
+as a unique, strongly typed symbol property on objects.</p>
+<h3 id="2-core-async-iteration-interfaces">2. Core Async Iteration
+Interfaces</h3>
+<p>TypeScript exposes three primary interfaces to model asynchronous
+data iteration:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncIterator<span class="op">&lt;</span>T<span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">,</span> TNext <span class="op">=</span> <span class="dt">undefined</span><span class="op">&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>(<span class="op">...</span>args<span class="op">:</span> [] <span class="op">|</span> [TNext])<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span><span class="op">?</span>(value<span class="op">?:</span> TReturn <span class="op">|</span> PromiseLike<span class="op">&lt;</span>TReturn<span class="op">&gt;</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span><span class="op">?</span>(e<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncIterable<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]()<span class="op">:</span> AsyncIterator<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncIterableIterator<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="kw">extends</span> AsyncIterator<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]()<span class="op">:</span> AsyncIterableIterator<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<ul>
+<li><strong><code>AsyncIterator&lt;T&gt;</code></strong>: Represents the
+object producing sequence values. Its <code>next()</code> method yields
+a promise resolving to <code>IteratorResult&lt;T&gt;</code>.</li>
+<li><strong><code>AsyncIterable&lt;T&gt;</code></strong>: Represents any
+data structure containing a <code>[Symbol.asyncIterator]()</code> method
+that returns an <code>AsyncIterator&lt;T&gt;</code>.</li>
+<li><strong><code>AsyncIterableIterator&lt;T&gt;</code></strong>:
+Combines both interfaces, typical for async generator functions where
+the iterator instance is itself an iterable.</li>
+</ul>
+<h3 id="3-implementing-async-iterables-in-typescript">3. Implementing
+Async Iterables in TypeScript</h3>
+<p>To create a type-safe custom async iterable, implement the
+<code>AsyncIterable&lt;T&gt;</code> interface:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NumberStream <span class="kw">implements</span> AsyncIterable<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(<span class="kw">private</span> limit<span class="op">:</span> <span class="dt">number</span>) {}</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]()<span class="op">:</span> AsyncIterator<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> current <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> limit <span class="op">=</span> <span class="kw">this</span><span class="op">.</span><span class="at">limit</span><span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="kw">async</span> <span class="fu">next</span>()<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span><span class="dt">number</span><span class="op">&gt;&gt;</span> {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (current <span class="op">&lt;</span> limit) {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>          <span class="cf">return</span> { value<span class="op">:</span> current<span class="op">++,</span> done<span class="op">:</span> <span class="kw">false</span> }<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { value<span class="op">:</span> <span class="dt">undefined</span><span class="op">,</span> done<span class="op">:</span> <span class="kw">true</span> }<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">run</span>() {</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> stream <span class="op">=</span> <span class="kw">new</span> <span class="fu">NumberStream</span>(<span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="cf">await</span> (<span class="kw">const</span> num <span class="kw">of</span> stream) {</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(num)<span class="op">;</span> <span class="co">// Yields 0, 1, 2 with type &#39;number&#39;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="4-async-generator-functions">4. Async Generator Functions</h3>
+<p>TypeScript also infers types automatically when using async generator
+functions (<code>async function*</code>). The return type of an async
+generator is typed as
+<code>AsyncGenerator&lt;T, TReturn, TNext&gt;</code>, which extends
+<code>AsyncIterableIterator&lt;T&gt;</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span><span class="op">*</span> <span class="fu">generateData</span>()<span class="op">:</span> AsyncGenerator<span class="op">&lt;</span><span class="dt">string</span><span class="op">&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="st">&quot;first&quot;</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">yield</span> <span class="st">&quot;second&quot;</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="compiler-requirements">Compiler Requirements</h2>
+<p>Because <code>Symbol.asyncIterator</code> was introduced in
+ECMAScript 2018, ensure your <code>tsconfig.json</code> includes the
+appropriate standard library definitions:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES2018&quot;</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;lib&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;ES2018&quot;</span><span class="ot">,</span> <span class="st">&quot;DOM&quot;</span><span class="ot">]</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>If targeting older ECMAScript targets like ES5 or ES6, add
+<code>"es2018.asynciterable"</code> directly to the <code>"lib"</code>
+array and set <code>"downlevelIteration": true</code> to ensure code
+compiles and transpiles correctly.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/async-iterators-and-symbol-async-iterator-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

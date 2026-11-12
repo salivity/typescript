@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync vs Async Iterators in TypeScript - typescript</title>
+    <meta name="description" content="TypeScript models the structural differences between synchronous and asynchronous iterators by mapping directly to JavaScript&#39;s iteration protocols through separate, parallel interface hierarchies. The primary architectural divide lies in execution timing">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/sync-vs-async-iterators-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sync vs Async Iterators in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/sync-vs-async-iterators-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="TypeScript models the structural differences between synchronous and asynchronous iterators by mapping directly to JavaScript&#39;s iteration protocols through separate, parallel interface hierarchies. The primary architectural divide lies in execution timing" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="sync-vs-async-iterators-in-typescript">Sync vs Async Iterators
+in TypeScript</h1>
+<p>TypeScript models the structural differences between synchronous and
+asynchronous iterators by mapping directly to JavaScript's iteration
+protocols through separate, parallel interface hierarchies. The primary
+architectural divide lies in execution timing: synchronous iterators
+immediately return an iteration result object containing the current
+value and completion state, whereas asynchronous iterators return a
+<code>Promise</code> resolving to that result object. TypeScript
+enforces this distinction through dedicated standard library
+types—<code>Iterable&lt;T&gt;</code> versus
+<code>AsyncIterable&lt;T&gt;</code>, and <code>Iterator&lt;T&gt;</code>
+versus <code>AsyncIterator&lt;T&gt;</code>—alongside their corresponding
+unique symbol properties, <code>Symbol.iterator</code> and
+<code>Symbol.asyncIterator</code>.</p>
+<h3 id="core-interface-signatures">Core Interface Signatures</h3>
+<p>TypeScript defines the foundational iteration types in its core
+library definitions (<code>lib.es2015.iterable.d.ts</code> and
+<code>lib.es2018.asynciterable.d.ts</code>). The structural divergence
+begins at the <code>IteratorResult</code> level and propagates upward
+through the iterator and iterable abstractions.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Shared result structure</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">&gt;</span> <span class="op">=</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> IteratorYieldResult<span class="op">&lt;</span>T<span class="op">&gt;</span> </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> IteratorReturnResult<span class="op">&lt;</span>TReturn<span class="op">&gt;;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> IteratorYieldResult<span class="op">&lt;</span>TYield<span class="op">&gt;</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  done<span class="op">?:</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> TYield<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> IteratorReturnResult<span class="op">&lt;</span>TReturn<span class="op">&gt;</span> {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  done<span class="op">:</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> TReturn<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="synchronous-iterator-interfaces">Synchronous Iterator
+Interfaces</h4>
+<p>A synchronous iterator yields its values directly:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Iterator<span class="op">&lt;</span>T<span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">,</span> TNext <span class="op">=</span> <span class="dt">any</span><span class="op">&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>(<span class="op">...</span>[args]<span class="op">:</span> [] <span class="op">|</span> [TNext])<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span><span class="op">?</span>(value<span class="op">?:</span> TReturn)<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span><span class="op">?</span>(e<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> Iterable<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">iterator</span>]()<span class="op">:</span> Iterator<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="asynchronous-iterator-interfaces">Asynchronous Iterator
+Interfaces</h4>
+<p>An asynchronous iterator wraps the exact same
+<code>IteratorResult</code> in a <code>Promise</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncIterator<span class="op">&lt;</span>T<span class="op">,</span> TReturn <span class="op">=</span> <span class="dt">any</span><span class="op">,</span> TNext <span class="op">=</span> <span class="dt">any</span><span class="op">&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">next</span>(<span class="op">...</span>[args]<span class="op">:</span> [] <span class="op">|</span> [TNext])<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span><span class="op">?</span>(value<span class="op">?:</span> TReturn <span class="op">|</span> PromiseLike<span class="op">&lt;</span>TReturn<span class="op">&gt;</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">throw</span><span class="op">?</span>(e<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="bu">Promise</span><span class="op">&lt;</span>IteratorResult<span class="op">&lt;</span>T<span class="op">,</span> TReturn<span class="op">&gt;&gt;;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AsyncIterable<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  [<span class="bu">Symbol</span><span class="op">.</span><span class="at">asyncIterator</span>]()<span class="op">:</span> AsyncIterator<span class="op">&lt;</span>T<span class="op">&gt;;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="key-structural-differences">Key Structural Differences</h3>
+<h4 id="1-method-return-types">1. Method Return Types</h4>
+<p>The most significant divergence is the return type of the
+<code>next()</code>, <code>return()</code>, and <code>throw()</code>
+methods.</p>
+<ul>
+<li>Synchronous methods execute on the main call stack and synchronously
+return <code>IteratorResult&lt;T, TReturn&gt;</code>.</li>
+<li>Asynchronous methods return
+<code>Promise&lt;IteratorResult&lt;T, TReturn&gt;&gt;</code>, allowing
+consumers to await asynchronous I/O, timers, or stream chunks before
+evaluating <code>value</code> and <code>done</code>.</li>
+</ul>
+<h4 id="2-protocol-identification-via-symbols">2. Protocol
+Identification via Symbols</h4>
+<p>TypeScript treats the property key that exposes the iterator factory
+method as a strict structural discriminator:</p>
+<ul>
+<li><code>Iterable&lt;T&gt;</code> mandates the presence of the
+<code>[Symbol.iterator]</code> method.</li>
+<li><code>AsyncIterable&lt;T&gt;</code> mandates the presence of the
+<code>[Symbol.asyncIterator]</code> method.</li>
+</ul>
+<p>Because these symbols are distinct global symbols in JavaScript, an
+object implementing only <code>Iterable&lt;T&gt;</code> cannot be
+directly passed to APIs requiring <code>AsyncIterable&lt;T&gt;</code>,
+and vice versa, preserving strict type safety at compile time.</p>
+<h3 id="language-level-syntax-integration">Language-Level Syntax
+Integration</h3>
+<p>TypeScript's type checker maps language constructs to these
+interfaces distinctly:</p>
+<ul>
+<li><strong><code>for...of</code> loops</strong>: Exclusively accept
+objects conforming to <code>Iterable&lt;T&gt;</code>. Attempting to use
+a type matching only <code>AsyncIterable&lt;T&gt;</code> produces a
+compiler error (TS2488).</li>
+<li><strong><code>for await...of</code> loops</strong>: Primarily
+designed for <code>AsyncIterable&lt;T&gt;</code>. However, TypeScript
+also permits <code>for await...of</code> over synchronous
+<code>Iterable&lt;Promise&lt;T&gt;&gt;</code> or
+<code>Iterable&lt;T&gt;</code>, automatically wrapping synchronous
+values in a resolution handler matching JavaScript runtime
+behavior.</li>
+<li><strong>Generators</strong>:
+<ul>
+<li><code>function*</code> declarations automatically infer the return
+type <code>Generator&lt;T, TReturn, TNext&gt;</code>, which extends
+<code>Iterator&lt;T, TReturn, TNext&gt;</code>.</li>
+<li><code>async function*</code> declarations infer
+<code>AsyncGenerator&lt;T, TReturn, TNext&gt;</code>, extending
+<code>AsyncIterator&lt;T, TReturn, TNext&gt;</code>.</li>
+</ul></li>
+</ul>
+<h3 id="type-compatibility-and-assignment">Type Compatibility and
+Assignment</h3>
+<p>Because <code>AsyncIterator</code> requires methods to return a
+<code>Promise</code>, an <code>Iterator&lt;T&gt;</code> is structurally
+incompatible with <code>AsyncIterator&lt;T&gt;</code>. The compiler
+prevents accidental synchronous consumption of asynchronous streams and
+ensures that asynchronous boundaries are handled explicitly with
+<code>await</code> or promise chaining.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/sync-vs-async-iterators-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

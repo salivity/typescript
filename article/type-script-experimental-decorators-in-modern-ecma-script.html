@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript experimentalDecorators in Modern ECMAScript - typescript</title>
+    <meta name="description" content="As projects modernize their codebases to align with current ECMAScript standards, the experimentalDecorators compiler flag in TypeScript is transitioning from a default necessity to a legacy compatibility setting. With TypeScript 5.0 adopting the official">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-experimental-decorators-in-modern-ecma-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript experimentalDecorators in Modern ECMAScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-experimental-decorators-in-modern-ecma-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="As projects modernize their codebases to align with current ECMAScript standards, the experimentalDecorators compiler flag in TypeScript is transitioning from a default necessity to a legacy compatibility setting. With TypeScript 5.0 adopting the official" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-experimentaldecorators-in-modern-ecmascript">TypeScript
+experimentalDecorators in Modern ECMAScript</h1>
+<p>As projects modernize their codebases to align with current
+ECMAScript standards, the <code>experimentalDecorators</code> compiler
+flag in TypeScript is transitioning from a default necessity to a legacy
+compatibility setting. With TypeScript 5.0 adopting the official Stage 3
+TC39 Decorators proposal, developers now have native, standardized
+decorator support out of the box. However, the migration path for
+existing projects is not a simple toggle: deep architectural differences
+between legacy and modern decorators—particularly concerning runtime
+type metadata—mean that <code>experimentalDecorators</code> remains
+actively maintained and widely used during the transition.</p>
+<h3 id="the-shift-to-standard-decorators">The Shift to Standard
+Decorators</h3>
+<p>Prior to TypeScript 5.0, decorators were based on an early Stage 1
+TC39 proposal. Enabling them required setting
+<code>"experimentalDecorators": true</code> in
+<code>tsconfig.json</code>. TypeScript 5.0 implemented the finalized
+Stage 3 specification, which is now the default behavior when
+<code>experimentalDecorators</code> is omitted or set to
+<code>false</code>, provided the target is <code>ES5</code> or
+higher.</p>
+<p>Modern ECMAScript decorators differ significantly from the legacy
+implementation in syntax, capabilities, and execution:</p>
+<ul>
+<li><strong>Context Objects:</strong> Modern decorators receive a
+dedicated <code>context</code> object containing metadata about the
+member being decorated (such as its kind, name, accessors, and static
+status) alongside the value being decorated. Legacy decorators received
+the class prototype, the property name, and a property descriptor.</li>
+<li><strong>Return Values:</strong> Standard decorators allow you to
+replace class elements or return initializer functions directly,
+providing clearer semantics without mutating existing prototypes.</li>
+<li><strong>Parameter Decorators:</strong> The current Stage 3 standard
+initially excluded parameter decorators, a feature heavily utilized in
+legacy TypeScript ecosystems for dependency injection.</li>
+</ul>
+<h3 id="the-emitdecoratormetadata-blocker">The
+<code>emitDecoratorMetadata</code> Blocker</h3>
+<p>The most critical barrier preventing projects from deprecating
+<code>experimentalDecorators</code> is type reflection. The legacy
+implementation supported <code>"emitDecoratorMetadata": true</code>,
+which serialized TypeScript design-time types (such as parameter types
+and return types) via the <code>reflect-metadata</code> library.</p>
+<p>The official ECMAScript decorator specification does not currently
+include built-in type serialization. Consequently:</p>
+<ul>
+<li>TypeScript cannot emit runtime type metadata for standard Stage 3
+decorators.</li>
+<li>Major enterprise frameworks like NestJS, Angular, and TypeORM, which
+depend on <code>emitDecoratorMetadata</code> for dependency injection
+and database schema mapping, cannot run on standard decorators without
+significant internal refactoring or alternative metadata APIs.</li>
+<li>Projects built on these frameworks must continue using
+<code>"experimentalDecorators": true</code> regardless of their target
+ECMAScript version (such as <code>ES2022</code> or
+<code>ESNext</code>).</li>
+</ul>
+<h3 id="migration-status-and-best-practices">Migration Status and Best
+Practices</h3>
+<p>For projects undergoing modernization, the status of
+<code>experimentalDecorators</code> falls into two distinct strategies
+based on dependencies:</p>
+<ol type="1">
+<li><strong>Standalone Libraries and Vanilla TypeScript:</strong>
+Projects that write custom decorators without dependency injection
+frameworks can safely disable <code>experimentalDecorators</code>. This
+requires refactoring decorator function signatures to accept the modern
+<code>(value, context)</code> signature and removing reliance on
+<code>reflect-metadata</code>.</li>
+<li><strong>Framework-Dependent Applications:</strong> Projects reliant
+on NestJS, TypeORM, or older Angular architectures must keep
+<code>"experimentalDecorators": true</code> and
+<code>"emitDecoratorMetadata": true</code>. The TypeScript team has
+committed to maintaining the legacy flag indefinitely to ensure
+backwards compatibility for these large ecosystems.</li>
+</ol>
+<p>In summary, modern ECMAScript decorators are production-ready in
+TypeScript, but <code>experimentalDecorators</code> remains a permanent
+fixture for projects requiring runtime type reflection until a
+standardized metadata proposal reaches consensus within TC39.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-experimental-decorators-in-modern-ecma-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

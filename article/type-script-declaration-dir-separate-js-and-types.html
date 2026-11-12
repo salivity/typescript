@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript declarationDir: Separate JS and Types - typescript</title>
+    <meta name="description" content="Managing build artifacts in TypeScript often requires distinguishing between executable runtime code and static type declarations. This article explains how the declarationDir compiler option functions, how it interacts with outDir and declaration, and ho">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-declaration-dir-separate-js-and-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript declarationDir: Separate JS and Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-declaration-dir-separate-js-and-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing build artifacts in TypeScript often requires distinguishing between executable runtime code and static type declarations. This article explains how the declarationDir compiler option functions, how it interacts with outDir and declaration, and ho" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-declarationdir-separate-js-and-types">TypeScript
+declarationDir: Separate JS and Types</h1>
+<p>Managing build artifacts in TypeScript often requires distinguishing
+between executable runtime code and static type declarations. This
+article explains how the <code>declarationDir</code> compiler option
+functions, how it interacts with <code>outDir</code> and
+<code>declaration</code>, and how to configure
+<code>tsconfig.json</code> to direct emitted JavaScript files and
+TypeScript declaration files into entirely separate folders.</p>
+<h3 id="the-default-emit-behavior">The Default Emit Behavior</h3>
+<p>When TypeScript compiles a project with declarations enabled, it
+generates both JavaScript files (<code>.js</code>) and type declaration
+files (<code>.d.ts</code>). By default, if you specify an
+<code>outDir</code>, the TypeScript compiler (<code>tsc</code>) places
+both types of emitted files together into the same directory
+structure.</p>
+<p>For example, a file at <code>src/index.ts</code> will emit both
+<code>dist/index.js</code> and <code>dist/index.d.ts</code> into the
+specified <code>dist</code> folder. While functional, mixing runtime
+code and declaration files can clutter build directories and complicate
+packaging strategies.</p>
+<h3 id="how-declarationdir-works">How <code>declarationDir</code>
+Works</h3>
+<p>The <code>declarationDir</code> compiler option explicitly reroutes
+the output path for <code>.d.ts</code> and <code>.d.ts.map</code> files
+without affecting where the <code>.js</code> and <code>.js.map</code>
+files are written.</p>
+<p>When <code>declarationDir</code> is set:</p>
+<ul>
+<li><strong>JavaScript files</strong> (and their source maps) continue
+emitting to the directory specified by <code>outDir</code>.</li>
+<li><strong>Declaration files</strong> (and their source maps) emit to
+the path specified by <code>declarationDir</code>.</li>
+</ul>
+<p>Both destinations preserve the original directory hierarchy of the
+source code relative to <code>rootDir</code>.</p>
+<h3 id="configuration-requirements">Configuration Requirements</h3>
+<p>To separate emitted files, you must enable three key settings inside
+your <code>tsconfig.json</code>:</p>
+<ol type="1">
+<li><code>"declaration": true</code> — Instructs the compiler to emit
+<code>.d.ts</code> files.</li>
+<li><code>"outDir": "&lt;path&gt;"</code> — Sets the destination for
+compiled JavaScript files.</li>
+<li><code>"declarationDir": "&lt;path&gt;"</code> — Overrides the
+destination exclusively for emitted <code>.d.ts</code> files.</li>
+</ol>
+<h3 id="example-tsconfigjson-setup">Example <code>tsconfig.json</code>
+Setup</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;compilerOptions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="st">&quot;ES2022&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="st">&quot;NodeNext&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;moduleResolution&quot;</span><span class="fu">:</span> <span class="st">&quot;NodeNext&quot;</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rootDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./src&quot;</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;outDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/js&quot;</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declaration&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;declarationDir&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/types&quot;</span><span class="fu">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;strict&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;include&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;src/**/*&quot;</span><span class="ot">]</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="resulting-directory-structure">Resulting Directory
+Structure</h3>
+<p>Given a source structure like this:</p>
+<pre class="text"><code>my-project/
+├── src/
+│   ├── components/
+│   │   └── button.ts
+│   └── index.ts
+└── tsconfig.json</code></pre>
+<p>Running <code>tsc</code> with the configuration above generates
+cleanly separated output paths:</p>
+<pre class="text"><code>my-project/
+└── dist/
+    ├── js/
+    │   ├── components/
+    │   │   └── button.js
+    │   └── index.js
+    └── types/
+        ├── components/
+        │   └── button.d.ts
+        └── index.d.ts</code></pre>
+<h3 id="configuring-packagejson">Configuring
+<code>package.json</code></h3>
+<p>When using separate output directories for a published library,
+update your <code>package.json</code> entry points to match the
+designated locations:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;my-library&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0.0&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;main&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/js/index.js&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/types/index.d.ts&quot;</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;exports&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;.&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;types&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/types/index.d.ts&quot;</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;import&quot;</span><span class="fu">:</span> <span class="st">&quot;./dist/js/index.js&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>By decoupling the declaration target from the general compilation
+target, <code>declarationDir</code> gives you full control over your
+project's distribution layout, making package maintenance and
+post-processing steps simpler and cleaner.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-declaration-dir-separate-js-and-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

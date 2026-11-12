@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Mapped Types: Transform Object Structures - typescript</title>
+    <meta name="description" content="Mapped types in TypeScript provide a powerful mechanism to create new types by iterating over the property keys of an existing type and transforming them systematically. This article explores how mapped types operate, covering the fundamental iteration sy">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-mapped-types-transform-object-structures">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Mapped Types: Transform Object Structures - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-mapped-types-transform-object-structures" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Mapped types in TypeScript provide a powerful mechanism to create new types by iterating over the property keys of an existing type and transforming them systematically. This article explores how mapped types operate, covering the fundamental iteration sy" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-mapped-types-transform-object-structures">TypeScript
+Mapped Types: Transform Object Structures</h1>
+<p>Mapped types in TypeScript provide a powerful mechanism to create new
+types by iterating over the property keys of an existing type and
+transforming them systematically. This article explores how mapped types
+operate, covering the fundamental iteration syntax, the addition or
+removal of property modifiers like <code>readonly</code> and optional
+flags, key remapping techniques introduced in modern TypeScript, and how
+built-in utility types leverage this pattern to enforce type safety
+across complex data models.</p>
+<h2 id="understanding-the-core-syntax">Understanding the Core
+Syntax</h2>
+<p>Mapped types build upon index signatures and use the
+<code>keyof</code> operator to iterate over property keys. The syntax
+closely resembles a loop:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FeatureFlags <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  darkMode<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  betaAccess<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReadonlyFlags <span class="op">=</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> FeatureFlags]<span class="op">:</span> FeatureFlags[K]<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>In this syntax:</p>
+<ul>
+<li><code>keyof FeatureFlags</code> generates the union
+<code>'darkMode' | 'betaAccess'</code>.</li>
+<li><code>[K in ...]</code> iterates through each key in that
+union.</li>
+<li><code>FeatureFlags[K]</code> uses indexed access to retain the
+original value type (<code>boolean</code>).</li>
+</ul>
+<h2 id="transforming-property-modifiers">Transforming Property
+Modifiers</h2>
+<p>Mapped types allow you to modify property attributes by adding or
+removing the <code>readonly</code> and <code>?</code> (optional)
+modifiers using <code>+</code> (implied if omitted) or <code>-</code>
+prefixes.</p>
+<h3 id="making-properties-optional-or-required">Making Properties
+Optional or Required</h3>
+<p>To make all properties optional, append <code>?</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Optional<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">?:</span> T[K]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>To strip the optional flag and enforce that all properties are
+strictly required, use <code>-?</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Concrete<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">-?:</span> T[K]<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h3 id="adding-or-removing-readonly">Adding or Removing Readonly</h3>
+<p>To prevent mutations, prefix with <code>readonly</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Immutable<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>To remove immutability constraints, use <code>-readonly</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Mutable<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span><span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h2 id="transforming-value-types">Transforming Value Types</h2>
+<p>Mapped types can map existing keys to entirely new value types,
+allowing structural transformations such as turning properties into
+functions, promises, or validation schemas.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="op">=</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  age<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Transform all property values into functions returning that value</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Getters<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> () <span class="kw">=&gt;</span> T[K]<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserGetters <span class="op">=</span> Getters<span class="op">&lt;</span>User<span class="op">&gt;;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Result:</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   id: () =&gt; string;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">//   age: () =&gt; number;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<h2 id="key-remapping-with-the-as-clause">Key Remapping with the
+<code>as</code> Clause</h2>
+<p>TypeScript allows you to transform key names directly using an
+<code>as</code> clause within the mapped type declaration. This is often
+combined with template literal types.</p>
+<h3 id="renaming-properties">Renaming Properties</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AddGetters<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T <span class="im">as</span> <span class="vs">`get</span><span class="sc">${</span>Capitalize<span class="op">&lt;</span><span class="dt">string</span> <span class="op">&amp;</span> K<span class="op">&gt;</span><span class="sc">}</span><span class="vs">`</span>]<span class="op">:</span> () <span class="kw">=&gt;</span> T[K]<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserAccessor <span class="op">=</span> AddGetters<span class="op">&lt;</span>User<span class="op">&gt;;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result:</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">//   getId: () =&gt; string;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">//   getAge: () =&gt; number;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<h3 id="filtering-keys-using-never">Filtering Keys Using
+<code>never</code></h3>
+<p>You can conditionally filter out properties during transformation by
+mapping keys to <code>never</code>:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> OnlyStrings<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T <span class="im">as</span> T[K] <span class="kw">extends</span> <span class="dt">string</span> <span class="op">?</span> K <span class="op">:</span> <span class="dt">never</span>]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> UserStrings <span class="op">=</span> OnlyStrings<span class="op">&lt;</span>User<span class="op">&gt;;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Result:</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">//   id: string;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<h2 id="standard-utility-types">Standard Utility Types</h2>
+<p>TypeScript includes several built-in utility types that are
+implemented directly via mapped types:</p>
+<ul>
+<li><strong><code>Partial&lt;T&gt;</code></strong>: Marks all properties
+as optional using <code>[P in keyof T]?: T[P]</code>.</li>
+<li><strong><code>Required&lt;T&gt;</code></strong>: Removes optional
+flags with <code>[P in keyof T]-?: T[P]</code>.</li>
+<li><strong><code>Readonly&lt;T&gt;</code></strong>: Freezes properties
+using <code>readonly [P in keyof T]: T[P]</code>.</li>
+<li><strong><code>Record&lt;K, T&gt;</code></strong>: Constructs an
+object type with specified keys <code>K</code> and values <code>T</code>
+using <code>[P in K]: T</code>.</li>
+<li><strong><code>Pick&lt;T, K&gt;</code></strong>: Selects a subset of
+properties using <code>[P in K]: T[P]</code>.</li>
+</ul>
+<p>Mapped types eliminate the need for manual, redundant interface
+declarations, providing a single source of truth when adapting data
+structures across application layers.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-mapped-types-transform-object-structures';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

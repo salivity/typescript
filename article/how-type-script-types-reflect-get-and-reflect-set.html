@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How TypeScript Types Reflect.get and Reflect.set - typescript</title>
+    <meta name="description" content="This article explores how TypeScript types the built-in ECMAScript Reflect.get and Reflect.set methods in its standard library declarations. It examines the actual TypeScript signatures for both functions, explains why the compiler opts for loose any type">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-type-script-types-reflect-get-and-reflect-set">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How TypeScript Types Reflect.get and Reflect.set - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-type-script-types-reflect-get-and-reflect-set" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores how TypeScript types the built-in ECMAScript Reflect.get and Reflect.set methods in its standard library declarations. It examines the actual TypeScript signatures for both functions, explains why the compiler opts for loose any type" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-typescript-types-reflectget-and-reflectset">How TypeScript
+Types Reflect.get and Reflect.set</h1>
+<p>This article explores how TypeScript types the built-in ECMAScript
+<code>Reflect.get</code> and <code>Reflect.set</code> methods in its
+standard library declarations. It examines the actual TypeScript
+signatures for both functions, explains why the compiler opts for loose
+<code>any</code> types rather than strict generic mappings by default,
+and demonstrates how to implement strictly typed wrappers when compiler
+safety is required.</p>
+<h2 id="standard-library-type-definitions">Standard Library Type
+Definitions</h2>
+<p>In TypeScript's standard library
+(<code>lib.es2015.reflect.d.ts</code>), <code>Reflect.get</code> and
+<code>Reflect.set</code> are intentionally typed with flexible,
+non-generic signatures.</p>
+<p>The official definition for <code>Reflect.get</code> is:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">get</span>(target<span class="op">:</span> <span class="dt">object</span><span class="op">,</span> propertyKey<span class="op">:</span> PropertyKey<span class="op">,</span> receiver<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">any</span><span class="op">;</span></span></code></pre></div>
+<p>The official definition for <code>Reflect.set</code> is:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">set</span>(target<span class="op">:</span> <span class="dt">object</span><span class="op">,</span> propertyKey<span class="op">:</span> PropertyKey<span class="op">,</span> value<span class="op">:</span> <span class="dt">any</span><span class="op">,</span> receiver<span class="op">?:</span> <span class="dt">any</span>)<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span></code></pre></div>
+<p>In these signatures:</p>
+<ul>
+<li><code>target</code> is constrained simply to
+<code>object</code>.</li>
+<li><code>propertyKey</code> accepts <code>PropertyKey</code>, which is
+a global type alias for <code>string | number | symbol</code>.</li>
+<li>For <code>Reflect.get</code>, the return type is
+<code>any</code>.</li>
+<li>For <code>Reflect.set</code>, the <code>value</code> argument is
+typed as <code>any</code>, and the method returns a <code>boolean</code>
+indicating whether property assignment succeeded.</li>
+</ul>
+<h2 id="why-typescript-uses-any-instead-of-generics">Why TypeScript Uses
+<code>any</code> Instead of Generics</h2>
+<p>TypeScript's standard object property access
+(<code>target[key]</code>) uses generic lookup types (<code>T[K]</code>)
+to enforce that the key exists on the object and that the returned value
+matches the property's type. However, the design team intentionally
+chose not to make <code>Reflect.get</code> and <code>Reflect.set</code>
+generic for several structural reasons:</p>
+<h3 id="1-dynamic-metaprogramming-and-proxies">1. Dynamic
+Metaprogramming and Proxies</h3>
+<p>The <code>Reflect</code> API is primarily intended for
+metaprogramming, runtime reflection, and forwarding operations inside
+<code>Proxy</code> traps. Inside a Proxy handler, properties may be
+virtual or generated dynamically at runtime without existing on the
+underlying target interface. Stricter types would cause false-positive
+type errors in these dynamic contexts.</p>
+<h3 id="2-receiver-polymorphism">2. Receiver Polymorphism</h3>
+<p>Both <code>Reflect.get</code> and <code>Reflect.set</code> accept an
+optional <code>receiver</code> argument. When accessing a property
+backed by a getter or setter, the <code>receiver</code> replaces the
+<code>this</code> context for that getter/setter execution. This means
+the returned value or expected input value might depend entirely on the
+receiver's type rather than the <code>target</code>'s declared type,
+making precise static typing impossible at compile time.</p>
+<h3 id="3-non-existent-keys">3. Non-Existent Keys</h3>
+<p>In vanilla JavaScript, calling
+<code>Reflect.get(target, "missingKey")</code> does not throw a runtime
+error; it returns <code>undefined</code>. If TypeScript typed the return
+value strictly as <code>T[K]</code>, it would prevent checking for
+properties that might not exist on the type definition.</p>
+<h2 id="enforcing-strict-types">Enforcing Strict Types</h2>
+<p>When you need type safety for reflection methods outside of Proxy
+handlers, you can create strongly typed generic helper wrappers or use
+TypeScript module augmentation.</p>
+<p>A type-safe wrapper for <code>Reflect.get</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">strictGet</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">,</span> K <span class="kw">extends</span> <span class="kw">keyof</span> T<span class="op">&gt;</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  propertyKey<span class="op">:</span> K<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  receiver<span class="op">?:</span> <span class="dt">unknown</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> T[K] {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Reflect</span><span class="op">.</span><span class="fu">get</span>(target<span class="op">,</span> propertyKey<span class="op">,</span> receiver)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> user <span class="op">=</span> { id<span class="op">:</span> <span class="dv">1</span><span class="op">,</span> name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> }<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> id <span class="op">=</span> <span class="fu">strictGet</span>(user<span class="op">,</span> <span class="st">&quot;id&quot;</span>)<span class="op">;</span> <span class="co">// Typed as number</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// strictGet(user, &quot;email&quot;); // Compiler Error: Argument of type &#39;&quot;email&quot;&#39; is not assignable to parameter of type &#39;&quot;id&quot; | &quot;name&quot;&#39;.</span></span></code></pre></div>
+<p>A type-safe wrapper for <code>Reflect.set</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">strictSet</span><span class="op">&lt;</span>T <span class="kw">extends</span> <span class="dt">object</span><span class="op">,</span> K <span class="kw">extends</span> <span class="kw">keyof</span> T<span class="op">&gt;</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  target<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  propertyKey<span class="op">:</span> K<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  value<span class="op">:</span> T[K]<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  receiver<span class="op">?:</span> <span class="dt">unknown</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Reflect</span><span class="op">.</span><span class="fu">set</span>(target<span class="op">,</span> propertyKey<span class="op">,</span> value<span class="op">,</span> receiver)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> settings <span class="op">=</span> { theme<span class="op">:</span> <span class="st">&quot;dark&quot;</span><span class="op">,</span> notifications<span class="op">:</span> <span class="kw">true</span> }<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">strictSet</span>(settings<span class="op">,</span> <span class="st">&quot;theme&quot;</span><span class="op">,</span> <span class="st">&quot;light&quot;</span>)<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">// strictSet(settings, &quot;theme&quot;, 123); // Compiler Error: Type &#39;number&#39; is not assignable to type &#39;string&#39;.</span></span></code></pre></div>
+<p>By default, TypeScript sacrifices type safety in
+<code>Reflect.get</code> and <code>Reflect.set</code> to preserve
+runtime flexibility for JavaScript metaprogramming patterns, requiring
+developers to provide explicit types or custom generic abstractions when
+stronger guarantees are needed.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-type-script-types-reflect-get-and-reflect-set';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript ReadonlyMap vs Map: Key Differences - typescript</title>
+    <meta name="description" content="In TypeScript, Map and ReadonlyMap represent key-value collections with distinct mutability constraints. While the standard Map allows dynamic addition, modification, and removal of entries, ReadonlyMap enforces compile-time immutability by stripping away">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-readonly-map-vs-map-key-differences">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript ReadonlyMap vs Map: Key Differences - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-readonly-map-vs-map-key-differences" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, Map and ReadonlyMap represent key-value collections with distinct mutability constraints. While the standard Map allows dynamic addition, modification, and removal of entries, ReadonlyMap enforces compile-time immutability by stripping away" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-readonlymap-vs-map-key-differences">TypeScript
+ReadonlyMap vs Map: Key Differences</h1>
+<p>In TypeScript, <code>Map</code> and <code>ReadonlyMap</code>
+represent key-value collections with distinct mutability constraints.
+While the standard <code>Map</code> allows dynamic addition,
+modification, and removal of entries, <code>ReadonlyMap</code> enforces
+compile-time immutability by stripping away all mutating methods. This
+article breaks down the technical differences between these two types,
+examines their assignability rules, and highlights how to use them
+effectively to ensure data integrity in your applications.</p>
+<hr />
+<h3 id="what-is-the-standard-map">What is the Standard
+<code>Map</code>?</h3>
+<p>The standard <code>Map&lt;K, V&gt;</code> type in TypeScript
+represents the native ECMAScript 6 <code>Map</code> object. It provides
+a full set of read and write operations for managing key-value
+pairs.</p>
+<p>A standard <code>Map</code> includes:</p>
+<ul>
+<li><strong>Mutating methods:</strong> <code>set(key, value)</code>,
+<code>delete(key)</code>, <code>clear()</code></li>
+<li><strong>Reading methods:</strong> <code>get(key)</code>,
+<code>has(key)</code>, <code>size</code></li>
+<li><strong>Iteration methods:</strong> <code>entries()</code>,
+<code>keys()</code>, <code>values()</code>, <code>forEach()</code>,
+<code>[Symbol.iterator]()</code></li>
+</ul>
+<p>Because it allows mutation, any part of your codebase with access to
+a <code>Map</code> instance can alter its contents directly:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userRoles <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>userRoles<span class="op">.</span><span class="fu">set</span>(<span class="st">&quot;alice&quot;</span><span class="op">,</span> <span class="st">&quot;admin&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>userRoles<span class="op">.</span><span class="fu">delete</span>(<span class="st">&quot;alice&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>userRoles<span class="op">.</span><span class="fu">clear</span>()<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="what-is-readonlymap">What is <code>ReadonlyMap</code>?</h3>
+<p><code>ReadonlyMap&lt;K, V&gt;</code> is a built-in TypeScript
+interface designed to prevent accidental modifications to a map
+collection. It is purely a compile-time construct—not a separate runtime
+class.</p>
+<p>The <code>ReadonlyMap</code> interface includes only the non-mutating
+members of <code>Map</code>:</p>
+<ul>
+<li><strong>Inspection properties:</strong> <code>size</code></li>
+<li><strong>Lookup methods:</strong> <code>get(key)</code>,
+<code>has(key)</code></li>
+<li><strong>Iteration methods:</strong> <code>entries()</code>,
+<code>keys()</code>, <code>values()</code>, <code>forEach()</code>,
+<code>[Symbol.iterator]()</code></li>
+</ul>
+<p>It completely omits <code>set()</code>, <code>delete()</code>, and
+<code>clear()</code>. Calling any of these methods on a
+<code>ReadonlyMap</code> produces a compile-time error:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> readOnlyRoles<span class="op">:</span> ReadonlyMap<span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>([[<span class="st">&quot;alice&quot;</span><span class="op">,</span> <span class="st">&quot;admin&quot;</span>]])<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(readOnlyRoles<span class="op">.</span><span class="fu">get</span>(<span class="st">&quot;alice&quot;</span>))<span class="op">;</span> <span class="co">// Allowed: &quot;admin&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(readOnlyRoles<span class="op">.</span><span class="at">size</span>)<span class="op">;</span>         <span class="co">// Allowed: 1</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile error: Property &#39;set&#39; does not exist on type &#39;ReadonlyMap&lt;string, string&gt;&#39;.</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>readOnlyRoles<span class="op">.</span><span class="fu">set</span>(<span class="st">&quot;bob&quot;</span><span class="op">,</span> <span class="st">&quot;editor&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile error: Property &#39;delete&#39; does not exist on type &#39;ReadonlyMap&lt;string, string&gt;&#39;.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>readOnlyRoles<span class="op">.</span><span class="fu">delete</span>(<span class="st">&quot;alice&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="key-differences">Key Differences</h3>
+<h4 id="1-mutability-and-api-surface">1. Mutability and API Surface</h4>
+<ul>
+<li><strong><code>Map</code></strong> provides a complete API for
+reading and writing data.</li>
+<li><strong><code>ReadonlyMap</code></strong> provides a restricted
+subset of the <code>Map</code> API, hiding all mutation methods at
+compile time.</li>
+</ul>
+<h4 id="2-subtyping-and-assignability">2. Subtyping and
+Assignability</h4>
+<p>A standard <code>Map&lt;K, V&gt;</code> implements the
+<code>ReadonlyMap&lt;K, V&gt;</code> interface. Because <code>Map</code>
+possesses all the methods defined on <code>ReadonlyMap</code>, you can
+safely assign a <code>Map</code> to a variable or parameter typed as
+<code>ReadonlyMap</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mutableMap <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span>([[<span class="dv">1</span><span class="op">,</span> <span class="st">&quot;one&quot;</span>]])<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> readonlyReference<span class="op">:</span> ReadonlyMap<span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> mutableMap<span class="op">;</span> <span class="co">// Valid</span></span></code></pre></div>
+<p>However, the reverse is not true. You cannot assign a
+<code>ReadonlyMap</code> to a standard <code>Map</code> without an
+explicit type assertion because <code>ReadonlyMap</code> lacks the
+mutating methods:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updateMap</span>(map<span class="op">:</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="dt">number</span><span class="op">,</span> <span class="dt">string</span><span class="op">&gt;</span>) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  map<span class="op">.</span><span class="fu">set</span>(<span class="dv">2</span><span class="op">,</span> <span class="st">&quot;two&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Compile error: Argument of type &#39;ReadonlyMap&lt;number, string&gt;&#39; is not assignable to &#39;Map&lt;number, string&gt;&#39;.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">updateMap</span>(readonlyReference)<span class="op">;</span></span></code></pre></div>
+<h4 id="3-runtime-existence">3. Runtime Existence</h4>
+<p><code>ReadonlyMap</code> exists solely within the TypeScript type
+system. At runtime, the compiled JavaScript contains a standard
+<code>Map</code> instance. As a result:</p>
+<ul>
+<li>You cannot instantiate a <code>ReadonlyMap</code> directly using
+<code>new ReadonlyMap()</code>. You must instantiate a
+<code>new Map()</code> and type-annotate it as
+<code>ReadonlyMap</code>.</li>
+<li>JavaScript code or external libraries that bypass TypeScript's type
+checking can still mutate the underlying object.</li>
+</ul>
+<h4 id="4-shallow-immutability">4. Shallow Immutability</h4>
+<p><code>ReadonlyMap</code> provides shallow protection. While the
+collection itself cannot have keys added, deleted, or reassigned, any
+mutable objects stored as values inside the map can still be
+modified:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> profiles<span class="op">:</span> ReadonlyMap<span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> UserProfile<span class="op">&gt;</span> <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>([</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  [<span class="st">&quot;u1&quot;</span><span class="op">,</span> { name<span class="op">:</span> <span class="st">&quot;Alice&quot;</span> }]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>])<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// This is still permitted because the object reference itself is mutable:</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>profiles<span class="op">.</span><span class="fu">get</span>(<span class="st">&quot;u1&quot;</span>)<span class="op">!.</span><span class="at">name</span> <span class="op">=</span> <span class="st">&quot;Bob&quot;</span><span class="op">;</span> </span></code></pre></div>
+<p>To prevent this, values must also be typed with
+<code>Readonly&lt;T&gt;</code> (for example,
+<code>ReadonlyMap&lt;string, Readonly&lt;UserProfile&gt;&gt;</code>).</p>
+<hr />
+<h3 id="when-to-use-each-type">When to Use Each Type</h3>
+<ul>
+<li><strong>Use <code>Map</code></strong> internally within a class,
+module, or function when you need to construct, populate, or update
+key-value state.</li>
+<li><strong>Use <code>ReadonlyMap</code></strong> in public APIs,
+function signatures, and class getters where a caller needs to read data
+or iterate over it, but should not be allowed to modify the underlying
+collection.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-readonly-map-vs-map-key-differences';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

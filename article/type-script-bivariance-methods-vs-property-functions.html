@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Bivariance: Methods vs Property Functions - typescript</title>
+    <meta name="description" content="In TypeScript, parameter variance rules differ significantly between method syntax and function property syntax when the --strictFunctionTypes compiler flag is enabled. While function property declarations enforce strict contravariant parameter checking,">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-bivariance-methods-vs-property-functions">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Bivariance: Methods vs Property Functions - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-bivariance-methods-vs-property-functions" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, parameter variance rules differ significantly between method syntax and function property syntax when the --strictFunctionTypes compiler flag is enabled. While function property declarations enforce strict contravariant parameter checking," />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-bivariance-methods-vs-property-functions">TypeScript
+Bivariance: Methods vs Property Functions</h1>
+<p>In TypeScript, parameter variance rules differ significantly between
+method syntax and function property syntax when the
+<code>--strictFunctionTypes</code> compiler flag is enabled. While
+function property declarations enforce strict contravariant parameter
+checking, method declarations deliberately retain bivariant parameter
+checking. This article explores how this variance behavior operates in
+both declarations, why TypeScript maintains this distinction, and how to
+choose the right approach for type safety.</p>
+<h3 id="understanding-function-parameter-variance">Understanding
+Function Parameter Variance</h3>
+<p>When comparing two function types, variance determines whether one
+function can be safely assigned to another based on their parameter
+types.</p>
+<ul>
+<li><strong>Contravariance</strong> requires that a callback or function
+parameter accept a type that is equal to or broader (a supertype) than
+the expected parameter type.</li>
+<li><strong>Bivariance</strong> allows a parameter to be either a
+supertype (contravariant) or a subtype (covariant), effectively
+loosening type safety by permitting narrower types to be passed where
+broader types are expected.</li>
+</ul>
+<h3 id="method-declarations-and-bivariance">Method Declarations and
+Bivariance</h3>
+<p>Method syntax is defined directly within an interface, class, or
+object type using standard method signature notation:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AnimalComparer {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span>(a<span class="op">:</span> Animal)<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Even when <code>--strictFunctionTypes</code> is enabled, methods
+declared with this shorthand syntax are checked
+<strong>bivariantly</strong>. This means a method expecting a narrower
+derived type can be assigned to a method expecting a broader base type,
+and vice versa.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Animal { name<span class="op">!:</span> <span class="dt">string</span><span class="op">;</span> }</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dog <span class="kw">extends</span> Animal { <span class="fu">bark</span>() {} }</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> MethodContainer {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">handle</span>(animal<span class="op">:</span> Animal)<span class="op">:</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> dogHandler <span class="op">=</span> {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">handle</span>(dog<span class="op">:</span> Dog)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    dog<span class="op">.</span><span class="fu">bark</span>()<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Allowed due to method bivariance, despite potential runtime errors:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> container<span class="op">:</span> MethodContainer <span class="op">=</span> dogHandler<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Runtime failure: passing an Animal that lacks the bark() method</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">handle</span>(<span class="kw">new</span> <span class="fu">Animal</span>())<span class="op">;</span></span></code></pre></div>
+<h3 id="property-function-declarations-and-contravariance">Property
+Function Declarations and Contravariance</h3>
+<p>Function property syntax defines a function as a property holding a
+function type signature:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> AnimalComparer {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  compare<span class="op">:</span> (a<span class="op">:</span> Animal) <span class="kw">=&gt;</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Under <code>--strictFunctionTypes</code>, property functions enforce
+strict <strong>contravariant</strong> parameter checking. The compiler
+rejects assignments where the incoming function parameter is more
+specific than the target definition requires.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> PropertyContainer {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  handle<span class="op">:</span> (animal<span class="op">:</span> Animal) <span class="kw">=&gt;</span> <span class="dt">void</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> strictDogHandler <span class="op">=</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  handle<span class="op">:</span> (dog<span class="op">:</span> Dog) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    dog<span class="op">.</span><span class="fu">bark</span>()<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// TypeScript Error: Type &#39;(dog: Dog) =&gt; void&#39; is not assignable to type &#39;(animal: Animal) =&gt; void&#39;.</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Property &#39;bark&#39; is missing in type &#39;Animal&#39; but required in type &#39;Dog&#39;.</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> strictContainer<span class="op">:</span> PropertyContainer <span class="op">=</span> strictDogHandler<span class="op">;</span></span></code></pre></div>
+<h3 id="why-the-distinction-exists">Why the Distinction Exists</h3>
+<p>TypeScript intentionally preserves bivariant checking for method
+declarations to accommodate common JavaScript patterns, most notably
+with built-in mutable structures like arrays.</p>
+<p>In JavaScript, <code>Array&lt;Derived&gt;</code> is routinely treated
+as a subtype of <code>Array&lt;Base&gt;</code>. If methods like
+<code>push(item: T)</code> were strictly contravariant,
+<code>Dog[]</code> could not be assigned to <code>Animal[]</code>,
+because <code>Dog[].push</code> accepts only <code>Dog</code>, while
+<code>Animal[].push</code> accepts any <code>Animal</code>. By keeping
+method declarations bivariant, TypeScript allows array covariance to
+function smoothly at the cost of strict runtime safety.</p>
+<h3 id="best-practices-for-type-safety">Best Practices for Type
+Safety</h3>
+<p>To maximize type safety and prevent runtime errors caused by
+bivariant assignments:</p>
+<ol type="1">
+<li><strong>Use Property Signatures for Callbacks</strong>: When writing
+interfaces that accept handlers, event listeners, or callbacks, always
+declare them as function properties
+(<code>callback: (data: T) =&gt; void</code>) rather than methods
+(<code>callback(data: T): void</code>).</li>
+<li><strong>Reserve Method Signatures for True Methods</strong>: Use
+method shorthand syntax primarily when modeling object-oriented APIs,
+classes, or structures where method override flexibility is required and
+the structural risks are understood.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-bivariance-methods-vs-property-functions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

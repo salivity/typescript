@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Mapping Modifiers: -? and -readonly - typescript</title>
+    <meta name="description" content="In TypeScript, mapped types allow you to create new types by transforming existing ones. By prefixing the mapping modifiers with a minus sign (-? and -readonly), you explicitly remove optionality and immutability from properties. While TypeScript defaults">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-mapping-modifiers-and-readonly">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Mapping Modifiers: -? and -readonly - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-mapping-modifiers-and-readonly" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="In TypeScript, mapped types allow you to create new types by transforming existing ones. By prefixing the mapping modifiers with a minus sign (-? and -readonly), you explicitly remove optionality and immutability from properties. While TypeScript defaults" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typescript-mapping-modifiers---and--readonly">TypeScript Mapping
+Modifiers: -? and -readonly</h1>
+<p>In TypeScript, mapped types allow you to create new types by
+transforming existing ones. By prefixing the mapping modifiers with a
+minus sign (<code>-?</code> and <code>-readonly</code>), you explicitly
+remove optionality and immutability from properties. While TypeScript
+defaults to adding or preserving modifiers, the <code>-</code> prefix
+acts as a removal operator, turning optional properties into required
+ones and immutable <code>readonly</code> properties into mutable
+ones.</p>
+<h2 id="understanding-mapping-modifiers">Understanding Mapping
+Modifiers</h2>
+<p>When constructing mapped types, you can apply property modifiers to
+adjust how properties behave:</p>
+<ul>
+<li><code>readonly</code>: Controls whether a property can be reassigned
+after initialization.</li>
+<li><code>?</code>: Controls whether a property is optional.</li>
+</ul>
+<p>By default, omitting a prefix or using a <code>+</code> prefix adds
+the modifier (e.g., <code>+?</code> or <code>+readonly</code>).
+Prefixing a modifier with <code>-</code> removes it from the resulting
+type definition.</p>
+<h2 id="the-effect-of--">The Effect of <code>-?</code></h2>
+<p>The <code>-?</code> modifier removes the optional flag from all
+properties being mapped, making them strictly required.</p>
+<p>If an interface contains properties marked with <code>?</code>,
+mapping over it normally preserves that optionality. Using
+<code>-?</code> forces the resulting type to require every key,
+effectively stripping <code>undefined</code> from the property's
+potential values.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> UserProfile {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  email<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Without -?, optionality is preserved</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PartialCopy<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// With -?, properties become required</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Concrete<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">-?:</span> T[K]<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="op">=</span> Concrete<span class="op">&lt;</span>UserProfile<span class="op">&gt;;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Result is:</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">//   id: string;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">//   name: string;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">//   email: string;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<p>This is the exact mechanism TypeScript uses internally to implement
+the built-in utility type <code>Required&lt;T&gt;</code>.</p>
+<h2 id="the-effect-of--readonly">The Effect of
+<code>-readonly</code></h2>
+<p>The <code>-readonly</code> modifier removes the <code>readonly</code>
+attribute from properties, making previously immutable fields
+writable.</p>
+<p>When working with frozen objects, configuration types, or types
+wrapped in TypeScript's <code>Readonly&lt;T&gt;</code>, properties
+cannot be modified. Applying <code>-readonly</code> in a mapped type
+strips this constraint, producing a mutable version of the type.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> ImmutableConfig {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> endpoint<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> port<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Mutable<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span><span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">:</span> T[K]<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EditableConfig <span class="op">=</span> Mutable<span class="op">&lt;</span>ImmutableConfig<span class="op">&gt;;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// EditableConfig is:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   endpoint: string;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   port: number;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<p>In the resulting <code>EditableConfig</code> type, properties can now
+be reassigned without triggering compiler errors.</p>
+<h2 id="combining-modifiers">Combining Modifiers</h2>
+<p>Both removal modifiers can be used simultaneously within the same
+mapped type declaration. This allows you to construct a type that is
+both completely mutable and fully required in a single step.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> StrictSettings {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> theme<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> autoSave<span class="op">?:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FullyUnlocked<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">-</span><span class="kw">readonly</span> [K <span class="kw">in</span> <span class="kw">keyof</span> T]<span class="op">-?:</span> T[K]<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ActiveSettings <span class="op">=</span> FullyUnlocked<span class="op">&lt;</span>StrictSettings<span class="op">&gt;;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// ActiveSettings is:</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// {</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">//   theme: string;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">//   autoSave: boolean;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// }</span></span></code></pre></div>
+<p>Using <code>-?</code> and <code>-readonly</code> gives you precise,
+granular control over property contracts in TypeScript, allowing you to
+invert constraints imposed by third-party definitions or upstream
+types.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-mapping-modifiers-and-readonly';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

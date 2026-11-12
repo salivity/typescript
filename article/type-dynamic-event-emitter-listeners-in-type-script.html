@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Dynamic Event Emitter Listeners in TypeScript - typescript</title>
+    <meta name="description" content="By default, standard event emitters in JavaScript and Node.js rely on string identifiers and arbitrary callback arguments, leading to an absence of type safety that can introduce runtime bugs. This article explains how to build a strongly typed dynamic ev">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-dynamic-event-emitter-listeners-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type Dynamic Event Emitter Listeners in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-dynamic-event-emitter-listeners-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="By default, standard event emitters in JavaScript and Node.js rely on string identifiers and arbitrary callback arguments, leading to an absence of type safety that can introduce runtime bugs. This article explains how to build a strongly typed dynamic ev" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-dynamic-event-emitter-listeners-in-typescript">Type Dynamic
+Event Emitter Listeners in TypeScript</h1>
+<p>By default, standard event emitters in JavaScript and Node.js rely on
+string identifiers and arbitrary callback arguments, leading to an
+absence of type safety that can introduce runtime bugs. This article
+explains how to build a strongly typed dynamic event emitter in
+TypeScript using generic interfaces, mapped types, and key constraints.
+By defining an event-to-payload map, you can ensure that event names
+provide auto-completion and that listener callbacks automatically
+resolve to their correct, dynamically typed payloads.</p>
+<h2 id="defining-the-event-map">Defining the Event Map</h2>
+<p>The foundation of type-safe event emitters is an interface that maps
+event names to their expected parameter payloads. Represent arguments as
+tuples to accommodate events that pass multiple arguments:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> AppEvents {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  userLoggedIn<span class="op">:</span> [userId<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> timestamp<span class="op">:</span> <span class="dt">number</span>]<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  userLoggedOut<span class="op">:</span> [userId<span class="op">:</span> <span class="dt">string</span>]<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  error<span class="op">:</span> [error<span class="op">:</span> <span class="bu">Error</span>]<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  cacheCleared<span class="op">:</span> []<span class="op">;</span> <span class="co">// No arguments</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="creating-a-strongly-typed-eventemitter-interface">Creating a
+Strongly Typed EventEmitter Interface</h2>
+<p>Instead of typing event names as arbitrary strings, restrict event
+names to <code>keyof AppEvents</code> and bind listener parameters
+directly to the corresponding tuple types:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> TypedEventEmitter<span class="op">&lt;</span>Events <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">any</span>[]<span class="op">&gt;&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">on</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">once</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emit</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Events[K])<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">off</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">removeListener</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="implementing-with-nodejs-eventemitter">Implementing with Node.js
+EventEmitter</h2>
+<p>You can back this interface using the standard Node.js
+<code>EventEmitter</code>. The cleanest approach is extending the
+standard class while casting the methods to your strictly typed
+signatures:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { <span class="bu">EventEmitter</span> } <span class="im">from</span> <span class="st">&#39;events&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> StrictEventEmitter<span class="op">&lt;</span>Events <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">any</span>[]<span class="op">&gt;&gt;</span> <span class="kw">extends</span> (<span class="bu">EventEmitter</span> <span class="im">as</span> <span class="kw">new</span> () <span class="kw">=&gt;</span> TypedEventEmitter<span class="op">&lt;</span>Events<span class="op">&gt;</span>) {}</span></code></pre></div>
+<p>Alternatively, if you prefer composition to avoid inheritance
+complexities:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { <span class="bu">EventEmitter</span> } <span class="im">from</span> <span class="st">&#39;events&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">class</span> TypedEmitter<span class="op">&lt;</span>Events <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">any</span>[]<span class="op">&gt;&gt;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> emitter <span class="op">=</span> <span class="kw">new</span> <span class="bu">EventEmitter</span>()<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">on</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span> {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">emitter</span><span class="op">.</span><span class="fu">on</span>(<span class="bu">event</span> <span class="im">as</span> <span class="dt">string</span><span class="op">,</span> listener <span class="im">as</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emit</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> <span class="op">...</span>args<span class="op">:</span> Events[K])<span class="op">:</span> <span class="dt">boolean</span> {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="at">emitter</span><span class="op">.</span><span class="fu">emit</span>(<span class="bu">event</span> <span class="im">as</span> <span class="dt">string</span><span class="op">,</span> <span class="op">...</span>args)<span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">off</span><span class="op">&lt;</span>K <span class="kw">extends</span> <span class="kw">keyof</span> Events<span class="op">&gt;</span>(event<span class="op">:</span> K<span class="op">,</span> listener<span class="op">:</span> (<span class="op">...</span>args<span class="op">:</span> Events[K]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">:</span> <span class="kw">this</span> {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">this</span><span class="op">.</span><span class="at">emitter</span><span class="op">.</span><span class="fu">off</span>(<span class="bu">event</span> <span class="im">as</span> <span class="dt">string</span><span class="op">,</span> listener <span class="im">as</span> (<span class="op">...</span>args<span class="op">:</span> <span class="dt">any</span>[]) <span class="kw">=&gt;</span> <span class="dt">void</span>)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="handling-dynamic-and-extensible-event-maps">Handling Dynamic and
+Extensible Event Maps</h2>
+<p>If your application registers dynamic events at runtime or combines
+modules with different event sets, leverage generic intersection types
+or generic inheritance:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Base emitter instance instantiated with dynamic extensions</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createScopedEmitter</span><span class="op">&lt;</span>CustomEvents <span class="kw">extends</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">any</span>[]<span class="op">&gt;&gt;</span>() {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> CombinedEvents <span class="op">=</span> AppEvents <span class="op">&amp;</span> CustomEvents<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="fu">TypedEmitter</span><span class="op">&lt;</span>CombinedEvents<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Defining a scoped module</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> PluginEvents {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  pluginLoaded<span class="op">:</span> [pluginName<span class="op">:</span> <span class="dt">string</span>]<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> emitter <span class="op">=</span> <span class="fu">createScopedEmitter</span><span class="op">&lt;</span>PluginEvents<span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Type-safe dynamic listeners</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>emitter<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pluginLoaded&#39;</span><span class="op">,</span> (name) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript infers `name` as string</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`Loaded: </span><span class="sc">${</span>name<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>emitter<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;userLoggedIn&#39;</span><span class="op">,</span> (userId<span class="op">,</span> timestamp) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// TypeScript infers `userId` as string and `timestamp` as number</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`User </span><span class="sc">${</span>userId<span class="sc">}</span><span class="vs"> logged in at </span><span class="sc">${</span>timestamp<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="compile-time-validation">Compile-Time Validation</h2>
+<p>When using this pattern, TypeScript validates the relationship
+between the event name and listener parameters:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler Error: Argument of type &#39;number&#39; is not assignable to parameter of type &#39;string&#39;.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>emitter<span class="op">.</span><span class="fu">emit</span>(<span class="st">&#39;userLoggedOut&#39;</span><span class="op">,</span> <span class="dv">12345</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler Error: Argument of type &#39;&quot;invalidEvent&quot;&#39; is not assignable to parameter of type &#39;keyof CombinedEvents&#39;.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>emitter<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;invalidEvent&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {})<span class="op">;</span></span></code></pre></div>
+<p>This pattern eliminates manual casting inside listener callbacks and
+surfaces breaking changes immediately whenever an event's payload
+signature is modified.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-dynamic-event-emitter-listeners-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

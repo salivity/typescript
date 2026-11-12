@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type-Only Imports and Exports in TypeScript - typescript</title>
+    <meta name="description" content="This article provides an overview of type-only imports and exports in TypeScript, explaining what they are, how their syntax works, and why they were introduced. You will learn how this feature resolves compilation ambiguities for single-file transpilers">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-only-imports-and-exports-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Type-Only Imports and Exports in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-only-imports-and-exports-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of type-only imports and exports in TypeScript, explaining what they are, how their syntax works, and why they were introduced. You will learn how this feature resolves compilation ambiguities for single-file transpilers" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="type-only-imports-and-exports-in-typescript">Type-Only Imports
+and Exports in TypeScript</h1>
+<p>This article provides an overview of type-only imports and exports in
+TypeScript, explaining what they are, how their syntax works, and why
+they were introduced. You will learn how this feature resolves
+compilation ambiguities for single-file transpilers like Babel,
+eliminates accidental runtime side effects, and helps developers
+maintain clean and predictable compiled JavaScript code.</p>
+<h3 id="what-are-type-only-imports-and-exports">What Are Type-Only
+Imports and Exports?</h3>
+<p>Type-only imports and exports, introduced in TypeScript 3.8, allow
+developers to explicitly state that an imported or exported item is
+strictly used for type checking and should never be emitted into the
+final JavaScript output.</p>
+<p>Before this feature, TypeScript used heuristic analysis to determine
+whether an import was used purely as a type. If an import was only used
+in type positions (such as type annotations or interfaces), the
+TypeScript compiler automatically omitted it from the emitted
+JavaScript.</p>
+<p>With type-only syntax, you use the <code>type</code> keyword directly
+in the import or export statement:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Type-only import</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="im">type</span> { User<span class="op">,</span> Credentials } <span class="im">from</span> <span class="st">&#39;./models&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Type-only export</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">export type</span> { User }<span class="op">;</span></span></code></pre></div>
+<p>TypeScript 4.5 expanded this feature by introducing inline type
+qualifiers, allowing you to mix values and types in a single import
+statement:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Inline type-only import</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { loginUser<span class="op">,</span> <span class="kw">type</span> AuthToken } <span class="im">from</span> <span class="st">&#39;./auth&#39;</span><span class="op">;</span></span></code></pre></div>
+<h3 id="why-were-they-introduced">Why Were They Introduced?</h3>
+<h4 id="1-compatibility-with-single-file-transpilers">1. Compatibility
+with Single-File Transpilers</h4>
+<p>Modern build tools like Babel, esbuild, and SWC transpile TypeScript
+files into JavaScript on a file-by-file basis without running the full
+TypeScript type checker. This isolated approach makes builds
+significantly faster, but it creates an ambiguity problem.</p>
+<p>When a single-file transpiler encounters:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SomeIdentifier } <span class="im">from</span> <span class="st">&#39;./module&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>It cannot determine whether <code>SomeIdentifier</code> is a
+JavaScript value (like a <code>class</code> or <code>const</code>) or a
+TypeScript-only construct (like an <code>interface</code> or
+<code>type alias</code>). If <code>SomeIdentifier</code> is only a type,
+emitting the import into JavaScript causes a runtime error because the
+module might not export anything by that name at runtime.</p>
+<p>Using <code>import type</code> guarantees that transpilers can safely
+drop the import statement entirely without needing to resolve the
+imported file. This behavior is reinforced by setting
+<code>"isolatedModules": true</code> in <code>tsconfig.json</code>.</p>
+<h4 id="2-eliminating-unintended-runtime-side-effects">2. Eliminating
+Unintended Runtime Side Effects</h4>
+<p>When an import statement is preserved in compiled JavaScript, the
+imported file is loaded and executed at runtime. If an imported file
+contains side effects—such as initializing a database connection,
+reading configuration files, or logging—a standard import could trigger
+this code unexpectedly.</p>
+<p>By using <code>import type</code>, the compiler guarantees that the
+import will be completely stripped from the emitted JavaScript. This
+guarantees that the target file is not loaded at runtime simply because
+a type was needed during development.</p>
+<h4 id="3-resolving-circular-dependencies">3. Resolving Circular
+Dependencies</h4>
+<p>Circular dependencies between types are common and usually harmless
+in TypeScript because types disappear at runtime. However, if those
+circular dependencies cause runtime import statements to be generated,
+they can lead to undefined module evaluations or circular dependency
+errors in JavaScript. Type-only imports break these runtime loops by
+ensuring that only actual runtime dependencies are evaluated.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-only-imports-and-exports-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

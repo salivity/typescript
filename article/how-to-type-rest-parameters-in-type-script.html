@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Type Rest Parameters in TypeScript - typescript</title>
+    <meta name="description" content="Rest parameters in TypeScript allow functions to accept an indefinite number of arguments represented as a single array. To annotate rest parameters properly, you assign them an array type or a tuple type, depending on whether the arguments are uniform or">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/how-to-type-rest-parameters-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Type Rest Parameters in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/how-to-type-rest-parameters-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rest parameters in TypeScript allow functions to accept an indefinite number of arguments represented as a single array. To annotate rest parameters properly, you assign them an array type or a tuple type, depending on whether the arguments are uniform or" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-type-rest-parameters-in-typescript">How to Type Rest
+Parameters in TypeScript</h1>
+<p>Rest parameters in TypeScript allow functions to accept an indefinite
+number of arguments represented as a single array. To annotate rest
+parameters properly, you assign them an array type or a tuple type,
+depending on whether the arguments are uniform or follow a specific
+sequential pattern. This guide explains the syntax, type rules, and
+practical examples for annotating rest parameters effectively in
+TypeScript.</p>
+<h3 id="basic-array-annotations">Basic Array Annotations</h3>
+<p>Because rest parameters collect remaining function arguments into an
+array, their type annotation must always be an array type. You can use
+standard bracket notation (<code>Type[]</code>) or generic array
+notation (<code>Array&lt;Type&gt;</code>).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sumAll</span>(<span class="op">...</span>numbers<span class="op">:</span> <span class="dt">number</span>[])<span class="op">:</span> <span class="dt">number</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> numbers<span class="op">.</span><span class="fu">reduce</span>((total<span class="op">,</span> num) <span class="kw">=&gt;</span> total <span class="op">+</span> num<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sumAll</span>(<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sumAll</span>(<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>)<span class="op">;</span> <span class="co">// Valid</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// sumAll(1, &quot;two&quot;); // Error: Argument of type &#39;string&#39; is not assignable to parameter of type &#39;number&#39;.</span></span></code></pre></div>
+<p>In this example, <code>...numbers: number[]</code> specifies that the
+function can take any number of numeric arguments, all of which are
+accessible inside the function as an array of numbers.</p>
+<h3 id="tuple-type-annotations">Tuple Type Annotations</h3>
+<p>When a function requires an exact number of arguments of specific
+types, or a set pattern of arguments, you can type the rest parameter as
+a tuple.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">setCoordinates</span>(<span class="op">...</span>coords<span class="op">:</span> [<span class="dt">number</span><span class="op">,</span> <span class="dt">number</span><span class="op">,</span> <span class="dt">number</span><span class="op">?</span>])<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [x<span class="op">,</span> y<span class="op">,</span> z] <span class="op">=</span> coords<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="vs">`X: </span><span class="sc">${</span>x<span class="sc">}</span><span class="vs">, Y: </span><span class="sc">${</span>y<span class="sc">}</span><span class="vs">, Z: </span><span class="sc">${</span>z <span class="op">??</span> <span class="dv">0</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">setCoordinates</span>(<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>)<span class="op">;</span>       <span class="co">// Valid: optional third parameter omitted</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">setCoordinates</span>(<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>)<span class="op">;</span>   <span class="co">// Valid</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// setCoordinates(10);        // Error: Expected at least 2 arguments, but got 1.</span></span></code></pre></div>
+<p>Tuples allow you to enforce argument length, assign different types
+to specific positions, and mark trailing elements as optional using the
+<code>?</code> modifier.</p>
+<h3 id="leading-and-middle-rest-elements-in-tuples">Leading and Middle
+Rest Elements in Tuples</h3>
+<p>TypeScript allows rest elements to appear anywhere within a tuple
+type, provided they are followed by strongly typed elements or are fixed
+at the end. This allows for flexible API designs where variable
+arguments precede fixed arguments.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sendMessage</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span>args<span class="op">:</span> [prefix<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> <span class="op">...</span>messages<span class="op">:</span> <span class="dt">string</span>[]<span class="op">,</span> suffix<span class="op">:</span> <span class="dt">string</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>)<span class="op">:</span> <span class="dt">void</span> {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> [prefix<span class="op">,</span> <span class="op">...</span>rest] <span class="op">=</span> args<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> suffix <span class="op">=</span> rest<span class="op">.</span><span class="fu">pop</span>()<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(prefix<span class="op">,</span> rest<span class="op">.</span><span class="fu">join</span>(<span class="st">&quot; &quot;</span>)<span class="op">,</span> suffix)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sendMessage</span>(<span class="st">&quot;START:&quot;</span><span class="op">,</span> <span class="st">&quot;Hello&quot;</span><span class="op">,</span> <span class="st">&quot;World&quot;</span><span class="op">,</span> <span class="st">&quot;END&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="key-rules-for-rest-parameters">Key Rules for Rest
+Parameters</h3>
+<ol type="1">
+<li><strong>Must be the last parameter</strong>: A rest parameter must
+always be the final parameter in the function's parameter list (e.g.,
+<code>(first: string, ...rest: number[])</code>).</li>
+<li><strong>Must be an array-like type</strong>: Providing a non-array
+type, such as <code>...args: number</code>, will result in a compiler
+error. It must be <code>number[]</code>,
+<code>Array&lt;number&gt;</code>, or a tuple
+<code>[number, ...]</code>.</li>
+<li><strong>Implicit <code>any[]</code> without strict mode</strong>: If
+<code>noImplicitAny</code> is disabled and no annotation is provided,
+TypeScript defaults the rest parameter type to <code>any[]</code>. Under
+strict mode, the annotation is required.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/how-to-type-rest-parameters-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

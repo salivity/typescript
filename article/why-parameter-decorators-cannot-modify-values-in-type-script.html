@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Parameter Decorators Cannot Modify Values in TypeScript - typescript</title>
+    <meta name="description" content="Parameter decorators in TypeScript are a powerful language feature, yet developers frequently encounter the limitation that they cannot directly intercept or mutate method arguments. This article explores the architectural reasons behind this restriction,">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/why-parameter-decorators-cannot-modify-values-in-type-script">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Why Parameter Decorators Cannot Modify Values in TypeScript - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/why-parameter-decorators-cannot-modify-values-in-type-script" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Parameter decorators in TypeScript are a powerful language feature, yet developers frequently encounter the limitation that they cannot directly intercept or mutate method arguments. This article explores the architectural reasons behind this restriction," />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="why-parameter-decorators-cannot-modify-values-in-typescript">Why
+Parameter Decorators Cannot Modify Values in TypeScript</h1>
+<p>Parameter decorators in TypeScript are a powerful language feature,
+yet developers frequently encounter the limitation that they cannot
+directly intercept or mutate method arguments. This article explores the
+architectural reasons behind this restriction, focusing on TypeScript's
+decorator evaluation lifecycle, the ignored return value of parameter
+decorators, and how metadata observation differs from runtime execution.
+It also outlines the standard pattern used to achieve parameter
+modification by pairing parameter decorators with method decorators.</p>
+<h2 id="1-execution-timing-definition-time-vs-invocation-time">1.
+Execution Timing: Definition Time vs. Invocation Time</h2>
+<p>The primary reason parameter decorators cannot modify argument values
+is that decorators execute when a class is declared, not when a method
+is called.</p>
+<p>When the JavaScript runtime evaluates a class definition:</p>
+<ul>
+<li>Decorator functions run once to set up the class structure.</li>
+<li>At this point, the method has not been invoked, meaning runtime
+arguments simply do not exist.</li>
+<li>Because there is no active invocation or call stack to intercept,
+there are no concrete values for the parameter decorator to inspect or
+mutate.</li>
+</ul>
+<h2 id="2-the-return-value-is-ignored-by-design">2. The Return Value is
+Ignored by Design</h2>
+<p>In TypeScript's decorator implementation (both experimental and
+ECMAScript stages), different decorators possess different capabilities
+based on what the runtime does with their return values:</p>
+<ul>
+<li><strong>Method Decorators</strong> can return a new
+<code>PropertyDescriptor</code>, allowing you to replace the method
+implementation and intercept incoming calls.</li>
+<li><strong>Class Decorators</strong> can return a new constructor
+function to replace the class.</li>
+<li><strong>Parameter Decorators</strong> have their return values
+completely ignored by the runtime.</li>
+</ul>
+<p>A parameter decorator function receives three arguments:</p>
+<ol type="1">
+<li><code>target</code>: The prototype of the class (for an instance
+member) or the constructor function (for a static member).</li>
+<li><code>propertyKey</code>: The name of the member (string or
+symbol).</li>
+<li><code>parameterIndex</code>: The ordinal index of the parameter in
+the function’s argument list.</li>
+</ol>
+<p>Because the decorator signature enforces that any returned value is
+discarded, the decorator cannot supply a replacement value, a default
+wrapper, or an interceptor on its own.</p>
+<h2 id="3-the-intended-purpose-metadata-storage">3. The Intended
+Purpose: Metadata Storage</h2>
+<p>Parameter decorators are designed strictly for observation and
+metadata registration. Their sole capability is to record information
+about a specific parameter at a specific index.</p>
+<p>Using metadata libraries such as <code>reflect-metadata</code>, a
+parameter decorator attaches custom flags, validation rules, or
+dependency injection tokens to the class prototype under the target
+method's key. This metadata remains dormant until another mechanism acts
+upon it.</p>
+<h2 id="4-the-solution-combining-parameter-and-method-decorators">4. The
+Solution: Combining Parameter and Method Decorators</h2>
+<p>To modify, transform, or validate a parameter at runtime, you must
+pair the parameter decorator with a method decorator.</p>
+<ol type="1">
+<li><strong>Parameter Decorator:</strong> Registers the index of the
+parameter and the required transformation or validation rule using
+metadata reflection.</li>
+<li><strong>Method Decorator:</strong> Replaces the original method's
+<code>value</code> in the <code>PropertyDescriptor</code> with a wrapper
+function.</li>
+<li><strong>Runtime Execution:</strong> When the wrapped method is
+invoked, it retrieves the metadata for its parameters, reads the
+arguments array via <code>arguments</code> or rest parameters
+(<code>...args</code>), modifies the value at the designated index, and
+passes the updated arguments to the original method.</li>
+</ol>
+<p>Parameter decorators cannot modify values in isolation because they
+lack both the execution context of a method call and the runtime
+mechanism to override argument bindings. Modifying runtime parameters
+requires wrapping the function itself via a method decorator.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/why-parameter-decorators-cannot-modify-values-in-type-script';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

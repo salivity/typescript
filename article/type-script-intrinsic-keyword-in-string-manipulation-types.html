@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Intrinsic Keyword in String Manipulation Types - typescript</title>
+    <meta name="description" content="This article explains the purpose and functionality of the intrinsic keyword within TypeScript&#39;s built-in string manipulation types. You will learn why this keyword was introduced, how it enables native compiler operations for types such as Uppercase and">
+    <link rel="canonical" href="https://salivity.github.io/typescript/article/type-script-intrinsic-keyword-in-string-manipulation-types">
+    <link rel="search" type="application/opensearchdescription+xml" title="typescript" href="/typescript/opensearch.xml">
+    <link rel="icon" href="/typescript/favicon.ico">
+    <link rel="stylesheet" href="/typescript/css/style.css">
+    <link media="print" rel="stylesheet" href="/typescript/css/print.css">
+    <script src="/typescript/js/fuse.min.js"></script>
+    <script src="/typescript/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TypeScript Intrinsic Keyword in String Manipulation Types - typescript" />
+    <meta property="og:url" content="https://salivity.github.io/typescript/article/type-script-intrinsic-keyword-in-string-manipulation-types" />
+    <meta property="og:image" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/typescript/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the purpose and functionality of the intrinsic keyword within TypeScript&#39;s built-in string manipulation types. You will learn why this keyword was introduced, how it enables native compiler operations for types such as Uppercase and" />
+    <link rel="manifest" href="/typescript/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/typescript/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>typescript</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/typescript/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="typescript-intrinsic-keyword-in-string-manipulation-types">TypeScript
+Intrinsic Keyword in String Manipulation Types</h1>
+<p>This article explains the purpose and functionality of the
+<code>intrinsic</code> keyword within TypeScript's built-in string
+manipulation types. You will learn why this keyword was introduced, how
+it enables native compiler operations for types such as
+<code>Uppercase</code> and <code>Lowercase</code>, and why it cannot be
+defined in user-space code.</p>
+<h2 id="the-purpose-of-the-intrinsic-keyword">The Purpose of the
+<code>intrinsic</code> Keyword</h2>
+<p>The <code>intrinsic</code> keyword tells the TypeScript compiler that
+a type's implementation is built directly into the compiler itself.
+Rather than relying on standard type system logic—such as conditional
+types, mapped types, or type inference—types marked as
+<code>intrinsic</code> are executed via JavaScript logic embedded within
+the compiler core.</p>
+<p>TypeScript provides four built-in template literal utility types
+defined in <code>lib.es5.d.ts</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Uppercase<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> intrinsic<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Lowercase<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> intrinsic<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Capitalize<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> intrinsic<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Uncapitalize<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> intrinsic<span class="op">;</span></span></code></pre></div>
+<h2 id="why-string-manipulation-types-need-intrinsic">Why String
+Manipulation Types Need <code>intrinsic</code></h2>
+<p>TypeScript's type system does not have built-in arithmetic, string
+character mutation, or direct access to character code mappings. Without
+native compiler intervention, converting a string literal like
+<code>"hello"</code> to <code>"HELLO"</code> would require maintaining
+an exhaustive mapping table for every character in every supported
+alphabet.</p>
+<p>To avoid performance degradation and complex type definitions,
+TypeScript 4.1 delegated string casing transformations directly to the
+compiler runtime using JavaScript's native string methods:</p>
+<ul>
+<li><code>Uppercase&lt;S&gt;</code> applies
+<code>String.prototype.toUpperCase()</code></li>
+<li><code>Lowercase&lt;S&gt;</code> applies
+<code>String.prototype.toLowerCase()</code></li>
+<li><code>Capitalize&lt;S&gt;</code> converts the first character using
+<code>toUpperCase()</code></li>
+<li><code>Uncapitalize&lt;S&gt;</code> converts the first character
+using <code>toLowerCase()</code></li>
+</ul>
+<p>When the compiler encounters one of these types applied to a string
+literal, it intercepts the operation and returns the transformed string
+directly:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventName <span class="op">=</span> <span class="st">&quot;user_joined&quot;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ShoutEvent <span class="op">=</span> Uppercase<span class="op">&lt;</span>EventName<span class="op">&gt;;</span> <span class="co">// &quot;USER_JOINED&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> TitleEvent <span class="op">=</span> Capitalize<span class="op">&lt;</span>EventName<span class="op">&gt;;</span> <span class="co">// &quot;User_joined&quot;</span></span></code></pre></div>
+<h2 id="limitations-and-user-land-restrictions">Limitations and User
+Land Restrictions</h2>
+<p>The <code>intrinsic</code> keyword is reserved exclusively for
+TypeScript's internal standard library definitions. Attempting to use
+the keyword in application code will trigger a compile-time error:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Reverse<span class="op">&lt;</span>S <span class="kw">extends</span> <span class="dt">string</span><span class="op">&gt;</span> <span class="op">=</span> intrinsic<span class="op">;</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Error: TS2795: The &#39;intrinsic&#39; keyword is only allowed for use in built-in libraries.</span></span></code></pre></div>
+<p>Because custom <code>intrinsic</code> definitions would require
+custom compiler hooks or modifications to TypeScript's source code,
+developers must use regular conditional types, recursive type
+definitions, and template literal patterns for any custom type-level
+operations.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/typescript/article/type-script-intrinsic-keyword-in-string-manipulation-types';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/typescript/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/typescript/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
